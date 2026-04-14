@@ -1,0 +1,594 @@
+{
+  "name": "AI Supply Chain - Santista (v2 - calibrado reunião 10/04)",
+  "nodes": [
+    {
+      "parameters": {
+        "cronExpression": "0 8 * * 1-5"
+      },
+      "id": "Cron",
+      "name": "Daily Trigger (Seg-Sex 08h)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sku, client, SUM(sales) AS sales, MAX(stock) AS stock, AVG(cost) AS cost, AVG(cost_cotton) AS cost_cotton, AVG(cost_labor) AS cost_labor, AVG(cost_energy) AS cost_energy FROM sales_data WHERE date >= NOW() - INTERVAL '30 days' GROUP BY sku, client ORDER BY sku;"
+      },
+      "id": "Postgres",
+      "name": "Fetch ERP Data",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        380,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "SEU_CREDENTIAL_ID",
+          "name": "Postgres ERP"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Valida e normaliza cada item recebido do ERP\nconst validated = [];\nconst errors = [];\n\nfor (const item of items) {\n  const sku   = String(item.json.sku || '').trim();\n  const client = String(item.json.client || 'N/A').trim();\n  const sales = Number(item.json.sales);\n  const stock = Number(item.json.stock);\n  const cost  = Number(item.json.cost);\n\n  if (!sku) { errors.push({ reason: 'SKU vazio', raw: item.json }); continue; }\n  if (isNaN(sales) || isNaN(stock) || isNaN(cost)) { errors.push({ reason: 'Campo numérico inválido', raw: item.json }); continue; }\n  if (cost <= 0 || stock < 0) { errors.push({ reason: 'Custo inválido ou valor negativo', raw: item.json }); continue; }\n\n  validated.push({ json: { sku, client, sales, stock, cost } });\n}\n\nif (errors.length > 0) {\n  console.error('[DataCleaning] Itens descartados:', JSON.stringify(errors));\n}\n\nreturn validated;"
+      },
+      "id": "CleanData",
+      "name": "Data Cleaning + Validation",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        580,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Agrupa todos os itens em um único array para enviar ao backend\nconst allData = items.map(i => i.json);\nreturn [{ json: { data: allData } }];"
+      },
+      "id": "AggregateItems",
+      "name": "Aggregate to Array",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/forecast",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000,
+          "retry": {
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "Forecast",
+      "name": "AI Demand Forecast",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1000,
+        150
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/inventory",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000,
+          "retry": {
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "Inventory",
+      "name": "AI Inventory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1000,
+        300
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/pricing",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000,
+          "retry": {
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "id": "Pricing",
+      "name": "AI Pricing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1000,
+        450
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Consolida forecast + inventory + pricing num único objeto por SKU\n// Recebe os 3 inputs diretamente (sem Merge node)\nconst allInputs = $input.all();\nconst forecast  = (allInputs[0]?.json?.results || []);\nconst inventory = (allInputs[1]?.json?.results || []);\nconst pricing   = (allInputs[2]?.json?.results || []);\n\nconst bySkuF = Object.fromEntries(forecast.map(r  => [r.sku, r]));\nconst bySkuI = Object.fromEntries(inventory.map(r => [r.sku, r]));\nconst bySkuP = Object.fromEntries(pricing.map(r   => [r.sku, r]));\n\nconst allSkus = [...new Set([...Object.keys(bySkuF), ...Object.keys(bySkuI), ...Object.keys(bySkuP)])];\n\nconst consolidated = allSkus.map(sku => ({\n  sku,\n  client:          bySkuF[sku]?.client || bySkuI[sku]?.client || '',\n  forecast_30d:    bySkuF[sku]?.forecast_30d || 0,\n  days_of_stock:   bySkuF[sku]?.days_of_stock || 0,\n  risk:            bySkuF[sku]?.risk || 'N/A',\n  inventory_status: bySkuI[sku]?.inventory_status || 'N/A',\n  suggested_order:  bySkuI[sku]?.suggested_order || 0,\n  stock_value_brl:  bySkuI[sku]?.stock_value_brl || 0,\n  excess_alert:    bySkuI[sku]?.excess_alert || false,\n  suggested_price: bySkuP[sku]?.suggested_price || 0,\n  margin_pct:      bySkuP[sku]?.margin_pct || 0,\n  pricing_action:  bySkuP[sku]?.pricing_action || 'N/A',\n  processed_at:    new Date().toISOString(),\n}));\n\nreturn consolidated.map(r => ({ json: r }));"
+      },
+      "id": "ConsolidateData",
+      "name": "Consolidate Results",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO supply_chain_results (sku, client, forecast_30d, days_of_stock, risk, inventory_status, suggested_order, stock_value_brl, suggested_price, margin_pct, pricing_action, processed_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) ON CONFLICT (sku, client) DO UPDATE SET forecast_30d = EXCLUDED.forecast_30d, days_of_stock = EXCLUDED.days_of_stock, risk = EXCLUDED.risk, inventory_status = EXCLUDED.inventory_status, suggested_order = EXCLUDED.suggested_order, stock_value_brl = EXCLUDED.stock_value_brl, suggested_price = EXCLUDED.suggested_price, margin_pct = EXCLUDED.margin_pct, pricing_action = EXCLUDED.pricing_action, processed_at = EXCLUDED.processed_at;",
+        "queryParams": "={{ [$json.sku, $json.client, $json.forecast_30d, $json.days_of_stock, $json.risk, $json.inventory_status, $json.suggested_order, $json.stock_value_brl, $json.suggested_price, $json.margin_pct, $json.pricing_action, $json.processed_at].join(',') }}"
+      },
+      "id": "SaveResults",
+      "name": "Save to Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1650,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "SEU_CREDENTIAL_ID",
+          "name": "Postgres ERP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.excess_alert }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "CheckExcessStock",
+      "name": "Check Excess Stock",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1650,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.risk }}",
+              "operation": "equal",
+              "value2": "CRÍTICO"
+            }
+          ]
+        }
+      },
+      "id": "CheckCritical",
+      "name": "Check Critical Stock",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1650,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#supply-chain-alerts",
+        "text": "⚠️ *ESTOQUE EXCESSIVO*\n• SKU: `{{ $json.sku }}` | Cliente: {{ $json.client }}\n• Estoque cobre *{{ $json.days_of_stock }} dias*\n• Valor imobilizado: R$ {{ $json.stock_value_brl }}\n• Ação sugerida de preço: *{{ $json.pricing_action }}* → R$ {{ $json.suggested_price }}"
+      },
+      "id": "SlackExcess",
+      "name": "Slack: Excess Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1870,
+        340
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "SEU_SLACK_ID",
+          "name": "Slack Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "#supply-chain-alerts",
+        "text": "🚨 *ESTOQUE CRÍTICO*\n• SKU: `{{ $json.sku }}` | Cliente: {{ $json.client }}\n• Risco: *{{ $json.risk }}* | Dias restantes: {{ $json.days_of_stock }}\n• Pedido sugerido: *{{ $json.suggested_order }} unidades*"
+      },
+      "id": "SlackCritical",
+      "name": "Slack: Critical Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1870,
+        500
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "SEU_SLACK_ID",
+          "name": "Slack Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Compila o resumo diário\nconst total     = items.length;\nconst criticos  = items.filter(i => i.json.risk === 'CRÍTICO').length;\nconst excessos  = items.filter(i => i.json.excess_alert).length;\nconst reposicao = items.filter(i => i.json.inventory_status === 'REPOSIÇÃO').length;\nconst valorTotal = items.reduce((s, i) => s + (i.json.stock_value_brl || 0), 0).toFixed(2);\n\nreturn [{ json: {\n  report_date: new Date().toLocaleDateString('pt-BR'),\n  total_skus:  total,\n  criticos,\n  excessos,\n  reposicao,\n  valor_imobilizado_brl: valorTotal,\n  summary_text: `📊 *Relatório Supply Chain ${new Date().toLocaleDateString('pt-BR')}*\\n• Total SKUs processados: ${total}\\n• Estoque crítico: ${criticos}\\n• Estoque excessivo: ${excessos}\\n• Em reposição: ${reposicao}\\n• Valor imobilizado total: R$ ${Number(valorTotal).toLocaleString('pt-BR')}`,\n}}];"
+      },
+      "id": "BuildReport",
+      "name": "Build Daily Report",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1870,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#supply-chain-daily",
+        "text": "={{ $json.summary_text }}"
+      },
+      "id": "SlackDailyReport",
+      "name": "Slack: Daily Report",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        2070,
+        660
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "SEU_SLACK_ID",
+          "name": "Slack Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const err = $input.item.json;\nconst nodeName = err.node || 'desconhecido';\nconst message  = err.message || 'Erro sem mensagem';\nreturn [{ json: {\n  error_node: nodeName,\n  error_message: message,\n  timestamp: new Date().toISOString(),\n  alert: `🔴 *Erro no workflow Supply Chain*\\nNó: ${nodeName}\\nDetalhe: ${message}`,\n}}];"
+      },
+      "id": "ErrorHandler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#supply-chain-errors",
+        "text": "={{ $json.alert }}"
+      },
+      "id": "SlackError",
+      "name": "Slack: Error Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        520
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "SEU_SLACK_ID",
+          "name": "Slack Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Verifica se forecast total atinge a meta mensal da Santista\n// Meta: 65-70M metros/ano → ~5.8M metros/mês (reunião 10/04/2026)\nconst META_MENSAL = 5800000;\nconst totalForecast = items.reduce((s, i) => s + (i.json.forecast_30d || 0), 0);\nconst pct = ((totalForecast / META_MENSAL) * 100).toFixed(1);\nconst onTrack = totalForecast >= META_MENSAL;\nconst status = onTrack ? '✅ ON TRACK' : '⚠️ ABAIXO DA META';\nconst emoji = onTrack ? '📈' : '📉';\nreturn [{ json: {\n  totalForecast: Math.round(totalForecast),\n  meta_mensal: META_MENSAL,\n  pct_meta: pct,\n  on_track: onTrack,\n  volume_status: status,\n  volume_alert: `${emoji} *Volume forecast 30d:* ${Math.round(totalForecast).toLocaleString()} metros\\n• Meta mensal: ${META_MENSAL.toLocaleString()} metros\\n• Atingimento: *${pct}%* | ${status}`,\n}}];"
+      },
+      "id": "CheckVolumeTarget",
+      "name": "Check Volume Target",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1650,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#supply-chain-daily",
+        "text": "={{ $json.volume_alert }}"
+      },
+      "id": "SlackVolumeAlert",
+      "name": "Slack: Volume Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1870,
+        760
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "SEU_SLACK_ID",
+          "name": "Slack Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily Trigger (Seg-Sex 08h)": {
+      "main": [
+        [
+          {
+            "node": "Fetch ERP Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch ERP Data": {
+      "main": [
+        [
+          {
+            "node": "Data Cleaning + Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Cleaning + Validation": {
+      "main": [
+        [
+          {
+            "node": "Aggregate to Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate to Array": {
+      "main": [
+        [
+          {
+            "node": "AI Demand Forecast",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Inventory",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Pricing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Demand Forecast": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Inventory": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Pricing": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate Results": {
+      "main": [
+        [
+          {
+            "node": "Save to Postgres",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Excess Stock",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Critical Stock",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Daily Report",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Volume Target",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Excess Stock": {
+      "main": [
+        [
+          {
+            "node": "Slack: Excess Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Check Critical Stock": {
+      "main": [
+        [
+          {
+            "node": "Slack: Critical Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Build Daily Report": {
+      "main": [
+        [
+          {
+            "node": "Slack: Daily Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Slack: Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Volume Target": {
+      "main": [
+        [
+          {
+            "node": "Slack: Volume Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
