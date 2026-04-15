@@ -165,12 +165,12 @@
     },
     {
       "parameters": {
-        "functionCode": "// Consolida forecast + inventory + pricing num único objeto por SKU\n// Recebe os 3 inputs diretamente (sem Merge node)\nconst allInputs = $input.all();\nconst forecast  = (allInputs[0]?.json?.results || []);\nconst inventory = (allInputs[1]?.json?.results || []);\nconst pricing   = (allInputs[2]?.json?.results || []);\n\nconst bySkuF = Object.fromEntries(forecast.map(r  => [r.sku, r]));\nconst bySkuI = Object.fromEntries(inventory.map(r => [r.sku, r]));\nconst bySkuP = Object.fromEntries(pricing.map(r   => [r.sku, r]));\n\nconst allSkus = [...new Set([...Object.keys(bySkuF), ...Object.keys(bySkuI), ...Object.keys(bySkuP)])];\n\nconst consolidated = allSkus.map(sku => ({\n  sku,\n  client:          bySkuF[sku]?.client || bySkuI[sku]?.client || '',\n  forecast_30d:    bySkuF[sku]?.forecast_30d || 0,\n  days_of_stock:   bySkuF[sku]?.days_of_stock || 0,\n  risk:            bySkuF[sku]?.risk || 'N/A',\n  inventory_status: bySkuI[sku]?.inventory_status || 'N/A',\n  suggested_order:  bySkuI[sku]?.suggested_order || 0,\n  stock_value_brl:  bySkuI[sku]?.stock_value_brl || 0,\n  excess_alert:    bySkuI[sku]?.excess_alert || false,\n  suggested_price: bySkuP[sku]?.suggested_price || 0,\n  margin_pct:      bySkuP[sku]?.margin_pct || 0,\n  pricing_action:  bySkuP[sku]?.pricing_action || 'N/A',\n  processed_at:    new Date().toISOString(),\n}));\n\nreturn consolidated.map(r => ({ json: r }));"
+        "jsCode": "// Consolida forecast + inventory + pricing num único objeto por SKU\n// Recebe os 3 inputs (um item de cada endpoint da API)\nconst allInputs = $input.all();\nconst forecast  = (allInputs[0]?.json?.results || []);\nconst inventory = (allInputs[1]?.json?.results || []);\nconst pricing   = (allInputs[2]?.json?.results || []);\n\nconst bySkuF = Object.fromEntries(forecast.map(r  => [r.sku, r]));\nconst bySkuI = Object.fromEntries(inventory.map(r => [r.sku, r]));\nconst bySkuP = Object.fromEntries(pricing.map(r   => [r.sku, r]));\n\nconst allSkus = [...new Set([...Object.keys(bySkuF), ...Object.keys(bySkuI), ...Object.keys(bySkuP)])];\n\nconst consolidated = allSkus.map(sku => ({\n  sku,\n  client:          bySkuF[sku]?.client || bySkuI[sku]?.client || '',\n  forecast_30d:    bySkuF[sku]?.forecast_30d || 0,\n  days_of_stock:   bySkuF[sku]?.days_of_stock || 0,\n  risk:            bySkuF[sku]?.risk || 'N/A',\n  inventory_status: bySkuI[sku]?.inventory_status || 'N/A',\n  suggested_order:  bySkuI[sku]?.suggested_order || 0,\n  stock_value_brl:  bySkuI[sku]?.stock_value_brl || 0,\n  excess_alert:    bySkuI[sku]?.excess_alert || false,\n  suggested_price: bySkuP[sku]?.suggested_price || 0,\n  margin_pct:      bySkuP[sku]?.margin_pct || 0,\n  pricing_action:  bySkuP[sku]?.pricing_action || 'N/A',\n  processed_at:    new Date().toISOString(),\n}));\n\nreturn consolidated.map(r => ({ json: r }));"
       },
       "id": "ConsolidateData",
       "name": "Consolidate Results",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         1250,
         300
@@ -180,12 +180,14 @@
       "parameters": {
         "operation": "executeQuery",
         "query": "INSERT INTO supply_chain_results (sku, client, forecast_30d, days_of_stock, risk, inventory_status, suggested_order, stock_value_brl, suggested_price, margin_pct, pricing_action, processed_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) ON CONFLICT (sku, client) DO UPDATE SET forecast_30d = EXCLUDED.forecast_30d, days_of_stock = EXCLUDED.days_of_stock, risk = EXCLUDED.risk, inventory_status = EXCLUDED.inventory_status, suggested_order = EXCLUDED.suggested_order, stock_value_brl = EXCLUDED.stock_value_brl, suggested_price = EXCLUDED.suggested_price, margin_pct = EXCLUDED.margin_pct, pricing_action = EXCLUDED.pricing_action, processed_at = EXCLUDED.processed_at;",
-        "queryParams": "={{ [$json.sku, $json.client, $json.forecast_30d, $json.days_of_stock, $json.risk, $json.inventory_status, $json.suggested_order, $json.stock_value_brl, $json.suggested_price, $json.margin_pct, $json.pricing_action, $json.processed_at].join(',') }}"
+        "options": {
+          "queryReplacement": "={{ [$json.sku, $json.client, $json.forecast_30d, $json.days_of_stock, $json.risk, $json.inventory_status, $json.suggested_order, $json.stock_value_brl, $json.suggested_price, $json.margin_pct, $json.pricing_action, $json.processed_at] }}"
+        }
       },
       "id": "SaveResults",
       "name": "Save to Postgres",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         1650,
         200
@@ -313,7 +315,7 @@
     },
     {
       "parameters": {
-        "functionCode": "const err = $input.item.json;\nconst nodeName = err.node || 'desconhecido';\nconst message  = err.message || 'Erro sem mensagem';\nreturn [{ json: {\n  error_node: nodeName,\n  error_message: message,\n  timestamp: new Date().toISOString(),\n  alert: `🔴 *Erro no workflow Supply Chain*\\nNó: ${nodeName}\\nDetalhe: ${message}`,\n}}];"
+        "functionCode": "const err = items[0].json;\nconst nodeName = err.node || err.workflow?.last_node || 'desconhecido';\nconst message  = err.message || err.description || 'Erro sem mensagem';\nreturn [{ json: {\n  error_node: nodeName,\n  error_message: message,\n  timestamp: new Date().toISOString(),\n  alert: `🔴 *Erro no workflow Supply Chain*\\nNó: ${nodeName}\\nDetalhe: ${message}`,\n}}];"
       },
       "id": "ErrorHandler",
       "name": "Error Handler",
