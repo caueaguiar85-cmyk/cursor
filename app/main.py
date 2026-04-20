@@ -18,6 +18,11 @@ from app.forecast import run_forecast
 from app.inventory import run_inventory
 from app.pricing import run_pricing
 from app.agents import get_all_agents, get_agent, run_agent
+from app.datastore import (
+    save_interview, get_interviews, get_diagnostic_scores,
+    get_analysis_results, get_insights, get_pipeline_status
+)
+from app.pipeline import run_full_pipeline
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -1446,8 +1451,60 @@ def agent_detail(agent_id: str):
 @app.post("/api/agents/{agent_id}/run")
 async def agent_run(agent_id: str, req: AgentRequest):
     """Executa um agente com uma mensagem do usuário."""
-    logger.info(f"/api/agents/{agent_id}/run → mensagem: {req.message[:80]}...")
+    logger.info(f"/api/agents/{agent_id}/run")
     result = await run_agent(agent_id, req.message, req.context)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result)
     return {"status": "ok", **result}
+
+
+# ─── Data & Pipeline Endpoints ────────────────────────────────────────────────
+
+class InterviewData(BaseModel):
+    interviewer: str
+    interviewee: str
+    role: str
+    department: str = ""
+    level: str = ""
+    pillar: str = ""
+    date: str = ""
+    transcript: str = ""
+    ia_ready: bool = False
+
+@app.post("/api/interviews")
+def create_interview(data: InterviewData):
+    """Salva uma entrevista no datastore."""
+    interview = save_interview(data.model_dump())
+    return {"status": "ok", "interview": interview}
+
+@app.get("/api/interviews")
+def list_interviews():
+    return {"status": "ok", "interviews": get_interviews()}
+
+@app.post("/api/pipeline/run")
+async def trigger_pipeline():
+    """Dispara o pipeline completo de análise automática."""
+    import asyncio
+    status = get_pipeline_status()
+    if status["running"]:
+        return {"status": "already_running", "pipeline": status}
+    asyncio.create_task(run_full_pipeline())
+    return {"status": "ok", "message": "Pipeline iniciado"}
+
+@app.get("/api/pipeline/status")
+def pipeline_status():
+    return {"status": "ok", "pipeline": get_pipeline_status()}
+
+@app.get("/api/diagnostic")
+def get_diagnostic():
+    """Retorna scores e resultados do diagnóstico."""
+    return {
+        "status": "ok",
+        "scores": get_diagnostic_scores(),
+        "analysis": get_analysis_results()
+    }
+
+@app.get("/api/insights")
+def get_insights_data():
+    """Retorna insights gerados pelo pipeline."""
+    return {"status": "ok", "insights": get_insights()}

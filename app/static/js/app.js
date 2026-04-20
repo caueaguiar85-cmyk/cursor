@@ -632,6 +632,33 @@ function initNovaEntrevista() {
 
     if (!nome || !cargo) return;
 
+    var entrevistador = document.getElementById('ent-entrevistador').value.trim();
+    var area = document.getElementById('ent-area').value;
+    var nivel = document.getElementById('ent-nivel').value;
+
+    // Save to backend
+    fetch('/api/interviews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        interviewer: entrevistador,
+        interviewee: nome,
+        role: cargo,
+        department: area,
+        level: nivel,
+        pillar: pilar,
+        date: data,
+        transcript: transcricao,
+        ia_ready: iaReady
+      })
+    }).then(function(res) { return res.json(); })
+    .then(function(result) {
+      // If IA ready with transcript, trigger pipeline
+      if (iaReady && transcricao) {
+        triggerPipeline();
+      }
+    }).catch(function(err) { console.warn('Save interview error:', err); });
+
     // Generate initials
     var parts = nome.split(' ');
     var initials = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
@@ -646,7 +673,7 @@ function initNovaEntrevista() {
 
     var pilarInfo = PILAR_MAP[pilar];
     var tagHtml = pilarInfo ? '<span class="interview-tag" style="color:' + pilarInfo.color + '">' + pilarInfo.label + '</span>' : '';
-    var aiTag = iaReady ? 'AI ANALYZED' : (transcricao ? 'TRANSCRITO' : 'NOVO');
+    var aiTag = iaReady ? 'PROCESSANDO...' : (transcricao ? 'TRANSCRITO' : 'NOVO');
 
     // Create card
     var card = document.createElement('div');
@@ -835,6 +862,177 @@ function escapeHtml(text) {
   d.textContent = text;
   return d.innerHTML;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PIPELINE — Auto-analysis trigger + result loading
+   ══════════════════════════════════════════════════════════════════════════ */
+
+function triggerPipeline() {
+  fetch('/api/pipeline/run', { method: 'POST' })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.status === 'ok') {
+        pollPipelineStatus();
+      }
+    })
+    .catch(function(err) { console.warn('Pipeline trigger error:', err); });
+}
+
+function pollPipelineStatus() {
+  var interval = setInterval(function() {
+    fetch('/api/pipeline/status')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        var pipeline = data.pipeline;
+        if (!pipeline.running) {
+          clearInterval(interval);
+          // Pipeline done — reload data
+          loadDiagnosticData();
+          loadInsightsData();
+          // Update interview cards to show AI ANALYZED
+          document.querySelectorAll('.interview-ai-tag').forEach(function(tag) {
+            if (tag.textContent === 'PROCESSANDO...') tag.textContent = 'AI ANALYZED';
+          });
+        }
+      })
+      .catch(function() { clearInterval(interval); });
+  }, 3000);
+}
+
+function loadDiagnosticData() {
+  fetch('/api/diagnostic')
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.status !== 'ok') return;
+      var scores = data.scores;
+      if (!scores || !scores.geral) return;
+
+      // Update score display
+      var scoreBig = document.querySelector('.score-big');
+      if (scoreBig) scoreBig.textContent = parseFloat(scores.geral).toFixed(1);
+
+      var maturityNum = document.querySelector('.maturity-number');
+      if (maturityNum) maturityNum.textContent = parseFloat(scores.geral).toFixed(1);
+
+      // Update CMMI marker position
+      var cmmiMarker = document.querySelector('.cmmi-marker');
+      if (cmmiMarker) cmmiMarker.style.left = ((parseFloat(scores.geral) - 1) / 4 * 100) + '%';
+
+      // Update Santista benchmark value
+      var benchRows = document.querySelectorAll('.benchmark-value');
+      if (benchRows.length >= 1) benchRows[0].textContent = parseFloat(scores.geral).toFixed(1);
+
+      // Update pilar strip scores
+      var pilarKeys = ['processos', 'sistemas', 'operacoes', 'organizacao', 'roadmap'];
+      var pilarScores = document.querySelectorAll('.pilar-score');
+      pilarKeys.forEach(function(key, i) {
+        if (scores[key] && pilarScores[i]) {
+          pilarScores[i].textContent = parseFloat(scores[key]).toFixed(1);
+        }
+      });
+
+      // Update score color based on value
+      if (scoreBig) {
+        var val = parseFloat(scores.geral);
+        if (val >= 3.5) scoreBig.style.color = 'var(--success)';
+        else if (val >= 2.5) scoreBig.style.color = 'var(--warning)';
+        else scoreBig.style.color = 'var(--accent)';
+      }
+    })
+    .catch(function(err) { console.warn('Load diagnostic error:', err); });
+}
+
+function loadInsightsData() {
+  fetch('/api/insights')
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.status !== 'ok' || !data.insights || !data.insights.length) return;
+
+      var feed = document.querySelector('.insights-feed');
+      if (!feed) return;
+
+      // Clear existing static insights
+      feed.innerHTML = '';
+
+      data.insights.forEach(function(insight, i) {
+        if (i > 0) {
+          var divider = document.createElement('div');
+          divider.className = 'insight-divider';
+          feed.appendChild(divider);
+        }
+
+        var impactClass = insight.impact === 'alto' ? ' insight-tag--critical' : '';
+        var categoryLabel = {
+          'risco': 'RISCO', 'oportunidade': 'OPORTUNIDADE',
+          'quickwin': 'QUICK WIN', 'estrategico': 'ESTRAT\u00c9GICO'
+        }[insight.category] || insight.category.toUpperCase();
+
+        var pilarLabel = {
+          'processos': 'PROCESSOS', 'sistemas': 'SISTEMAS & DADOS',
+          'operacoes': 'OPERA\u00c7\u00d5ES', 'organizacao': 'ORGANIZA\u00c7\u00c3O',
+          'roadmap': 'ROADMAP'
+        }[insight.pillar] || (insight.pillar || '').toUpperCase();
+
+        var valueColor = insight.value_type === 'negative' ? 'var(--danger)' : 'var(--success)';
+
+        var article = document.createElement('article');
+        article.className = 'insight-item';
+        article.setAttribute('data-category', insight.category);
+        article.innerHTML =
+          '<div class="insight-tags">' +
+            '<span class="insight-tag' + impactClass + '">' + (insight.impact || '').toUpperCase() + ' IMPACTO</span>' +
+            '<span class="insight-tag-sep">\u00b7</span>' +
+            '<span class="insight-tag">' + categoryLabel + '</span>' +
+            '<span class="insight-tag-sep">\u00b7</span>' +
+            '<span class="insight-tag">' + pilarLabel + '</span>' +
+          '</div>' +
+          '<h3 class="insight-title">' + escapeHtml(insight.title) + '</h3>' +
+          '<p class="insight-body">' + escapeHtml(insight.body) + '</p>' +
+          '<div class="insight-meta">' +
+            '<div class="insight-meta-item">' +
+              '<span class="insight-meta-label">VALOR ESTIMADO</span>' +
+              '<span class="insight-meta-value font-mono" style="color:' + valueColor + '">' + escapeHtml(insight.estimated_value || '') + '</span>' +
+            '</div>' +
+            '<div class="insight-meta-item">' +
+              '<span class="insight-meta-label">ORIGEM</span>' +
+              '<span class="insight-meta-value">' + escapeHtml(insight.origin || '') + '</span>' +
+            '</div>' +
+            '<div class="insight-meta-item">' +
+              '<span class="insight-meta-label">BENCHMARK</span>' +
+              '<span class="insight-meta-value insight-meta-italic">' + escapeHtml(insight.benchmark || '') + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="insight-action-block">' +
+            '<span class="insight-action-label">A\u00c7\u00c3O SUGERIDA</span>' +
+            '<span class="insight-action-text">' + escapeHtml(insight.suggested_action || '') + '</span>' +
+          '</div>' +
+          '<div class="insight-footer">' +
+            '<span class="insight-validated font-mono">\u2713 Validado</span>' +
+          '</div>';
+
+        feed.appendChild(article);
+      });
+
+      // Update counter
+      var counter = document.querySelector('#page-insights .page-counter');
+      if (counter) {
+        var alto = data.insights.filter(function(i) { return i.impact === 'alto'; }).length;
+        counter.textContent = data.insights.length + ' insights \u00b7 ' + alto + ' alto impacto';
+      }
+
+      // Re-init filters for new dynamic content
+      initInsightFilters();
+    })
+    .catch(function(err) { console.warn('Load insights error:', err); });
+}
+
+// Load data on page init if available
+setTimeout(function() {
+  loadDiagnosticData();
+  loadInsightsData();
+}, 500);
+
+/* ══════════════════════════════════════════════════════════════════════════ */
 
 function renderMarkdown(text) {
   // Basic markdown → HTML
