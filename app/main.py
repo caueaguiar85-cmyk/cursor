@@ -3,9 +3,9 @@ AI Supply Chain API - Santista
 Backend FastAPI com endpoints de Forecast, Inventory e Pricing
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response, Cookie
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from pydantic import BaseModel, field_validator
@@ -23,6 +23,11 @@ from app.datastore import (
     get_analysis_results, get_insights, get_pipeline_status
 )
 from app.pipeline import run_full_pipeline
+from app.auth import (
+    authenticate, create_session, get_session_user, destroy_session,
+    get_all_users, create_user, update_user, delete_user,
+    has_permission, ROLES
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -45,6 +50,192 @@ app.add_middleware(
 # ─── Static files (logo, favicon) ─────────────────────────────────────────────
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+# ─── Auth helpers ─────────────────────────────────────────────────────────────
+
+def _get_current_user(request: Request):
+    token = request.cookies.get("session")
+    return get_session_user(token) if token else None
+
+
+# ─── Login page ───────────────────────────────────────────────────────────────
+
+LOGIN_HTML = """<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Stoken Advisory &mdash; Login</title>
+<link rel="icon" type="image/png" href="/static/santista.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#FAFAF7;--bg-elevated:#FFF;--bg-subtle:#F2F1EC;--border:#E6E4DD;--border-strong:#C9C6BC;--text:#1A1815;--text-muted:#6B6860;--text-subtle:#9B988F;--accent:#8B1D1D;--font-serif:'Source Serif 4',Georgia,serif;--font-sans:'Inter',system-ui,sans-serif;--font-mono:'JetBrains Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-container{width:100%;max-width:400px;padding:24px}
+.login-logo{text-align:center;margin-bottom:48px}
+.login-logo-mark{font-family:var(--font-serif);font-size:20px;font-weight:500;letter-spacing:0.02em;text-transform:uppercase}
+.login-logo-sub{font-size:11px;color:var(--text-subtle);letter-spacing:0.08em;text-transform:uppercase;display:block;margin-top:2px}
+.login-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:32px}
+.login-title{font-family:var(--font-serif);font-size:20px;font-weight:500;margin-bottom:4px}
+.login-subtitle{font-size:13px;color:var(--text-muted);margin-bottom:24px}
+.login-form{display:flex;flex-direction:column;gap:16px}
+.login-field{display:flex;flex-direction:column;gap:6px}
+.login-label{font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-muted)}
+.login-input{font-family:var(--font-sans);font-size:14px;padding:8px 12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);height:36px}
+.login-input:focus{outline:none;border-color:var(--accent)}
+.login-btn{font-family:var(--font-sans);font-size:14px;font-weight:500;padding:10px;border:none;border-radius:4px;background:var(--text);color:var(--bg);cursor:pointer;transition:opacity 0.15s}
+.login-btn:hover{opacity:0.85}
+.login-error{font-size:13px;color:var(--accent);text-align:center;display:none}
+.login-footer{text-align:center;margin-top:24px;font-size:11px;color:var(--text-subtle)}
+.login-footer strong{color:var(--text-muted);font-weight:500}
+</style>
+</head>
+<body>
+<div class="login-container">
+  <div class="login-logo">
+    <span class="login-logo-mark">STOKEN</span>
+    <span class="login-logo-sub">ADVISORY</span>
+  </div>
+  <div class="login-card">
+    <h1 class="login-title">Entrar</h1>
+    <p class="login-subtitle">Acesse a plataforma de diagn&oacute;stico estrat&eacute;gico</p>
+    <form class="login-form" id="login-form">
+      <div class="login-field">
+        <label class="login-label">Usu&aacute;rio</label>
+        <input class="login-input" type="text" id="login-user" placeholder="seu.usuario" required autofocus />
+      </div>
+      <div class="login-field">
+        <label class="login-label">Senha</label>
+        <input class="login-input" type="password" id="login-pass" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" required />
+      </div>
+      <p class="login-error" id="login-error">Usu&aacute;rio ou senha inv&aacute;lidos</p>
+      <button class="login-btn" type="submit">Entrar</button>
+    </form>
+  </div>
+  <p class="login-footer">&copy; 2026 <strong>Stoken Advisory</strong> &middot; Plataforma de Diagn&oacute;stico Estrat&eacute;gico</p>
+</div>
+<script>
+document.getElementById('login-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var user = document.getElementById('login-user').value;
+  var pass = document.getElementById('login-pass').value;
+  var errEl = document.getElementById('login-error');
+  var btn = this.querySelector('.login-btn');
+  btn.textContent = 'Entrando...';
+  btn.disabled = true;
+  fetch('/api/auth/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({username: user, password: pass})
+  }).then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.status === 'ok') {
+      window.location.href = '/';
+    } else {
+      errEl.style.display = 'block';
+      btn.textContent = 'Entrar';
+      btn.disabled = false;
+    }
+  }).catch(function() {
+    errEl.style.display = 'block';
+    btn.textContent = 'Entrar';
+    btn.disabled = false;
+  });
+});
+</script>
+</body>
+</html>
+"""
+
+# ─── Auth endpoints ───────────────────────────────────────────────────────────
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/api/auth/login")
+def login(req: LoginRequest, response: Response):
+    user = authenticate(req.username, req.password)
+    if not user:
+        return JSONResponse({"status": "error", "message": "Credenciais inválidas"}, status_code=401)
+    token = create_session(user["id"])
+    response = JSONResponse({"status": "ok", "user": user})
+    response.set_cookie("session", token, httponly=True, samesite="lax", max_age=86400*7)
+    return response
+
+@app.post("/api/auth/logout")
+def logout(request: Request, response: Response):
+    token = request.cookies.get("session")
+    if token:
+        destroy_session(token)
+    response = JSONResponse({"status": "ok"})
+    response.delete_cookie("session")
+    return response
+
+@app.get("/api/auth/me")
+def auth_me(request: Request):
+    user = _get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Não autenticado")
+    return {"status": "ok", "user": user, "role_info": ROLES.get(user["role"])}
+
+@app.get("/login", response_class=HTMLResponse, include_in_schema=False)
+def login_page():
+    return HTMLResponse(content=LOGIN_HTML)
+
+# ─── User Management endpoints ────────────────────────────────────────────────
+
+class UserCreate(BaseModel):
+    username: str
+    name: str = ""
+    email: str = ""
+    password: str
+    role: str = "viewer"
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
+    active: Optional[bool] = None
+    password: Optional[str] = None
+
+@app.get("/api/users")
+def list_users(request: Request):
+    user = _get_current_user(request)
+    if not user or not has_permission(user, "manage_users"):
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    return {"status": "ok", "users": get_all_users(), "roles": ROLES}
+
+@app.post("/api/users")
+def add_user(data: UserCreate, request: Request):
+    user = _get_current_user(request)
+    if not user or not has_permission(user, "manage_users"):
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    new_user = create_user(data.model_dump())
+    return {"status": "ok", "user": new_user}
+
+@app.put("/api/users/{user_id}")
+def edit_user(user_id: int, data: UserUpdate, request: Request):
+    user = _get_current_user(request)
+    if not user or not has_permission(user, "manage_users"):
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    updated = update_user(user_id, {k: v for k, v in data.model_dump().items() if v is not None})
+    if not updated:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    return {"status": "ok", "user": updated}
+
+@app.delete("/api/users/{user_id}")
+def remove_user(user_id: int, request: Request):
+    user = _get_current_user(request)
+    if not user or not has_permission(user, "manage_users"):
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    if user_id == user["id"]:
+        raise HTTPException(status_code=400, detail="Não pode excluir a si mesmo")
+    if not delete_user(user_id):
+        raise HTTPException(status_code=400, detail="Não pode excluir o último admin")
+    return {"status": "ok"}
 
 
 # ─── Landing page ─────────────────────────────────────────────────────────────
@@ -118,6 +309,10 @@ LANDING_HTML = """<!DOCTYPE html>
 
       <div class="sidebar-divider" style="margin-top: auto;"></div>
 
+      <a class="sidebar-item" data-page="usuarios" href="#usuarios">
+        <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        <span>Usu&aacute;rios</span>
+      </a>
       <a class="sidebar-item" data-page="configuracoes" href="#configuracoes">
         <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         <span>Configura&ccedil;&otilde;es</span>
@@ -159,7 +354,8 @@ LANDING_HTML = """<!DOCTYPE html>
           <span class="icon-sun">&#9788;</span>
           <span class="icon-moon">&#9789;</span>
         </button>
-        <div class="topbar-avatar">CA</div>
+        <button class="btn btn--ghost" id="btn-logout" style="font-size:11px;color:var(--text-subtle)">Sair</button>
+        <div class="topbar-avatar" id="topbar-avatar">CA</div>
       </div>
     </header>
 
@@ -1166,6 +1362,46 @@ LANDING_HTML = """<!DOCTYPE html>
         </div>
       </div>
 
+      <!-- ══ PAGE: USUARIOS ══ -->
+      <div class="page" id="page-usuarios" style="display:none">
+        <div class="page-header">
+          <div class="page-header-text">
+            <h1 class="page-title">Usu&aacute;rios</h1>
+            <p class="page-subtitle">Gerenciamento de acessos e permiss&otilde;es</p>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn--primary" id="btn-novo-usuario">Novo Usu&aacute;rio</button>
+          </div>
+        </div>
+        <div class="page-header-divider"></div>
+
+        <!-- Roles legend -->
+        <div class="roles-legend">
+          <span class="role-badge role-badge--admin font-mono">ADMIN</span> Acesso total, gerencia usu&aacute;rios
+          <span class="role-badge role-badge--editor font-mono">EDITOR</span> Cria e edita dados, roda agentes
+          <span class="role-badge role-badge--viewer font-mono">VIEWER</span> Somente leitura
+        </div>
+
+        <!-- Users table -->
+        <div class="users-table-wrap">
+          <table class="users-table" id="users-table">
+            <thead>
+              <tr>
+                <th>Usu&aacute;rio</th>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>A&ccedil;&otilde;es</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-subtle)">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- ══ PAGE: CONFIGURACOES ══ -->
       <div class="page" id="page-configuracoes" style="display:none">
         <div class="page-header">
@@ -1306,6 +1542,51 @@ LANDING_HTML = """<!DOCTYPE html>
   </div>
 </div>
 
+<!-- ═══ MODAL: Novo/Editar Usuario ═══ -->
+<div class="modal-overlay" id="modal-usuario" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-usuario-title">Novo Usu&aacute;rio</h2>
+      <button class="modal-close" id="modal-usuario-close">&times;</button>
+    </div>
+    <form class="modal-form" id="form-usuario">
+      <input type="hidden" id="usr-edit-id" value="" />
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Usu&aacute;rio*</label>
+          <input class="form-input" type="text" id="usr-username" placeholder="nome.sobrenome" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nome completo</label>
+          <input class="form-input" type="text" id="usr-name" placeholder="Nome Sobrenome" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" id="usr-email" placeholder="email@empresa.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role*</label>
+          <select class="form-input form-select" id="usr-role" required>
+            <option value="viewer">Visualizador</option>
+            <option value="editor">Editor</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="usr-pass-label">Senha*</label>
+        <input class="form-input" type="password" id="usr-password" placeholder="Min. 6 caracteres" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn--glass" id="modal-usuario-cancel">Cancelar</button>
+        <button type="submit" class="btn btn--primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="/static/js/app.js"></script>
 </body>
 </html>
@@ -1313,7 +1594,10 @@ LANDING_HTML = """<!DOCTYPE html>
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
-def landing():
+def landing(request: Request):
+    user = _get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
     return HTMLResponse(content=LANDING_HTML)
 
 

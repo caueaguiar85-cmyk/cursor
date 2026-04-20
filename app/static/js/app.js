@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
   initTimeline();
   initNovaEntrevista();
   initDiagActions();
+  initLogout();
+  initUserManagement();
+  initCurrentUser();
   try { initAgents(); } catch(e) { console.warn('Agents init:', e); }
 });
 
@@ -108,6 +111,7 @@ var PAGE_NAMES = {
   'insights': 'Insights',
   'roadmap': 'Roadmap',
   'agentes': 'Agentes IA',
+  'usuarios': 'Usu\u00e1rios',
   'configuracoes': 'Configura\u00e7\u00f5es'
 };
 
@@ -141,6 +145,9 @@ function navigateTo(page, fromPopstate) {
 
   // Update page title
   document.title = 'Stoken Advisory \u2014 ' + (PAGE_NAMES[page] || page);
+
+  // Load data for specific pages
+  if (page === 'usuarios') loadUsersTable();
 }
 
 /* ── Diagnostico Tabs ──────────────────────────────────────────────────── */
@@ -1031,6 +1038,189 @@ setTimeout(function() {
   loadDiagnosticData();
   loadInsightsData();
 }, 500);
+
+/* ══════════════════════════════════════════════════════════════════════════
+   AUTH — Logout + Current User
+   ══════════════════════════════════════════════════════════════════════════ */
+
+function initLogout() {
+  var btn = document.getElementById('btn-logout');
+  if (!btn) return;
+  btn.addEventListener('click', function() {
+    fetch('/api/auth/logout', { method: 'POST' })
+      .then(function() { window.location.href = '/login'; })
+      .catch(function() { window.location.href = '/login'; });
+  });
+}
+
+function initCurrentUser() {
+  fetch('/api/auth/me')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status !== 'ok') return;
+      var user = data.user;
+      var avatar = document.getElementById('topbar-avatar');
+      if (avatar && user.name) {
+        var parts = user.name.split(' ');
+        avatar.textContent = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+      }
+    })
+    .catch(function() {});
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   USER MANAGEMENT — CRUD
+   ══════════════════════════════════════════════════════════════════════════ */
+
+function initUserManagement() {
+  var btnNovo = document.getElementById('btn-novo-usuario');
+  var modal = document.getElementById('modal-usuario');
+  var closeBtn = document.getElementById('modal-usuario-close');
+  var cancelBtn = document.getElementById('modal-usuario-cancel');
+  var form = document.getElementById('form-usuario');
+
+  if (!btnNovo || !modal) return;
+
+  function openUserModal(editUser) {
+    var titleEl = document.getElementById('modal-usuario-title');
+    var editIdEl = document.getElementById('usr-edit-id');
+    var usernameEl = document.getElementById('usr-username');
+    var passLabel = document.getElementById('usr-pass-label');
+    var passInput = document.getElementById('usr-password');
+
+    if (editUser) {
+      titleEl.textContent = 'Editar Usu\u00e1rio';
+      editIdEl.value = editUser.id;
+      usernameEl.value = editUser.username;
+      usernameEl.disabled = true;
+      document.getElementById('usr-name').value = editUser.name || '';
+      document.getElementById('usr-email').value = editUser.email || '';
+      document.getElementById('usr-role').value = editUser.role || 'viewer';
+      passLabel.textContent = 'Nova Senha (deixe vazio para manter)';
+      passInput.required = false;
+      passInput.value = '';
+    } else {
+      titleEl.textContent = 'Novo Usu\u00e1rio';
+      editIdEl.value = '';
+      usernameEl.disabled = false;
+      passLabel.textContent = 'Senha*';
+      passInput.required = true;
+      form.reset();
+    }
+    modal.style.display = 'flex';
+  }
+
+  function closeUserModal() {
+    modal.style.display = 'none';
+    form.reset();
+    document.getElementById('usr-username').disabled = false;
+  }
+
+  btnNovo.addEventListener('click', function() { openUserModal(null); });
+  closeBtn.addEventListener('click', closeUserModal);
+  cancelBtn.addEventListener('click', closeUserModal);
+  modal.addEventListener('click', function(e) { if (e.target === modal) closeUserModal(); });
+
+  // Submit
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var editId = document.getElementById('usr-edit-id').value;
+    var isEdit = editId && editId !== '';
+
+    if (isEdit) {
+      var payload = {
+        name: document.getElementById('usr-name').value,
+        email: document.getElementById('usr-email').value,
+        role: document.getElementById('usr-role').value,
+      };
+      var pass = document.getElementById('usr-password').value;
+      if (pass) payload.password = pass;
+
+      fetch('/api/users/' + editId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function(r) { return r.json(); })
+      .then(function() { closeUserModal(); loadUsersTable(); });
+    } else {
+      var pass = document.getElementById('usr-password').value;
+      if (pass.length < 6) { alert('Senha deve ter no m\u00ednimo 6 caracteres'); return; }
+
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: document.getElementById('usr-username').value,
+          name: document.getElementById('usr-name').value,
+          email: document.getElementById('usr-email').value,
+          role: document.getElementById('usr-role').value,
+          password: pass
+        })
+      }).then(function(r) { return r.json(); })
+      .then(function() { closeUserModal(); loadUsersTable(); });
+    }
+  });
+
+  // Delegate edit/delete clicks
+  document.addEventListener('click', function(e) {
+    var editBtn = e.target.closest('[data-edit-user]');
+    if (editBtn) {
+      var userData = JSON.parse(editBtn.getAttribute('data-edit-user'));
+      openUserModal(userData);
+      return;
+    }
+    var deleteBtn = e.target.closest('[data-delete-user]');
+    if (deleteBtn) {
+      var userId = deleteBtn.getAttribute('data-delete-user');
+      var userName = deleteBtn.getAttribute('data-delete-name');
+      if (confirm('Excluir usu\u00e1rio "' + userName + '"?')) {
+        fetch('/api/users/' + userId, { method: 'DELETE' })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.status === 'ok') loadUsersTable();
+            else alert(data.detail || 'Erro ao excluir');
+          });
+      }
+    }
+  });
+
+  // Load on page navigate
+  var origNavigate = window.navigateTo;
+}
+
+function loadUsersTable() {
+  fetch('/api/users')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status !== 'ok') return;
+      var tbody = document.getElementById('users-tbody');
+      if (!tbody) return;
+
+      var roleClasses = { admin: 'role-badge--admin', editor: 'role-badge--editor', viewer: 'role-badge--viewer' };
+      var roleLabels = { admin: 'ADMIN', editor: 'EDITOR', viewer: 'VIEWER' };
+
+      tbody.innerHTML = data.users.map(function(u) {
+        var roleClass = roleClasses[u.role] || '';
+        var roleLabel = roleLabels[u.role] || u.role;
+        var statusClass = u.active ? 'user-status-active' : 'user-status-inactive';
+        var statusText = u.active ? 'Ativo' : 'Inativo';
+        var userData = JSON.stringify(u).replace(/"/g, '&quot;');
+
+        return '<tr>' +
+          '<td><span class="font-mono">' + escapeHtml(u.username) + '</span></td>' +
+          '<td>' + escapeHtml(u.name || '\u2014') + '</td>' +
+          '<td>' + escapeHtml(u.email || '\u2014') + '</td>' +
+          '<td><span class="role-badge ' + roleClass + ' font-mono">' + roleLabel + '</span></td>' +
+          '<td><span class="' + statusClass + '">' + statusText + '</span></td>' +
+          '<td class="user-actions">' +
+            '<button class="user-action-btn" data-edit-user="' + userData + '">Editar</button>' +
+            '<button class="user-action-btn user-action-btn--danger" data-delete-user="' + u.id + '" data-delete-name="' + escapeHtml(u.username) + '">Excluir</button>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+    })
+    .catch(function() {});
+}
 
 /* ══════════════════════════════════════════════════════════════════════════ */
 
