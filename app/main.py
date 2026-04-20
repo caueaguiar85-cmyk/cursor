@@ -3,14 +3,15 @@ AI Supply Chain API - Santista
 Backend FastAPI com endpoints de Forecast, Inventory e Pricing
 """
 
-from fastapi import FastAPI, HTTPException, Request, Response, Cookie
+from fastapi import FastAPI, HTTPException, Request, Response, Cookie, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from pydantic import BaseModel, field_validator
 from typing import List, Optional
 from pathlib import Path
+import io
 import logging
 import traceback
 
@@ -23,6 +24,7 @@ from app.datastore import (
     get_analysis_results, get_insights, get_pipeline_status
 )
 from app.pipeline import run_full_pipeline
+from app.docgen import generate_form_docx, parse_form_docx
 from app.auth import (
     authenticate, create_session, get_session_user, destroy_session,
     get_all_users, create_user, update_user, delete_user,
@@ -637,7 +639,7 @@ LANDING_HTML = """<!DOCTYPE html>
             <!-- Exportar -->
             <div class="card-section">
               <h3 class="card-label-heading">EXPORTAR FORMUL&Aacute;RIO</h3>
-              <p class="forms-desc">Selecione a &aacute;rea e gere um formul&aacute;rio .txt com perguntas prontas para aplicar na entrevista.</p>
+              <p class="forms-desc">Selecione a &aacute;rea e gere um formul&aacute;rio Word (.docx) com perguntas prontas para aplicar na entrevista.</p>
               <div class="form-group" style="margin-top: var(--space-4)">
                 <label class="form-label">&Aacute;rea / Departamento</label>
                 <select class="form-input form-select" id="export-area">
@@ -664,18 +666,18 @@ LANDING_HTML = """<!DOCTYPE html>
                   <input class="form-input" type="text" id="export-cargo" placeholder="Cargo" />
                 </div>
               </div>
-              <button class="btn btn--primary" id="btn-export-form" style="margin-top: var(--space-4)">Exportar Formul&aacute;rio (.txt)</button>
+              <button class="btn btn--primary" id="btn-export-form" style="margin-top: var(--space-4)">Exportar Formul&aacute;rio (.docx)</button>
             </div>
 
             <!-- Importar -->
             <div class="card-section">
               <h3 class="card-label-heading">IMPORTAR FORMUL&Aacute;RIO PREENCHIDO</h3>
-              <p class="forms-desc">Importe um formul&aacute;rio j&aacute; preenchido (.txt) para criar a entrevista automaticamente com transcri&ccedil;&atilde;o.</p>
+              <p class="forms-desc">Importe o formul&aacute;rio Word (.docx) j&aacute; preenchido para criar a entrevista automaticamente com transcri&ccedil;&atilde;o.</p>
               <div class="import-dropzone" id="import-dropzone">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 <p>Arraste o arquivo aqui ou clique para selecionar</p>
-                <span class="form-hint">Aceita .txt exportados pela plataforma</span>
-                <input type="file" id="import-file" accept=".txt" style="display:none" />
+                <span class="form-hint">Aceita .docx exportados pela plataforma</span>
+                <input type="file" id="import-file" accept=".docx" style="display:none" />
               </div>
               <div class="import-preview" id="import-preview" style="display:none">
                 <span class="card-label-heading">PR&Eacute;-VISUALIZA&Ccedil;&Atilde;O</span>
@@ -1868,3 +1870,45 @@ def get_diagnostic():
 def get_insights_data():
     """Retorna insights gerados pelo pipeline."""
     return {"status": "ok", "insights": get_insights()}
+
+
+# ─── Word Document Export/Import ──────────────────────────────────────────────
+
+@app.get("/api/forms/export/{area}")
+def export_form(area: str, interviewee: str = "", role: str = "", date: str = ""):
+    """Exporta formulário de entrevista como .docx"""
+    try:
+        docx_bytes = generate_form_docx(area, interviewee, role, date)
+        filename = f"formulario_{area}_{interviewee.replace(' ', '_') or 'entrevista'}.docx"
+        return StreamingResponse(
+            io.BytesIO(docx_bytes),
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/forms/import")
+async def import_form(file: UploadFile = File(...)):
+    """Importa formulário .docx preenchido e extrai dados."""
+    if not file.filename.endswith('.docx'):
+        raise HTTPException(status_code=400, detail="Apenas arquivos .docx são aceitos")
+    content = await file.read()
+    try:
+        data = parse_form_docx(content)
+        # Auto-save as interview
+        if data["interviewee"]:
+            interview = save_interview({
+                "interviewer": data.get("interviewer", ""),
+                "interviewee": data["interviewee"],
+                "role": data.get("role", ""),
+                "department": data.get("department", ""),
+                "date": data.get("date", ""),
+                "transcript": data.get("transcript", ""),
+                "ia_ready": data.get("questions_answered", 0) > 0,
+            })
+            data["interview_id"] = interview["id"]
+        return {"status": "ok", "data": data}
+    except Exception as e:
+        logger.error(f"Import error: {e}")
+        raise HTTPException(status_code=400, detail=f"Erro ao processar arquivo: {str(e)}")

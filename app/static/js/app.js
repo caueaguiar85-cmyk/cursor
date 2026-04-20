@@ -1045,56 +1045,24 @@ setTimeout(function() {
    ══════════════════════════════════════════════════════════════════════════ */
 
 function initFormExportImport() {
-  // ── EXPORT ──
+  // ── EXPORT (.docx via backend) ──
   var btnExport = document.getElementById('btn-export-form');
   if (btnExport) {
     btnExport.addEventListener('click', function() {
       var area = document.getElementById('export-area').value;
-      var nome = document.getElementById('export-nome').value.trim() || '_______________';
-      var cargo = document.getElementById('export-cargo').value.trim() || '_______________';
+      var nome = document.getElementById('export-nome').value.trim();
+      var cargo = document.getElementById('export-cargo').value.trim();
 
       if (!area) { alert('Selecione uma \u00e1rea'); return; }
 
-      var areaData = AREA_QUESTIONS[area];
-      if (!areaData) return;
+      var params = new URLSearchParams({ interviewee: nome, role: cargo });
+      var url = '/api/forms/export/' + area + '?' + params.toString();
 
-      var today = new Date();
-      var months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-      var dateStr = today.getDate() + ' ' + months[today.getMonth()] + ' ' + today.getFullYear();
-
-      var content = '========================================\n';
-      content += 'STOKEN ADVISORY - FORMULARIO DE ENTREVISTA\n';
-      content += '========================================\n\n';
-      content += 'AREA: ' + areaData.title + '\n';
-      content += 'ENTREVISTADO: ' + nome + '\n';
-      content += 'CARGO: ' + cargo + '\n';
-      content += 'DATA: ' + dateStr + '\n';
-      content += 'ENTREVISTADOR: _______________\n\n';
-      content += '----------------------------------------\n';
-      content += 'PERGUNTAS - ' + areaData.title.toUpperCase() + '\n';
-      content += '----------------------------------------\n\n';
-
-      areaData.questions.forEach(function(q, i) {
-        content += (i + 1) + '. ' + q + '\n\n';
-        content += 'R: \n\n\n';
-      });
-
-      content += '----------------------------------------\n';
-      content += 'OBSERVACOES ADICIONAIS\n';
-      content += '----------------------------------------\n\n';
-      content += '\n\n\n';
-      content += '----------------------------------------\n';
-      content += 'FIM DO FORMULARIO\n';
-      content += '========================================\n';
-
-      // Download as .txt
-      var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-      var url = URL.createObjectURL(blob);
+      // Download .docx
       var a = document.createElement('a');
       a.href = url;
-      a.download = 'formulario_' + area + '_' + (nome.replace(/\s+/g, '_').replace(/_+/g, '_').toLowerCase()) + '.txt';
+      a.download = 'formulario_' + area + '.docx';
       a.click();
-      URL.revokeObjectURL(url);
     });
   }
 
@@ -1129,79 +1097,39 @@ function initFormExportImport() {
   });
 
   function processImportFile(file) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var text = e.target.result;
-      importedData = parseFormulario(text);
-
-      if (importedData) {
-        previewContent.textContent =
-          'Entrevistado: ' + importedData.interviewee + '\n' +
-          'Cargo: ' + importedData.role + '\n' +
-          'Area: ' + importedData.department + '\n' +
-          'Data: ' + importedData.date + '\n' +
-          'Perguntas respondidas: ' + importedData.answeredCount + '/' + importedData.totalCount + '\n\n' +
-          'Transcri\u00e7\u00e3o (' + importedData.transcript.length + ' caracteres):\n' +
-          importedData.transcript.substring(0, 500) + (importedData.transcript.length > 500 ? '...' : '');
-        dropzone.style.display = 'none';
-        preview.style.display = 'block';
-      } else {
-        alert('Formato de arquivo n\u00e3o reconhecido. Use um formul\u00e1rio exportado pela plataforma.');
-      }
-    };
-    reader.readAsText(file, 'utf-8');
-  }
-
-  function parseFormulario(text) {
-    var lines = text.split('\n');
-    var data = { interviewee: '', role: '', department: '', date: '', transcript: '', answeredCount: 0, totalCount: 0 };
-
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i].trim();
-      if (line.startsWith('ENTREVISTADO:')) data.interviewee = line.replace('ENTREVISTADO:', '').trim();
-      if (line.startsWith('CARGO:')) data.role = line.replace('CARGO:', '').trim();
-      if (line.startsWith('AREA:')) data.department = line.replace('AREA:', '').trim();
-      if (line.startsWith('DATA:')) data.date = line.replace('DATA:', '').trim();
-      if (line.startsWith('ENTREVISTADOR:')) data.interviewer = line.replace('ENTREVISTADOR:', '').trim();
+    if (!file.name.endsWith('.docx')) {
+      alert('Apenas arquivos .docx s\u00e3o aceitos');
+      return;
     }
 
-    // Extract Q&A pairs
-    var transcript = '';
-    var inQuestions = false;
-    var currentQ = '';
-    for (var j = 0; j < lines.length; j++) {
-      var l = lines[j];
-      if (l.includes('PERGUNTAS -')) { inQuestions = true; continue; }
-      if (l.includes('OBSERVACOES ADICIONAIS')) { inQuestions = false; continue; }
-      if (l.includes('FIM DO FORMULARIO')) break;
+    var formData = new FormData();
+    formData.append('file', file);
 
-      if (inQuestions) {
-        var qMatch = l.match(/^\d+\.\s+(.+)/);
-        if (qMatch) {
-          currentQ = qMatch[1];
-          data.totalCount++;
-          transcript += 'P: ' + currentQ + '\n';
-        } else if (l.startsWith('R:')) {
-          var answer = l.replace('R:', '').trim();
-          // Collect multi-line answer
-          var k = j + 1;
-          while (k < lines.length && !lines[k].match(/^\d+\.\s/) && !lines[k].includes('---')) {
-            if (lines[k].trim()) answer += ' ' + lines[k].trim();
-            k++;
-          }
-          if (answer) {
-            data.answeredCount++;
-            transcript += 'R: ' + answer + '\n\n';
-          } else {
-            transcript += 'R: (sem resposta)\n\n';
-          }
+    fetch('/api/forms/import', { method: 'POST', body: formData })
+      .then(function(r) { return r.json(); })
+      .then(function(result) {
+        if (result.status === 'ok' && result.data) {
+          importedData = result.data;
+          importedData.answeredCount = result.data.questions_answered;
+          importedData.totalCount = result.data.questions_total;
+
+          previewContent.textContent =
+            'Entrevistado: ' + (importedData.interviewee || '(vazio)') + '\n' +
+            'Cargo: ' + (importedData.role || '(vazio)') + '\n' +
+            '\u00c1rea: ' + (importedData.department || '(vazio)') + '\n' +
+            'Data: ' + (importedData.date || '(vazio)') + '\n' +
+            'Perguntas respondidas: ' + importedData.answeredCount + '/' + importedData.totalCount + '\n\n' +
+            'Transcri\u00e7\u00e3o (' + (importedData.transcript || '').length + ' caracteres):\n' +
+            (importedData.transcript || '').substring(0, 500) + ((importedData.transcript || '').length > 500 ? '...' : '');
+          dropzone.style.display = 'none';
+          preview.style.display = 'block';
+        } else {
+          alert(result.detail || 'Erro ao processar arquivo');
         }
-      }
-    }
-
-    data.transcript = transcript.trim();
-    if (!data.interviewee || data.interviewee.includes('___')) return null;
-    return data;
+      })
+      .catch(function(err) {
+        alert('Erro ao importar: ' + err.message);
+      });
   }
 
   if (btnCancel) {
@@ -1217,23 +1145,8 @@ function initFormExportImport() {
     btnConfirm.addEventListener('click', function() {
       if (!importedData) return;
 
-      // Save to backend
-      fetch('/api/interviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          interviewer: importedData.interviewer || '',
-          interviewee: importedData.interviewee,
-          role: importedData.role,
-          department: importedData.department,
-          date: importedData.date,
-          transcript: importedData.transcript,
-          ia_ready: importedData.answeredCount > 0
-        })
-      }).then(function(r) { return r.json(); })
-      .then(function(result) {
-        if (importedData.answeredCount > 0) triggerPipeline();
-      });
+      // Backend already saved during import, just trigger pipeline if needed
+      if (importedData.answeredCount > 0) triggerPipeline();
 
       // Create card visually
       var parts = importedData.interviewee.split(' ');
