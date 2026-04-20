@@ -1177,40 +1177,245 @@ LANDING_HTML = """<!DOCTYPE html>
 
 <!-- ═══ MODAL: Nova Entrevista ═══ -->
 <div class="modal-overlay" id="modal-entrevista" style="display:none">
-  <div class="modal">
+  <div class="modal modal--wide">
     <div class="modal-header">
       <h2 class="modal-title">Nova Entrevista</h2>
       <button class="modal-close" id="modal-entrevista-close">&times;</button>
     </div>
     <form class="modal-form" id="form-entrevista">
-      <div class="form-group">
-        <label class="form-label">Nome completo</label>
-        <input class="form-input" type="text" id="ent-nome" placeholder="Ex: Maria Silva" required />
-      </div>
+
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Cargo</label>
-          <input class="form-input" type="text" id="ent-cargo" placeholder="Ex: Gerente de Log&iacute;stica" required />
+          <label class="form-label">Entrevistador*</label>
+          <input class="form-input" type="text" id="ent-entrevistador" placeholder="Ex: Joao Silva" required />
         </div>
         <div class="form-group">
-          <label class="form-label">Data</label>
-          <input class="form-input" type="date" id="ent-data" required />
+          <label class="form-label">Nome do Entrevistado*</label>
+          <input class="form-input" type="text" id="ent-nome" placeholder="Ex: Maria Souza" required />
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Pilares cobertos</label>
-        <div class="form-checkboxes">
-          <label class="form-checkbox"><input type="checkbox" name="pilar" value="processos" /> Processos</label>
-          <label class="form-checkbox"><input type="checkbox" name="pilar" value="sistemas" /> Sistemas &amp; Dados</label>
-          <label class="form-checkbox"><input type="checkbox" name="pilar" value="operacoes" /> Opera&ccedil;&otilde;es</label>
-          <label class="form-checkbox"><input type="checkbox" name="pilar" value="organizacao" /> Organiza&ccedil;&atilde;o</label>
-          <label class="form-checkbox"><input type="checkbox" name="pilar" value="roadmap" /> Roadmap</label>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cargo*</label>
+          <input class="form-input" type="text" id="ent-cargo" placeholder="Ex: Gerente de Operacoes" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">&Aacute;rea / Departamento*</label>
+          <select class="form-input form-select" id="ent-area" required>
+            <option value="">Selecione a area...</option>
+            <option value="supply-chain">Supply Chain</option>
+            <option value="producao">Produ&ccedil;&atilde;o / PCP</option>
+            <option value="comercial">Comercial / Vendas</option>
+            <option value="logistica">Log&iacute;stica</option>
+            <option value="ti">Tecnologia / TI</option>
+            <option value="financeiro">Financeiro / Controladoria</option>
+            <option value="qualidade">Qualidade</option>
+            <option value="compras">Compras / Procurement</option>
+            <option value="rh">RH / Pessoas</option>
+            <option value="diretoria">Diretoria Geral</option>
+          </select>
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Notas / Transcri&ccedil;&atilde;o</label>
-        <textarea class="form-textarea" id="ent-notas" rows="4" placeholder="Cole aqui a transcri&ccedil;&atilde;o ou notas da entrevista..."></textarea>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">N&iacute;vel Hier&aacute;rquico</label>
+          <select class="form-input form-select" id="ent-nivel">
+            <option value="gerencia">Ger&ecirc;ncia</option>
+            <option value="diretoria">Diretoria</option>
+            <option value="coordenacao">Coordena&ccedil;&atilde;o</option>
+            <option value="supervisao">Supervis&atilde;o</option>
+            <option value="analista">Analista / Especialista</option>
+            <option value="c-level">C-Level</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pilar do Assessment</label>
+          <select class="form-input form-select" id="ent-pilar">
+            <option value="processos">Processos &amp; Governan&ccedil;a</option>
+            <option value="sistemas">Sistemas &amp; Dados</option>
+            <option value="operacoes">Opera&ccedil;&otilde;es &amp; Log&iacute;stica</option>
+            <option value="organizacao">Organiza&ccedil;&atilde;o &amp; Pessoas</option>
+            <option value="roadmap">Estrat&eacute;gia &amp; Roadmap</option>
+          </select>
+        </div>
       </div>
+
+      <div class="form-group">
+        <label class="form-label">Data da Entrevista*</label>
+        <input class="form-input" type="date" id="ent-data" required style="max-width: 220px" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Transcri&ccedil;&atilde;o da Entrevista</label>
+        <textarea class="form-textarea" id="ent-transcricao" rows="4" placeholder="Cole aqui a transcricao completa da entrevista..."></textarea>
+        <span class="form-hint">Adicionar a transcri&ccedil;&atilde;o habilita a an&aacute;lise por IA e altera o status para &ldquo;Conclu&iacute;da&rdquo;.</span>
+      </div>
+
+      <!-- Perguntas sugeridas por pilar -->
+      <div class="form-questions" id="form-questions">
+        <div class="form-questions-header" id="form-questions-toggle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/></svg>
+          <span class="form-questions-title" id="form-questions-title">Perguntas gerais para Processos &amp; Governan&ccedil;a</span>
+          <span class="form-questions-chevron" id="form-questions-chevron">&#8964;</span>
+        </div>
+        <div class="form-questions-list" id="form-questions-list">
+
+          <!-- Processos -->
+          <div class="question-set" data-pilar-q="processos">
+            <div class="question-item">
+              <span>Como funciona o processo de S&amp;OP atualmente? Existe valida&ccedil;&atilde;o estrat&eacute;gica de demanda?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Qual o n&iacute;vel de integra&ccedil;&atilde;o entre as &aacute;reas (Comercial, PCP, Financeiro)?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Como s&atilde;o definidos, acompanhados e revisados os KPIs da &aacute;rea?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>O planejamento de produ&ccedil;&atilde;o &eacute; feito em sistema ou em Excel? Por qu&ecirc;?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Como funciona o custeio de produtos? Qual a granularidade dispon&iacute;vel?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Existe controle de acur&aacute;cia do cronograma de produ&ccedil;&atilde;o?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+          </div>
+
+          <!-- Sistemas -->
+          <div class="question-set" data-pilar-q="sistemas" style="display:none">
+            <div class="question-item">
+              <span>Quais sistemas s&atilde;o usados no dia a dia (ERP, WMS, TMS, BI)?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Qual a vers&atilde;o do ERP e quando foi a &uacute;ltima atualiza&ccedil;&atilde;o?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Existem integra&ccedil;&otilde;es autom&aacute;ticas entre sistemas ou &eacute; tudo manual?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Como &eacute; a qualidade e confiabilidade dos dados para tomada de decis&atilde;o?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Existe algum projeto de BI, data lake ou analytics em andamento?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Como &eacute; o suporte de TI para a opera&ccedil;&atilde;o? Qual o SLA?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+          </div>
+
+          <!-- Operacoes -->
+          <div class="question-set" data-pilar-q="operacoes" style="display:none">
+            <div class="question-item">
+              <span>Como funciona o fluxo de recebimento, armazenagem e expedi&ccedil;&atilde;o?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Qual o n&iacute;vel de automa&ccedil;&atilde;o na opera&ccedil;&atilde;o (picking, embalagem, invent&aacute;rio)?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Como &eacute; feito o controle de qualidade na produ&ccedil;&atilde;o?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Qual o lead time m&eacute;dio do pedido at&eacute; entrega ao cliente?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Quais s&atilde;o os principais gargalos operacionais hoje?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Como &eacute; gerenciada a frota / transportadoras? Existe TMS?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+          </div>
+
+          <!-- Organizacao -->
+          <div class="question-set" data-pilar-q="organizacao" style="display:none">
+            <div class="question-item">
+              <span>Como est&aacute; estruturada a equipe de supply chain? Quantas pessoas?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Existe programa de capacita&ccedil;&atilde;o t&eacute;cnica para a equipe?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Como &eacute; a cultura de dados na organiza&ccedil;&atilde;o? Decis&otilde;es s&atilde;o data-driven?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Existe clareza de pap&eacute;is e responsabilidades (RACI) nos processos-chave?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Como funciona a comunica&ccedil;&atilde;o entre turnos e entre &aacute;reas?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Qual o turnover da &aacute;rea? Quais os cargos mais cr&iacute;ticos?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+          </div>
+
+          <!-- Roadmap -->
+          <div class="question-set" data-pilar-q="roadmap" style="display:none">
+            <div class="question-item">
+              <span>Existe um plano estrat&eacute;gico de supply chain documentado?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Quais iniciativas de melhoria est&atilde;o em andamento ou planejadas?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Como &eacute; priorizado o investimento entre projetos concorrentes?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>A empresa tem vis&atilde;o de supply chain digital? Qual o horizonte?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>Quais foram as maiores mudan&ccedil;as na opera&ccedil;&atilde;o nos &uacute;ltimos 2 anos?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+            <div class="question-item">
+              <span>O que a ger&ecirc;ncia considera como &ldquo;estado ideal&rdquo; em 3 anos?</span>
+              <button type="button" class="question-add">+</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Pronto para IA -->
+      <div class="form-ia-check">
+        <label class="form-checkbox">
+          <input type="checkbox" id="ent-ia-ready" />
+          <div>
+            <strong>Pronto para an&aacute;lise de IA</strong>
+            <span class="form-hint">Marque quando a transcri&ccedil;&atilde;o estiver revisada e aprovada para processamento.</span>
+          </div>
+        </label>
+      </div>
+
       <div class="modal-actions">
         <button type="button" class="btn btn--glass" id="modal-entrevista-cancel">Cancelar</button>
         <button type="submit" class="btn btn--primary">Salvar Entrevista</button>

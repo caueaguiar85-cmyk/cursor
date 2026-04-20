@@ -177,19 +177,36 @@ function initInsightFilters() {
    NOVA ENTREVISTA — Modal + dynamic card creation
    ══════════════════════════════════════════════════════════════════════════ */
 
+var PILAR_MAP = {
+  'processos':   { label: 'PROCESSOS',      color: 'var(--pilar-processos)',   title: 'Processos & Governan\u00e7a' },
+  'sistemas':    { label: 'SISTEMAS',        color: 'var(--pilar-sistemas)',    title: 'Sistemas & Dados' },
+  'operacoes':   { label: 'OPERA\u00c7\u00d5ES', color: 'var(--pilar-operacoes)', title: 'Opera\u00e7\u00f5es & Log\u00edstica' },
+  'organizacao': { label: 'ORGANIZA\u00c7\u00c3O', color: 'var(--pilar-organizacao)', title: 'Organiza\u00e7\u00e3o & Pessoas' },
+  'roadmap':     { label: 'ROADMAP',         color: 'var(--pilar-roadmap)',     title: 'Estrat\u00e9gia & Roadmap' }
+};
+
 function initNovaEntrevista() {
   var btn = document.getElementById('btn-nova-entrevista');
   var modal = document.getElementById('modal-entrevista');
   var closeBtn = document.getElementById('modal-entrevista-close');
   var cancelBtn = document.getElementById('modal-entrevista-cancel');
   var form = document.getElementById('form-entrevista');
+  var pilarSelect = document.getElementById('ent-pilar');
+  var questionsToggle = document.getElementById('form-questions-toggle');
+  var questionsBlock = document.getElementById('form-questions');
+  var questionsTitle = document.getElementById('form-questions-title');
 
   if (!btn || !modal) return;
 
   // Open modal
   btn.addEventListener('click', function() {
     modal.style.display = 'flex';
-    document.getElementById('ent-nome').focus();
+    var hoje = new Date();
+    var dataInput = document.getElementById('ent-data');
+    if (dataInput && !dataInput.value) {
+      dataInput.value = hoje.toISOString().split('T')[0];
+    }
+    document.getElementById('ent-entrevistador').focus();
   });
 
   // Close modal
@@ -200,15 +217,45 @@ function initNovaEntrevista() {
 
   closeBtn.addEventListener('click', closeModal);
   cancelBtn.addEventListener('click', closeModal);
-
-  // Close on overlay click
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) closeModal();
-  });
-
-  // Close on Escape
+  modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
+  });
+
+  // Pilar selector → update questions
+  if (pilarSelect) {
+    pilarSelect.addEventListener('change', function() {
+      var val = pilarSelect.value;
+      // Hide all question sets
+      document.querySelectorAll('.question-set').forEach(function(qs) { qs.style.display = 'none'; });
+      // Show matching
+      var target = document.querySelector('.question-set[data-pilar-q="' + val + '"]');
+      if (target) target.style.display = '';
+      // Update title
+      if (questionsTitle && PILAR_MAP[val]) {
+        questionsTitle.textContent = 'Perguntas gerais para ' + PILAR_MAP[val].title;
+      }
+    });
+  }
+
+  // Questions accordion toggle
+  if (questionsToggle && questionsBlock) {
+    questionsToggle.addEventListener('click', function() {
+      questionsBlock.classList.toggle('collapsed');
+    });
+  }
+
+  // Question "+" buttons → append to transcription
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('question-add')) {
+      var questionText = e.target.parentElement.querySelector('span').textContent;
+      var textarea = document.getElementById('ent-transcricao');
+      if (textarea) {
+        textarea.value += (textarea.value ? '\n\n' : '') + 'P: ' + questionText + '\nR: ';
+        textarea.focus();
+        textarea.scrollTop = textarea.scrollHeight;
+      }
+    }
   });
 
   // Submit form
@@ -218,12 +265,9 @@ function initNovaEntrevista() {
     var nome = document.getElementById('ent-nome').value.trim();
     var cargo = document.getElementById('ent-cargo').value.trim();
     var data = document.getElementById('ent-data').value;
-    var notas = document.getElementById('ent-notas').value.trim();
-
-    // Get selected pilares
-    var pilares = [];
-    var checks = form.querySelectorAll('input[name="pilar"]:checked');
-    checks.forEach(function(c) { pilares.push(c.value); });
+    var pilar = document.getElementById('ent-pilar').value;
+    var iaReady = document.getElementById('ent-ia-ready').checked;
+    var transcricao = document.getElementById('ent-transcricao').value.trim();
 
     if (!nome || !cargo) return;
 
@@ -239,21 +283,11 @@ function initNovaEntrevista() {
       dateStr = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
     }
 
-    // Pilar labels & colors
-    var pilarMap = {
-      'processos':   { label: 'PROCESSOS',      color: 'var(--pilar-processos)' },
-      'sistemas':    { label: 'SISTEMAS',        color: 'var(--pilar-sistemas)' },
-      'operacoes':   { label: 'OPERA\u00c7\u00d5ES',  color: 'var(--pilar-operacoes)' },
-      'organizacao': { label: 'ORGANIZA\u00c7\u00c3O', color: 'var(--pilar-organizacao)' },
-      'roadmap':     { label: 'ROADMAP',         color: 'var(--pilar-roadmap)' }
-    };
+    var pilarInfo = PILAR_MAP[pilar];
+    var tagHtml = pilarInfo ? '<span class="interview-tag" style="color:' + pilarInfo.color + '">' + pilarInfo.label + '</span>' : '';
+    var aiTag = iaReady ? 'AI ANALYZED' : (transcricao ? 'TRANSCRITO' : 'NOVO');
 
-    var tagsHtml = pilares.map(function(p) {
-      var info = pilarMap[p];
-      return info ? '<span class="interview-tag" style="color:' + info.color + '">' + info.label + '</span>' : '';
-    }).join('');
-
-    // Create card HTML
+    // Create card
     var card = document.createElement('div');
     card.className = 'interview-card';
     card.style.animation = 'fadeIn 0.3s ease-out';
@@ -264,18 +298,15 @@ function initNovaEntrevista() {
           '<span class="interview-name">' + escapeHtml(nome) + '</span>' +
           '<span class="interview-role">' + escapeHtml(cargo) + '</span>' +
         '</div>' +
-        '<span class="interview-ai-tag font-mono">NOVO</span>' +
+        '<span class="interview-ai-tag font-mono">' + aiTag + '</span>' +
       '</div>' +
-      (tagsHtml ? '<div class="interview-tags">' + tagsHtml + '</div>' : '') +
+      (tagHtml ? '<div class="interview-tags">' + tagHtml + '</div>' : '') +
       '<div class="interview-footer">' +
         '<span class="interview-date font-mono">' + dateStr + '</span>' +
       '</div>';
 
-    // Insert at beginning of grid
     var grid = document.querySelector('.interview-grid');
-    if (grid) {
-      grid.insertBefore(card, grid.firstChild);
-    }
+    if (grid) grid.insertBefore(card, grid.firstChild);
 
     closeModal();
   });
