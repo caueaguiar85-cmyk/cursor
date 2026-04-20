@@ -1774,21 +1774,6 @@ html:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
    ROADMAP PAGE
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.roadmap-summary {
-  background: var(--bg-subtle);
-  border-left: 3px solid var(--accent);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  padding: var(--space-5) var(--space-6);
-  margin-bottom: var(--space-8);
-}
-
-.roadmap-summary p {
-  font-family: var(--font-serif);
-  font-size: var(--text-base);
-  color: var(--text-muted);
-  line-height: 1.8;
-}
-
 .roadmap-phase {
   margin-bottom: var(--space-8);
 }
@@ -1863,6 +1848,15 @@ html:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
 .roadmap-item-meta {
   font-size: var(--text-xs);
   color: var(--text-muted);
+}
+
+.roadmap-item-desc {
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-top: var(--space-2);
+  font-style: italic;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
