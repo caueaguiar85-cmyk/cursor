@@ -177,6 +177,138 @@ function initInsightFilters() {
    NOVA ENTREVISTA — Modal + dynamic card creation
    ══════════════════════════════════════════════════════════════════════════ */
 
+/* ── Perguntas por Area/Departamento ────────────────────────────────────── */
+var AREA_QUESTIONS = {
+  'supply-chain': {
+    title: 'Supply Chain',
+    questions: [
+      'Como funciona o processo de S&OP atualmente? Existe valida\u00e7\u00e3o estrat\u00e9gica de demanda?',
+      'Qual o n\u00edvel de integra\u00e7\u00e3o entre as \u00e1reas (Comercial, PCP, Financeiro)?',
+      'Como s\u00e3o definidos, acompanhados e revisados os KPIs da \u00e1rea?',
+      'Quais s\u00e3o os maiores gargalos da cadeia de suprimentos hoje?',
+      'Existe visibilidade end-to-end da cadeia? Quais ferramentas s\u00e3o usadas?',
+      'Como \u00e9 feita a gest\u00e3o de riscos da cadeia (fornecedores, log\u00edstica, demanda)?'
+    ]
+  },
+  'producao': {
+    title: 'Produ\u00e7\u00e3o / PCP',
+    questions: [
+      'O planejamento de produ\u00e7\u00e3o \u00e9 feito em sistema ou em Excel? Por qu\u00ea?',
+      'Existe controle de acur\u00e1cia do cronograma de produ\u00e7\u00e3o?',
+      'Como funciona o custeio de produtos? Qual a granularidade dispon\u00edvel?',
+      'Qual o OEE m\u00e9dio das linhas? Como \u00e9 medido?',
+      'Como s\u00e3o tratadas as paradas n\u00e3o planejadas? Existe manuten\u00e7\u00e3o preventiva?',
+      'Como \u00e9 feito o sequenciamento de produ\u00e7\u00e3o? Quais crit\u00e9rios de prioriza\u00e7\u00e3o?'
+    ]
+  },
+  'comercial': {
+    title: 'Comercial / Vendas',
+    questions: [
+      'Como \u00e9 feita a previs\u00e3o de vendas? Qual a acur\u00e1cia hist\u00f3rica?',
+      'Existe processo formal de valida\u00e7\u00e3o de demanda com a produ\u00e7\u00e3o?',
+      'Como \u00e9 a pol\u00edtica de pre\u00e7os? Existe pricing din\u00e2mico?',
+      'Qual o lead time prometido ao cliente vs realizado?',
+      'Como \u00e9 gerenciado o portf\u00f3lio de clientes (ABC, segmenta\u00e7\u00e3o)?',
+      'Quais s\u00e3o as principais reclama\u00e7\u00f5es de clientes sobre entrega e atendimento?'
+    ]
+  },
+  'logistica': {
+    title: 'Log\u00edstica',
+    questions: [
+      'Como funciona o fluxo de recebimento, armazenagem e expedi\u00e7\u00e3o?',
+      'Qual o n\u00edvel de automa\u00e7\u00e3o na opera\u00e7\u00e3o (picking, embalagem, invent\u00e1rio)?',
+      'Como \u00e9 gerenciada a frota / transportadoras? Existe TMS?',
+      'Qual o custo log\u00edstico como % do faturamento?',
+      'Existe rastreabilidade de pedidos em tempo real?',
+      'Como \u00e9 feita a roteiriza\u00e7\u00e3o de entregas? Manual ou otimizada?'
+    ]
+  },
+  'ti': {
+    title: 'Tecnologia / TI',
+    questions: [
+      'Quais sistemas s\u00e3o usados no dia a dia (ERP, WMS, TMS, BI)?',
+      'Qual a vers\u00e3o do ERP e quando foi a \u00faltima atualiza\u00e7\u00e3o?',
+      'Existem integra\u00e7\u00f5es autom\u00e1ticas entre sistemas ou \u00e9 tudo manual?',
+      'Como \u00e9 a qualidade e confiabilidade dos dados para tomada de decis\u00e3o?',
+      'Existe algum projeto de BI, data lake ou analytics em andamento?',
+      'Como \u00e9 o suporte de TI para a opera\u00e7\u00e3o? Qual o SLA?'
+    ]
+  },
+  'financeiro': {
+    title: 'Financeiro / Controladoria',
+    questions: [
+      'Como \u00e9 feito o custeio de produtos? Custo padr\u00e3o ou real?',
+      'Qual a visibilidade de margem por SKU, canal e cliente?',
+      'Como s\u00e3o aprovados investimentos em supply chain? Qual o processo?',
+      'Existe an\u00e1lise de capital de giro vinculada ao estoque?',
+      'Como \u00e9 feito o or\u00e7amento anual de opera\u00e7\u00f5es? \u00c9 bottom-up ou top-down?',
+      'Quais KPIs financeiros s\u00e3o acompanhados com frequ\u00eancia mensal?'
+    ]
+  },
+  'qualidade': {
+    title: 'Qualidade',
+    questions: [
+      'Como \u00e9 feito o controle de qualidade na produ\u00e7\u00e3o? Em quais etapas?',
+      'Os checklists de qualidade s\u00e3o digitais ou em papel?',
+      'Qual o \u00edndice de retrabalho e refugo atual? Como \u00e9 medido?',
+      'Existe sistema de rastreabilidade de lotes/mat\u00e9rias-primas?',
+      'Como s\u00e3o tratadas as n\u00e3o-conformidades? Existe processo formal?',
+      'A empresa tem certifica\u00e7\u00f5es ISO? Como \u00e9 a manuten\u00e7\u00e3o?'
+    ]
+  },
+  'compras': {
+    title: 'Compras / Procurement',
+    questions: [
+      'Como \u00e9 o processo de compras? Manual, por aprova\u00e7\u00e3o ou automatizado?',
+      'Existe avalia\u00e7\u00e3o formal de fornecedores? Quais crit\u00e9rios?',
+      'Qual o lead time m\u00e9dio de compra das principais mat\u00e9rias-primas?',
+      'Existe depend\u00eancia cr\u00edtica de fornecedor \u00fanico em algum insumo?',
+      'Como \u00e9 feita a negocia\u00e7\u00e3o de contratos? Existem contratos de longo prazo?',
+      'Qual o saving anual gerado pela \u00e1rea de compras?'
+    ]
+  },
+  'rh': {
+    title: 'RH / Pessoas',
+    questions: [
+      'Como est\u00e1 estruturada a equipe de supply chain? Quantas pessoas por \u00e1rea?',
+      'Existe programa de capacita\u00e7\u00e3o t\u00e9cnica para a equipe?',
+      'Qual o turnover da \u00e1rea? Quais os cargos mais cr\u00edticos para reter?',
+      'Existe clareza de pap\u00e9is e responsabilidades (RACI) nos processos-chave?',
+      'Como funciona a comunica\u00e7\u00e3o entre turnos e entre \u00e1reas?',
+      'Existem programas de reconhecimento por performance operacional?'
+    ]
+  },
+  'diretoria': {
+    title: 'Diretoria Geral',
+    questions: [
+      'Qual a vis\u00e3o estrat\u00e9gica para supply chain nos pr\u00f3ximos 3 anos?',
+      'Quais s\u00e3o os principais riscos do neg\u00f3cio relacionados \u00e0 opera\u00e7\u00e3o?',
+      'Como \u00e9 priorizado o investimento entre projetos concorrentes?',
+      'A empresa tem vis\u00e3o de supply chain digital? Qual o horizonte?',
+      'Quais foram as maiores mudan\u00e7as na opera\u00e7\u00e3o nos \u00faltimos 2 anos?',
+      'O que a diretoria considera como \u201cestado ideal\u201d da opera\u00e7\u00e3o em 3 anos?'
+    ]
+  }
+};
+
+function updateQuestionsByArea(areaValue) {
+  var list = document.getElementById('form-questions-list');
+  var title = document.getElementById('form-questions-title');
+  if (!list) return;
+
+  var area = AREA_QUESTIONS[areaValue];
+  if (!area) {
+    title.textContent = 'Selecione a \u00e1rea para ver perguntas sugeridas';
+    list.innerHTML = '';
+    return;
+  }
+
+  title.textContent = 'Perguntas gerais para ' + area.title;
+  list.innerHTML = area.questions.map(function(q) {
+    return '<div class="question-item"><span>' + q + '</span><button type="button" class="question-add">+</button></div>';
+  }).join('');
+}
+
 var PILAR_MAP = {
   'processos':   { label: 'PROCESSOS',      color: 'var(--pilar-processos)',   title: 'Processos & Governan\u00e7a' },
   'sistemas':    { label: 'SISTEMAS',        color: 'var(--pilar-sistemas)',    title: 'Sistemas & Dados' },
@@ -222,19 +354,11 @@ function initNovaEntrevista() {
     if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
   });
 
-  // Pilar selector → update questions
-  if (pilarSelect) {
-    pilarSelect.addEventListener('change', function() {
-      var val = pilarSelect.value;
-      // Hide all question sets
-      document.querySelectorAll('.question-set').forEach(function(qs) { qs.style.display = 'none'; });
-      // Show matching
-      var target = document.querySelector('.question-set[data-pilar-q="' + val + '"]');
-      if (target) target.style.display = '';
-      // Update title
-      if (questionsTitle && PILAR_MAP[val]) {
-        questionsTitle.textContent = 'Perguntas gerais para ' + PILAR_MAP[val].title;
-      }
+  // Area selector → update questions
+  var areaSelect = document.getElementById('ent-area');
+  if (areaSelect) {
+    areaSelect.addEventListener('change', function() {
+      updateQuestionsByArea(areaSelect.value);
     });
   }
 
