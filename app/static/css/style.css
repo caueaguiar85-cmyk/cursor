@@ -1696,7 +1696,10 @@ html:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
 
 .insight-body.expanded {
   -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
   display: block;
+  overflow: visible;
+  max-height: none;
 }
 
 .insight-item.hidden,

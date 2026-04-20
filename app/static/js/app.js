@@ -198,15 +198,18 @@ function initInsightFilters() {
 
 /* ── Insight "ler mais" — expand truncated text ───────────────────────── */
 function initInsightReadmore() {
-  document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('insight-readmore')) {
+  // Bind directly to each link instead of delegation
+  var links = document.querySelectorAll('.insight-readmore');
+  links.forEach(function(link) {
+    link.addEventListener('click', function(e) {
       e.preventDefault();
-      var body = e.target.closest('.insight-body');
+      e.stopPropagation();
+      var body = link.closest('.insight-body');
       if (body) {
-        body.classList.toggle('expanded');
-        e.target.textContent = body.classList.contains('expanded') ? 'recolher' : 'ler mais';
+        var isExpanded = body.classList.toggle('expanded');
+        link.textContent = isExpanded ? 'recolher' : 'ler mais';
       }
-    }
+    });
   });
 }
 
@@ -643,7 +646,8 @@ function sendAgentMessage() {
   var loadingDiv = document.createElement('div');
   loadingDiv.className = 'agent-msg agent-msg--agent';
   loadingDiv.id = 'agent-loading';
-  loadingDiv.innerHTML = '<div class="agent-msg-label font-mono">' + (AGENT_INFO[currentAgent]?.name || 'AGENTE') + '</div><div class="agent-msg-text"><span class="agent-typing">Analisando</span></div>';
+  var agentName = (AGENT_INFO[currentAgent] && AGENT_INFO[currentAgent].name) || 'AGENTE';
+  loadingDiv.innerHTML = '<div class="agent-msg-label font-mono">' + agentName + '</div><div class="agent-msg-text"><span class="agent-typing">Analisando</span></div>';
   messagesEl.appendChild(loadingDiv);
 
   // Scroll to bottom
