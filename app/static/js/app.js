@@ -1064,6 +1064,11 @@ function initCurrentUser() {
         var parts = user.name.split(' ');
         avatar.textContent = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
       }
+      // Hide Usuarios tab for non-admins
+      if (user.role !== 'admin') {
+        var usrLink = document.querySelector('[data-page="usuarios"]');
+        if (usrLink) usrLink.style.display = 'none';
+      }
     })
     .catch(function() {});
 }
