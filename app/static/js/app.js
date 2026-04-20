@@ -214,28 +214,132 @@ function initInsightReadmore() {
   });
 }
 
-/* ── Timeline — expand/collapse items ──────────────────────────────────── */
+/* ── Timeline — interactive expand, checkboxes, status, notes ──────────── */
 function initTimeline() {
-  var items = document.querySelectorAll('.timeline-item[data-tl-status]');
+  var items = document.querySelectorAll('.timeline-item[data-tl-id]');
+  if (!items.length) return;
+
+  // Load saved state from localStorage
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem('tl-state') || '{}'); } catch(e) {}
+
   items.forEach(function(item) {
-    var headerRow = item.querySelector('.timeline-header-row');
+    var id = item.getAttribute('data-tl-id');
     var detail = item.querySelector('.timeline-detail');
-    if (!headerRow || !detail) return;
+    var headerLabel = item.querySelector('.timeline-label');
+    var select = item.querySelector('[data-tl-select]');
 
-    headerRow.addEventListener('click', function(e) {
-      // Don't toggle if clicking a button inside
-      if (e.target.closest('button') || e.target.closest('a')) return;
+    // Restore saved checkbox states
+    if (saved[id]) {
+      var checkboxes = item.querySelectorAll('.tl-checkbox');
+      if (saved[id].checks) {
+        checkboxes.forEach(function(cb, i) {
+          if (typeof saved[id].checks[i] !== 'undefined') cb.checked = saved[id].checks[i];
+        });
+      }
+      if (saved[id].status && select) {
+        select.value = saved[id].status;
+        applyTimelineStatus(item, saved[id].status);
+      }
+      if (saved[id].note) {
+        var noteInput = item.querySelector('.tl-note-input');
+        if (noteInput) noteInput.value = saved[id].note;
+      }
+      updateTimelineProgress(item);
+    }
 
-      var isOpen = detail.style.display !== 'none';
-      // Close all others
-      items.forEach(function(other) {
-        var otherDetail = other.querySelector('.timeline-detail');
-        if (otherDetail && other !== item) otherDetail.style.display = 'none';
+    // Click header to expand/collapse (but not on select or buttons)
+    if (headerLabel && detail) {
+      headerLabel.addEventListener('click', function() {
+        var isOpen = detail.style.display !== 'none';
+        items.forEach(function(other) {
+          var od = other.querySelector('.timeline-detail');
+          if (od && other !== item) od.style.display = 'none';
+        });
+        detail.style.display = isOpen ? 'none' : 'block';
       });
-      // Toggle this one
-      detail.style.display = isOpen ? 'none' : 'block';
+    }
+
+    // Status select change
+    if (select) {
+      select.addEventListener('click', function(e) { e.stopPropagation(); });
+      select.addEventListener('change', function() {
+        applyTimelineStatus(item, select.value);
+        saveTimelineState();
+      });
+    }
+
+    // Checkbox toggle
+    var checkboxes = item.querySelectorAll('.tl-checkbox');
+    checkboxes.forEach(function(cb) {
+      cb.addEventListener('click', function(e) { e.stopPropagation(); });
+      cb.addEventListener('change', function() {
+        updateTimelineProgress(item);
+        saveTimelineState();
+      });
     });
+
+    // Notes auto-save on blur
+    var noteInput = item.querySelector('.tl-note-input');
+    if (noteInput) {
+      noteInput.addEventListener('click', function(e) { e.stopPropagation(); });
+      noteInput.addEventListener('blur', function() { saveTimelineState(); });
+    }
   });
+
+  function applyTimelineStatus(item, status) {
+    item.className = 'timeline-item' + (status === 'done' ? ' timeline-item--done' : (status === 'active' ? ' timeline-item--active' : ''));
+    item.setAttribute('data-tl-status', status);
+    // Update marker
+    var marker = item.querySelector('.timeline-marker');
+    if (marker) marker.className = 'timeline-marker';
+  }
+
+  function updateTimelineProgress(item) {
+    var checkboxes = item.querySelectorAll('.tl-checkbox');
+    var total = checkboxes.length;
+    var done = 0;
+    checkboxes.forEach(function(cb) { if (cb.checked) done++; });
+    var progressText = item.querySelector('.tl-progress-text');
+    if (progressText) {
+      progressText.textContent = done + '/' + total + ' conclu\u00eddos';
+    }
+    // Update global progress in sidebar
+    updateGlobalProgress();
+  }
+
+  function saveTimelineState() {
+    var state = {};
+    items.forEach(function(item) {
+      var id = item.getAttribute('data-tl-id');
+      var checks = [];
+      item.querySelectorAll('.tl-checkbox').forEach(function(cb) { checks.push(cb.checked); });
+      var select = item.querySelector('[data-tl-select]');
+      var noteInput = item.querySelector('.tl-note-input');
+      state[id] = {
+        checks: checks,
+        status: select ? select.value : 'pending',
+        note: noteInput ? noteInput.value : ''
+      };
+    });
+    localStorage.setItem('tl-state', JSON.stringify(state));
+  }
+
+  function updateGlobalProgress() {
+    var allChecks = document.querySelectorAll('#project-timeline .tl-checkbox');
+    var total = allChecks.length;
+    var done = 0;
+    allChecks.forEach(function(cb) { if (cb.checked) done++; });
+    var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    // Update sidebar progress
+    var progressValue = document.querySelector('.sidebar-progress-value');
+    var progressFill = document.querySelector('.sidebar-progress-fill');
+    if (progressValue) progressValue.textContent = pct + '%';
+    if (progressFill) progressFill.style.width = pct + '%';
+  }
+
+  // Initial global progress update
+  updateGlobalProgress();
 }
 
 /* ── Diagnostico Actions — Rodar diag + Agente dropdown + Pilar links ── */

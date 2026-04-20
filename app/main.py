@@ -238,8 +238,8 @@ LANDING_HTML = """<!DOCTYPE html>
 
         <div class="card-section">
           <h2 class="section-heading">Timeline do projeto</h2>
-          <div class="timeline-simple">
-            <div class="timeline-item timeline-item--done" data-tl-status="done">
+          <div class="timeline-simple" id="project-timeline">
+            <div class="timeline-item timeline-item--done" data-tl-id="0" data-tl-status="done">
               <div class="timeline-marker"></div>
               <div class="timeline-content">
                 <div class="timeline-header-row">
@@ -247,27 +247,32 @@ LANDING_HTML = """<!DOCTYPE html>
                     <span class="timeline-date font-mono">01&ndash;10 mar</span>
                     <span class="timeline-label">Kickoff &amp; alinhamento</span>
                   </div>
-                  <span class="timeline-status-badge timeline-status--done font-mono">Conclu&iacute;do</span>
+                  <select class="tl-status-select font-mono" data-tl-select>
+                    <option value="done" selected>Conclu&iacute;do</option>
+                    <option value="active">Em andamento</option>
+                    <option value="pending">Pendente</option>
+                  </select>
                 </div>
                 <div class="timeline-detail" style="display:none">
                   <div class="timeline-detail-section">
                     <span class="timeline-detail-label">DELIVERABLES</span>
-                    <ul class="timeline-checklist">
-                      <li class="timeline-check timeline-check--done">Reuni&atilde;o de kickoff com diretoria</li>
-                      <li class="timeline-check timeline-check--done">Defini&ccedil;&atilde;o de escopo e pilares</li>
-                      <li class="timeline-check timeline-check--done">Cronograma aprovado</li>
-                      <li class="timeline-check timeline-check--done">Acesso a dados e sistemas concedido</li>
-                    </ul>
+                    <div class="timeline-checklist">
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" checked /> Reuni&atilde;o de kickoff com diretoria</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" checked /> Defini&ccedil;&atilde;o de escopo e pilares</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" checked /> Cronograma aprovado</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" checked /> Acesso a dados e sistemas concedido</label>
+                    </div>
                   </div>
                   <div class="timeline-detail-section">
                     <span class="timeline-detail-label">NOTAS</span>
-                    <p class="timeline-note">Diretoria engajada. Prioridade confirmada pelo CEO. Budget aprovado para consultoria de 3 meses.</p>
+                    <textarea class="tl-note-input" rows="2">Diretoria engajada. Prioridade confirmada pelo CEO. Budget aprovado para consultoria de 3 meses.</textarea>
                   </div>
+                  <div class="tl-progress-row"><span class="tl-progress-text font-mono">4/4 conclu&iacute;dos</span></div>
                 </div>
               </div>
             </div>
 
-            <div class="timeline-item timeline-item--done" data-tl-status="done">
+            <div class="timeline-item timeline-item--done" data-tl-id="1" data-tl-status="done">
               <div class="timeline-marker"></div>
               <div class="timeline-content">
                 <div class="timeline-header-row">
@@ -275,29 +280,34 @@ LANDING_HTML = """<!DOCTYPE html>
                     <span class="timeline-date font-mono">11&ndash;25 mar</span>
                     <span class="timeline-label">Entrevistas com stakeholders</span>
                   </div>
-                  <span class="timeline-status-badge timeline-status--done font-mono">Conclu&iacute;do</span>
+                  <select class="tl-status-select font-mono" data-tl-select>
+                    <option value="done" selected>Conclu&iacute;do</option>
+                    <option value="active">Em andamento</option>
+                    <option value="pending">Pendente</option>
+                  </select>
                 </div>
                 <div class="timeline-detail" style="display:none">
                   <div class="timeline-detail-section">
                     <span class="timeline-detail-label">DELIVERABLES</span>
-                    <ul class="timeline-checklist">
-                      <li class="timeline-check timeline-check--done">Entrevista Dir. Industrial (R. Mendes)</li>
-                      <li class="timeline-check timeline-check--done">Entrevista Ger. Comercial (C. Pinheiro)</li>
-                      <li class="timeline-check timeline-check--done">Entrevista Dir. TI (L. Torres)</li>
-                      <li class="timeline-check timeline-check--done">Entrevista Coord. Qualidade (A. Farias)</li>
-                      <li class="timeline-check">Entrevista CFO (pendente)</li>
-                      <li class="timeline-check">Entrevista Ger. Log&iacute;stica (pendente)</li>
-                    </ul>
+                    <div class="timeline-checklist">
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" checked /> Entrevista Dir. Industrial (R. Mendes)</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" checked /> Entrevista Ger. Comercial (C. Pinheiro)</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" checked /> Entrevista Dir. TI (L. Torres)</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" checked /> Entrevista Coord. Qualidade (A. Farias)</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Entrevista CFO (pendente)</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Entrevista Ger. Log&iacute;stica (pendente)</label>
+                    </div>
                   </div>
                   <div class="timeline-detail-section">
                     <span class="timeline-detail-label">NOTAS</span>
-                    <p class="timeline-note">4 de 6 entrevistas conclu&iacute;das. 2 pendentes por conflito de agenda. Transcri&ccedil;&otilde;es enviadas para an&aacute;lise de IA.</p>
+                    <textarea class="tl-note-input" rows="2">4 de 6 entrevistas conclu&iacute;das. 2 pendentes por conflito de agenda.</textarea>
                   </div>
+                  <div class="tl-progress-row"><span class="tl-progress-text font-mono">4/6 conclu&iacute;dos</span></div>
                 </div>
               </div>
             </div>
 
-            <div class="timeline-item timeline-item--active" data-tl-status="active">
+            <div class="timeline-item timeline-item--active" data-tl-id="2" data-tl-status="active">
               <div class="timeline-marker"></div>
               <div class="timeline-content">
                 <div class="timeline-header-row">
@@ -305,31 +315,36 @@ LANDING_HTML = """<!DOCTYPE html>
                     <span class="timeline-date font-mono">26 mar&ndash;10 abr</span>
                     <span class="timeline-label">An&aacute;lise e diagn&oacute;stico por pilar</span>
                   </div>
-                  <span class="timeline-status-badge timeline-status--active font-mono">Em andamento</span>
+                  <select class="tl-status-select font-mono" data-tl-select>
+                    <option value="done">Conclu&iacute;do</option>
+                    <option value="active" selected>Em andamento</option>
+                    <option value="pending">Pendente</option>
+                  </select>
                 </div>
                 <div class="timeline-detail" style="display:none">
                   <div class="timeline-detail-section">
                     <span class="timeline-detail-label">DELIVERABLES</span>
-                    <ul class="timeline-checklist">
-                      <li class="timeline-check timeline-check--done">Processamento de entrevistas pela IA</li>
-                      <li class="timeline-check timeline-check--done">Score preliminar por pilar</li>
-                      <li class="timeline-check">Valida&ccedil;&atilde;o de scores com cliente</li>
-                      <li class="timeline-check">Relat&oacute;rio de diagn&oacute;stico por pilar</li>
-                      <li class="timeline-check">Benchmark vs setor t&ecirc;xtil (ABIT)</li>
-                    </ul>
+                    <div class="timeline-checklist">
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" checked /> Processamento de entrevistas pela IA</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" checked /> Score preliminar por pilar</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Valida&ccedil;&atilde;o de scores com cliente</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Relat&oacute;rio de diagn&oacute;stico por pilar</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Benchmark vs setor t&ecirc;xtil (ABIT)</label>
+                    </div>
                   </div>
                   <div class="timeline-detail-section">
                     <span class="timeline-detail-label">NOTAS</span>
-                    <p class="timeline-note">Score geral 1.9/5.0. Defasagem cr&iacute;tica em Sistemas &amp; Dados (1.5). Agentes IA processando dados.</p>
+                    <textarea class="tl-note-input" rows="2">Score geral 1.9/5.0. Defasagem cr&iacute;tica em Sistemas &amp; Dados (1.5).</textarea>
                   </div>
-                  <div class="timeline-detail-actions">
+                  <div class="tl-progress-row">
+                    <span class="tl-progress-text font-mono">2/5 conclu&iacute;dos</span>
                     <button class="btn btn--ghost" onclick="navigateTo('diagnostico')">Ir para Diagn&oacute;stico &rarr;</button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="timeline-item" data-tl-status="pending">
+            <div class="timeline-item" data-tl-id="3" data-tl-status="pending">
               <div class="timeline-marker"></div>
               <div class="timeline-content">
                 <div class="timeline-header-row">
@@ -337,23 +352,32 @@ LANDING_HTML = """<!DOCTYPE html>
                     <span class="timeline-date font-mono">11&ndash;20 abr</span>
                     <span class="timeline-label">Gera&ccedil;&atilde;o de insights e roadmap</span>
                   </div>
-                  <span class="timeline-status-badge timeline-status--pending font-mono">Pendente</span>
+                  <select class="tl-status-select font-mono" data-tl-select>
+                    <option value="done">Conclu&iacute;do</option>
+                    <option value="active">Em andamento</option>
+                    <option value="pending" selected>Pendente</option>
+                  </select>
                 </div>
                 <div class="timeline-detail" style="display:none">
                   <div class="timeline-detail-section">
                     <span class="timeline-detail-label">DELIVERABLES</span>
-                    <ul class="timeline-checklist">
-                      <li class="timeline-check">Gera&ccedil;&atilde;o de insights via IA</li>
-                      <li class="timeline-check">Prioriza&ccedil;&atilde;o de quick wins por ROI</li>
-                      <li class="timeline-check">Business case por iniciativa</li>
-                      <li class="timeline-check">Roadmap de transforma&ccedil;&atilde;o em 3 ondas</li>
-                    </ul>
+                    <div class="timeline-checklist">
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Gera&ccedil;&atilde;o de insights via IA</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Prioriza&ccedil;&atilde;o de quick wins por ROI</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Business case por iniciativa</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Roadmap de transforma&ccedil;&atilde;o em 3 ondas</label>
+                    </div>
                   </div>
+                  <div class="timeline-detail-section">
+                    <span class="timeline-detail-label">NOTAS</span>
+                    <textarea class="tl-note-input" rows="2" placeholder="Adicionar notas..."></textarea>
+                  </div>
+                  <div class="tl-progress-row"><span class="tl-progress-text font-mono">0/4 conclu&iacute;dos</span></div>
                 </div>
               </div>
             </div>
 
-            <div class="timeline-item" data-tl-status="pending">
+            <div class="timeline-item" data-tl-id="4" data-tl-status="pending">
               <div class="timeline-marker"></div>
               <div class="timeline-content">
                 <div class="timeline-header-row">
@@ -361,18 +385,27 @@ LANDING_HTML = """<!DOCTYPE html>
                     <span class="timeline-date font-mono">21&ndash;25 abr</span>
                     <span class="timeline-label">Apresenta&ccedil;&atilde;o executiva</span>
                   </div>
-                  <span class="timeline-status-badge timeline-status--pending font-mono">Pendente</span>
+                  <select class="tl-status-select font-mono" data-tl-select>
+                    <option value="done">Conclu&iacute;do</option>
+                    <option value="active">Em andamento</option>
+                    <option value="pending" selected>Pendente</option>
+                  </select>
                 </div>
                 <div class="timeline-detail" style="display:none">
                   <div class="timeline-detail-section">
                     <span class="timeline-detail-label">DELIVERABLES</span>
-                    <ul class="timeline-checklist">
-                      <li class="timeline-check">Deck executivo para diretoria</li>
-                      <li class="timeline-check">Relat&oacute;rio final de diagn&oacute;stico</li>
-                      <li class="timeline-check">Sess&atilde;o de apresenta&ccedil;&atilde;o (2h)</li>
-                      <li class="timeline-check">Handoff e pr&oacute;ximos passos</li>
-                    </ul>
+                    <div class="timeline-checklist">
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Deck executivo para diretoria</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Relat&oacute;rio final de diagn&oacute;stico</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Sess&atilde;o de apresenta&ccedil;&atilde;o (2h)</label>
+                      <label class="tl-check-label"><input type="checkbox" class="tl-checkbox" /> Handoff e pr&oacute;ximos passos</label>
+                    </div>
                   </div>
+                  <div class="timeline-detail-section">
+                    <span class="timeline-detail-label">NOTAS</span>
+                    <textarea class="tl-note-input" rows="2" placeholder="Adicionar notas..."></textarea>
+                  </div>
+                  <div class="tl-progress-row"><span class="tl-progress-text font-mono">0/4 conclu&iacute;dos</span></div>
                 </div>
               </div>
             </div>
