@@ -667,7 +667,11 @@ function initNovaEntrevista() {
       '</div>';
 
     var grid = document.querySelector('.interview-grid');
-    if (grid) grid.insertBefore(card, grid.firstChild);
+    if (grid) {
+      grid.insertBefore(card, grid.firstChild);
+      var emptyState = document.getElementById('interview-empty');
+      if (emptyState) emptyState.style.display = 'none';
+    }
 
     closeModal();
   });

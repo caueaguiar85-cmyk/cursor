@@ -427,111 +427,13 @@ LANDING_HTML = """<!DOCTYPE html>
         <div class="page-header-divider"></div>
 
         <!-- Entrevistados -->
-        <div class="interview-grid">
+        <div class="interview-grid" id="interview-grid">
+          <!-- Cards ser&atilde;o adicionados via bot&atilde;o "Nova Entrevista" -->
+        </div>
 
-          <div class="interview-card">
-            <div class="interview-card-top">
-              <div class="interview-avatar">RM</div>
-              <div class="interview-info">
-                <span class="interview-name">Ricardo Mendes</span>
-                <span class="interview-role">Diretor Industrial</span>
-              </div>
-              <span class="interview-ai-tag font-mono">AI ANALYZED</span>
-            </div>
-            <div class="interview-tags">
-              <span class="interview-tag" style="color: var(--pilar-processos)">PROCESSOS</span>
-              <span class="interview-tag" style="color: var(--pilar-operacoes)">OPERA&Ccedil;&Otilde;ES</span>
-            </div>
-            <div class="interview-footer">
-              <span class="interview-date font-mono">12 mar 2026</span>
-              <span class="interview-duration font-mono">45 min</span>
-            </div>
-          </div>
-
-          <div class="interview-card">
-            <div class="interview-card-top">
-              <div class="interview-avatar">CP</div>
-              <div class="interview-info">
-                <span class="interview-name">Carla Pinheiro</span>
-                <span class="interview-role">Gerente Comercial</span>
-              </div>
-              <span class="interview-ai-tag font-mono">AI ANALYZED</span>
-            </div>
-            <div class="interview-tags">
-              <span class="interview-tag" style="color: var(--pilar-processos)">PROCESSOS</span>
-              <span class="interview-tag" style="color: var(--pilar-organizacao)">ORGANIZA&Ccedil;&Atilde;O</span>
-            </div>
-            <div class="interview-footer">
-              <span class="interview-date font-mono">14 mar 2026</span>
-              <span class="interview-duration font-mono">52 min</span>
-            </div>
-          </div>
-
-          <div class="interview-card">
-            <div class="interview-card-top">
-              <div class="interview-avatar">LT</div>
-              <div class="interview-info">
-                <span class="interview-name">Lucas Torres</span>
-                <span class="interview-role">Diretor de TI</span>
-              </div>
-              <span class="interview-ai-tag font-mono">AI ANALYZED</span>
-            </div>
-            <div class="interview-tags">
-              <span class="interview-tag" style="color: var(--pilar-sistemas)">SISTEMAS</span>
-              <span class="interview-tag" style="color: var(--pilar-roadmap)">ROADMAP</span>
-            </div>
-            <div class="interview-footer">
-              <span class="interview-date font-mono">18 mar 2026</span>
-              <span class="interview-duration font-mono">38 min</span>
-            </div>
-          </div>
-
-          <div class="interview-card">
-            <div class="interview-card-top">
-              <div class="interview-avatar">AF</div>
-              <div class="interview-info">
-                <span class="interview-name">Ana Farias</span>
-                <span class="interview-role">Coord. Qualidade</span>
-              </div>
-              <span class="interview-ai-tag font-mono">AI ANALYZED</span>
-            </div>
-            <div class="interview-tags">
-              <span class="interview-tag" style="color: var(--pilar-operacoes)">OPERA&Ccedil;&Otilde;ES</span>
-              <span class="interview-tag" style="color: var(--pilar-processos)">PROCESSOS</span>
-            </div>
-            <div class="interview-footer">
-              <span class="interview-date font-mono">20 mar 2026</span>
-              <span class="interview-duration font-mono">41 min</span>
-            </div>
-          </div>
-
-          <!-- Pendentes -->
-          <div class="interview-card interview-card--pending">
-            <div class="interview-card-top">
-              <div class="interview-avatar interview-avatar--empty">&mdash;</div>
-              <div class="interview-info">
-                <span class="interview-name" style="color: var(--text-muted)">Pendente</span>
-                <span class="interview-role">CFO / Diretor Financeiro</span>
-              </div>
-            </div>
-            <div class="interview-footer">
-              <span class="interview-date font-mono" style="color: var(--text-subtle)">A agendar</span>
-            </div>
-          </div>
-
-          <div class="interview-card interview-card--pending">
-            <div class="interview-card-top">
-              <div class="interview-avatar interview-avatar--empty">&mdash;</div>
-              <div class="interview-info">
-                <span class="interview-name" style="color: var(--text-muted)">Pendente</span>
-                <span class="interview-role">Ger. Log&iacute;stica</span>
-              </div>
-            </div>
-            <div class="interview-footer">
-              <span class="interview-date font-mono" style="color: var(--text-subtle)">A agendar</span>
-            </div>
-          </div>
-
+        <div class="empty-state" id="interview-empty">
+          <svg class="empty-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <p class="empty-text">Nenhuma entrevista cadastrada. Clique em "Nova Entrevista" para come&ccedil;ar.</p>
         </div>
 
         <!-- Mapa de Cobertura -->
@@ -548,38 +450,9 @@ LANDING_HTML = """<!DOCTYPE html>
                 <th><span class="coverage-pilar-header" style="border-color: var(--pilar-roadmap)">Roadmap</span></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="coverage-tbody">
               <tr>
-                <td class="coverage-name">R. Mendes</td>
-                <td class="coverage-cell coverage-cell--filled" style="--pilar-color: var(--pilar-processos)"><span class="font-mono">3</span></td>
-                <td class="coverage-cell coverage-cell--empty"><span class="coverage-dash">&mdash;</span></td>
-                <td class="coverage-cell coverage-cell--filled" style="--pilar-color: var(--pilar-operacoes)"><span class="font-mono">5</span></td>
-                <td class="coverage-cell coverage-cell--empty"><span class="coverage-dash">&mdash;</span></td>
-                <td class="coverage-cell coverage-cell--empty"><span class="coverage-dash">&mdash;</span></td>
-              </tr>
-              <tr>
-                <td class="coverage-name">C. Pinheiro</td>
-                <td class="coverage-cell coverage-cell--filled" style="--pilar-color: var(--pilar-processos)"><span class="font-mono">4</span></td>
-                <td class="coverage-cell coverage-cell--empty"><span class="coverage-dash">&mdash;</span></td>
-                <td class="coverage-cell coverage-cell--empty"><span class="coverage-dash">&mdash;</span></td>
-                <td class="coverage-cell coverage-cell--filled" style="--pilar-color: var(--pilar-organizacao)"><span class="font-mono">2</span></td>
-                <td class="coverage-cell coverage-cell--empty"><span class="coverage-dash">&mdash;</span></td>
-              </tr>
-              <tr>
-                <td class="coverage-name">L. Torres</td>
-                <td class="coverage-cell coverage-cell--empty"><span class="coverage-dash">&mdash;</span></td>
-                <td class="coverage-cell coverage-cell--filled" style="--pilar-color: var(--pilar-sistemas)"><span class="font-mono">6</span></td>
-                <td class="coverage-cell coverage-cell--empty"><span class="coverage-dash">&mdash;</span></td>
-                <td class="coverage-cell coverage-cell--empty"><span class="coverage-dash">&mdash;</span></td>
-                <td class="coverage-cell coverage-cell--filled" style="--pilar-color: var(--pilar-roadmap)"><span class="font-mono">3</span></td>
-              </tr>
-              <tr>
-                <td class="coverage-name">A. Farias</td>
-                <td class="coverage-cell coverage-cell--filled" style="--pilar-color: var(--pilar-processos)"><span class="font-mono">2</span></td>
-                <td class="coverage-cell coverage-cell--empty"><span class="coverage-dash">&mdash;</span></td>
-                <td class="coverage-cell coverage-cell--filled" style="--pilar-color: var(--pilar-operacoes)"><span class="font-mono">4</span></td>
-                <td class="coverage-cell coverage-cell--empty"><span class="coverage-dash">&mdash;</span></td>
-                <td class="coverage-cell coverage-cell--empty"><span class="coverage-dash">&mdash;</span></td>
+                <td class="coverage-name" colspan="6" style="text-align: center; color: var(--text-subtle); font-style: italic;">Adicione entrevistas para popular o mapa</td>
               </tr>
             </tbody>
           </table>
