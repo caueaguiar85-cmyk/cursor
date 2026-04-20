@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initDiagTabs();
   initInsightFilters();
   initAgents();
+  initNovaEntrevista();
 });
 
 /* ── Theme Toggle ──────��───────────────────────────────────────────────── */
@@ -169,6 +170,114 @@ function initInsightFilters() {
     btn.addEventListener('click', function() {
       filters.forEach(function(f) { f.classList.toggle('active', f === btn); });
     });
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NOVA ENTREVISTA — Modal + dynamic card creation
+   ══════════════════════════════════════════════════════════════════════════ */
+
+function initNovaEntrevista() {
+  var btn = document.getElementById('btn-nova-entrevista');
+  var modal = document.getElementById('modal-entrevista');
+  var closeBtn = document.getElementById('modal-entrevista-close');
+  var cancelBtn = document.getElementById('modal-entrevista-cancel');
+  var form = document.getElementById('form-entrevista');
+
+  if (!btn || !modal) return;
+
+  // Open modal
+  btn.addEventListener('click', function() {
+    modal.style.display = 'flex';
+    document.getElementById('ent-nome').focus();
+  });
+
+  // Close modal
+  function closeModal() {
+    modal.style.display = 'none';
+    form.reset();
+  }
+
+  closeBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+
+  // Close on overlay click
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) closeModal();
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
+  });
+
+  // Submit form
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var nome = document.getElementById('ent-nome').value.trim();
+    var cargo = document.getElementById('ent-cargo').value.trim();
+    var data = document.getElementById('ent-data').value;
+    var notas = document.getElementById('ent-notas').value.trim();
+
+    // Get selected pilares
+    var pilares = [];
+    var checks = form.querySelectorAll('input[name="pilar"]:checked');
+    checks.forEach(function(c) { pilares.push(c.value); });
+
+    if (!nome || !cargo) return;
+
+    // Generate initials
+    var parts = nome.split(' ');
+    var initials = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+
+    // Format date
+    var dateStr = 'Hoje';
+    if (data) {
+      var d = new Date(data + 'T12:00:00');
+      var months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+      dateStr = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    }
+
+    // Pilar labels & colors
+    var pilarMap = {
+      'processos':   { label: 'PROCESSOS',      color: 'var(--pilar-processos)' },
+      'sistemas':    { label: 'SISTEMAS',        color: 'var(--pilar-sistemas)' },
+      'operacoes':   { label: 'OPERA\u00c7\u00d5ES',  color: 'var(--pilar-operacoes)' },
+      'organizacao': { label: 'ORGANIZA\u00c7\u00c3O', color: 'var(--pilar-organizacao)' },
+      'roadmap':     { label: 'ROADMAP',         color: 'var(--pilar-roadmap)' }
+    };
+
+    var tagsHtml = pilares.map(function(p) {
+      var info = pilarMap[p];
+      return info ? '<span class="interview-tag" style="color:' + info.color + '">' + info.label + '</span>' : '';
+    }).join('');
+
+    // Create card HTML
+    var card = document.createElement('div');
+    card.className = 'interview-card';
+    card.style.animation = 'fadeIn 0.3s ease-out';
+    card.innerHTML =
+      '<div class="interview-card-top">' +
+        '<div class="interview-avatar">' + initials + '</div>' +
+        '<div class="interview-info">' +
+          '<span class="interview-name">' + escapeHtml(nome) + '</span>' +
+          '<span class="interview-role">' + escapeHtml(cargo) + '</span>' +
+        '</div>' +
+        '<span class="interview-ai-tag font-mono">NOVO</span>' +
+      '</div>' +
+      (tagsHtml ? '<div class="interview-tags">' + tagsHtml + '</div>' : '') +
+      '<div class="interview-footer">' +
+        '<span class="interview-date font-mono">' + dateStr + '</span>' +
+      '</div>';
+
+    // Insert at beginning of grid
+    var grid = document.querySelector('.interview-grid');
+    if (grid) {
+      grid.insertBefore(card, grid.firstChild);
+    }
+
+    closeModal();
   });
 }
 

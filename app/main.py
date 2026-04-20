@@ -286,7 +286,7 @@ LANDING_HTML = """<!DOCTYPE html>
             <p class="page-subtitle">Coleta de dados prim&aacute;rios com stakeholders</p>
           </div>
           <div class="page-header-actions">
-            <button class="btn btn--primary">Nova Entrevista</button>
+            <button class="btn btn--primary" id="btn-nova-entrevista">Nova Entrevista</button>
           </div>
         </div>
         <div class="page-header-divider"></div>
@@ -448,6 +448,50 @@ LANDING_HTML = """<!DOCTYPE html>
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Modal Nova Entrevista -->
+        <div class="modal-overlay" id="modal-entrevista" style="display:none">
+          <div class="modal">
+            <div class="modal-header">
+              <h2 class="modal-title">Nova Entrevista</h2>
+              <button class="modal-close" id="modal-entrevista-close">&times;</button>
+            </div>
+            <form class="modal-form" id="form-entrevista">
+              <div class="form-group">
+                <label class="form-label">Nome completo</label>
+                <input class="form-input" type="text" id="ent-nome" placeholder="Ex: Maria Silva" required />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Cargo</label>
+                  <input class="form-input" type="text" id="ent-cargo" placeholder="Ex: Gerente de Log&iacute;stica" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Data</label>
+                  <input class="form-input" type="date" id="ent-data" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Pilares cobertos</label>
+                <div class="form-checkboxes">
+                  <label class="form-checkbox"><input type="checkbox" name="pilar" value="processos" /> Processos</label>
+                  <label class="form-checkbox"><input type="checkbox" name="pilar" value="sistemas" /> Sistemas &amp; Dados</label>
+                  <label class="form-checkbox"><input type="checkbox" name="pilar" value="operacoes" /> Opera&ccedil;&otilde;es</label>
+                  <label class="form-checkbox"><input type="checkbox" name="pilar" value="organizacao" /> Organiza&ccedil;&atilde;o</label>
+                  <label class="form-checkbox"><input type="checkbox" name="pilar" value="roadmap" /> Roadmap</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Notas / Transcri&ccedil;&atilde;o</label>
+                <textarea class="form-textarea" id="ent-notas" rows="4" placeholder="Cole aqui a transcri&ccedil;&atilde;o ou notas da entrevista..."></textarea>
+              </div>
+              <div class="modal-actions">
+                <button type="button" class="btn btn--glass" id="modal-entrevista-cancel">Cancelar</button>
+                <button type="submit" class="btn btn--primary">Salvar Entrevista</button>
+              </div>
+            </form>
+          </div>
         </div>
 
       </div>
