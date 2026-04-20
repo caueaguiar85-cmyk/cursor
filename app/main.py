@@ -693,8 +693,116 @@ LANDING_HTML = """<!DOCTYPE html>
 
         <div class="page-header-divider" style="margin-top: var(--space-8)"></div>
 
+        <!-- Formulario Interativo Online -->
+        <div class="forms-section">
+          <div class="forms-section-header">
+            <h2 class="section-heading">Preencher Formul&aacute;rio Online</h2>
+            <p class="card-subtitle">Conduza a entrevista diretamente na plataforma. As respostas s&atilde;o salvas e organizadas por &aacute;rea.</p>
+          </div>
+
+          <div class="card-section" id="online-form-card">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Entrevistador*</label>
+                <input class="form-input" type="text" id="of-entrevistador" placeholder="Seu nome" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nome do Entrevistado*</label>
+                <input class="form-input" type="text" id="of-nome" placeholder="Nome completo" required />
+              </div>
+            </div>
+            <div class="form-row" style="margin-top: var(--space-4)">
+              <div class="form-group">
+                <label class="form-label">Cargo*</label>
+                <input class="form-input" type="text" id="of-cargo" placeholder="Ex: Gerente de Operacoes" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">&Aacute;rea / Departamento*</label>
+                <select class="form-input form-select" id="of-area" required>
+                  <option value="">Selecione a &aacute;rea...</option>
+                  <option value="supply-chain">Supply Chain</option>
+                  <option value="producao">Produ&ccedil;&atilde;o / PCP</option>
+                  <option value="comercial">Comercial / Vendas</option>
+                  <option value="logistica">Log&iacute;stica</option>
+                  <option value="ti">Tecnologia / TI</option>
+                  <option value="financeiro">Financeiro / Controladoria</option>
+                  <option value="qualidade">Qualidade</option>
+                  <option value="compras">Compras / Procurement</option>
+                  <option value="rh">RH / Pessoas</option>
+                  <option value="diretoria">Diretoria Geral</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row" style="margin-top: var(--space-4)">
+              <div class="form-group">
+                <label class="form-label">Data da Entrevista</label>
+                <input class="form-input" type="date" id="of-data" style="max-width:200px" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">N&iacute;vel Hier&aacute;rquico</label>
+                <select class="form-input form-select" id="of-nivel">
+                  <option value="gerencia">Ger&ecirc;ncia</option>
+                  <option value="diretoria">Diretoria</option>
+                  <option value="coordenacao">Coordena&ccedil;&atilde;o</option>
+                  <option value="supervisao">Supervis&atilde;o</option>
+                  <option value="analista">Analista / Especialista</option>
+                  <option value="c-level">C-Level</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Perguntas dinamicas -->
+            <div id="of-questions-area" style="margin-top: var(--space-6); display:none">
+              <div class="page-header-divider"></div>
+              <h3 class="section-heading" style="margin-top: var(--space-5)" id="of-questions-title">Perguntas</h3>
+              <p class="card-subtitle" style="margin-bottom: var(--space-5)">Responda cada pergunta com o m&aacute;ximo de detalhe poss&iacute;vel. Campos em branco ser&atilde;o ignorados.</p>
+              <div id="of-questions-list" class="of-questions-list"></div>
+            </div>
+
+            <!-- Observacoes -->
+            <div class="form-group" style="margin-top: var(--space-6)">
+              <label class="form-label">Observa&ccedil;&otilde;es adicionais</label>
+              <textarea class="form-textarea" id="of-observacoes" rows="3" placeholder="Anota&ccedil;&otilde;es gerais, impress&otilde;es, pontos que n&atilde;o foram cobertos pelas perguntas..."></textarea>
+            </div>
+
+            <!-- IA checkbox -->
+            <div class="form-ia-check" style="margin-top: var(--space-4)">
+              <label class="form-checkbox">
+                <input type="checkbox" id="of-ia-ready" checked />
+                <div>
+                  <strong>Enviar para an&aacute;lise de IA automaticamente</strong>
+                  <span class="form-hint">Os agentes PRISM e ARIA processar&atilde;o as respostas e alimentar&atilde;o o diagn&oacute;stico.</span>
+                </div>
+              </label>
+            </div>
+
+            <div style="margin-top: var(--space-6); display:flex; gap: var(--space-3); justify-content: flex-end">
+              <button class="btn btn--glass" id="of-btn-clear">Limpar</button>
+              <button class="btn btn--primary" id="of-btn-save">Salvar Entrevista</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-header-divider" style="margin-top: var(--space-8)"></div>
+
+        <!-- Formularios salvos por area -->
+        <h2 class="section-heading" style="margin-bottom: var(--space-5);">Formul&aacute;rios por &Aacute;rea</h2>
+        <div class="area-tabs" id="area-tabs">
+          <button class="area-tab active" data-area-filter="all">Todas</button>
+          <button class="area-tab" data-area-filter="supply-chain">Supply Chain</button>
+          <button class="area-tab" data-area-filter="producao">Produ&ccedil;&atilde;o</button>
+          <button class="area-tab" data-area-filter="comercial">Comercial</button>
+          <button class="area-tab" data-area-filter="logistica">Log&iacute;stica</button>
+          <button class="area-tab" data-area-filter="ti">TI</button>
+          <button class="area-tab" data-area-filter="financeiro">Financeiro</button>
+          <button class="area-tab" data-area-filter="qualidade">Qualidade</button>
+          <button class="area-tab" data-area-filter="compras">Compras</button>
+          <button class="area-tab" data-area-filter="rh">RH</button>
+          <button class="area-tab" data-area-filter="diretoria">Diretoria</button>
+        </div>
+
         <!-- Entrevistados -->
-        <h2 class="section-heading" style="margin-bottom: var(--space-5);">Entrevistas Cadastradas</h2>
+        <h2 class="section-heading" style="margin-top: var(--space-5); margin-bottom: var(--space-5);">Entrevistas Cadastradas</h2>
         <div class="interview-grid" id="interview-grid">
         </div>
 

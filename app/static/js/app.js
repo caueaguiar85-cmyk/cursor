@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', function() {
   initUserManagement();
   initCurrentUser();
   initFormExportImport();
+  initOnlineForm();
+  initAreaFilter();
   try { initAgents(); } catch(e) { console.warn('Agents init:', e); }
 });
 
@@ -1039,6 +1041,193 @@ setTimeout(function() {
   loadDiagnosticData();
   loadInsightsData();
 }, 500);
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ONLINE INTERVIEW FORM — fill questions interactively
+   ══════════════════════════════════════════════════════════════════════════ */
+
+function initOnlineForm() {
+  var areaSelect = document.getElementById('of-area');
+  var questionsArea = document.getElementById('of-questions-area');
+  var questionsList = document.getElementById('of-questions-list');
+  var questionsTitle = document.getElementById('of-questions-title');
+  var btnSave = document.getElementById('of-btn-save');
+  var btnClear = document.getElementById('of-btn-clear');
+  var dataInput = document.getElementById('of-data');
+
+  if (!areaSelect || !btnSave) return;
+
+  // Set today's date
+  if (dataInput && !dataInput.value) {
+    dataInput.value = new Date().toISOString().split('T')[0];
+  }
+
+  // Area change → render questions
+  areaSelect.addEventListener('change', function() {
+    var area = areaSelect.value;
+    var areaData = AREA_QUESTIONS[area];
+
+    if (!areaData) {
+      questionsArea.style.display = 'none';
+      return;
+    }
+
+    questionsTitle.textContent = 'Perguntas \u2014 ' + areaData.title;
+    questionsList.innerHTML = areaData.questions.map(function(q, i) {
+      return '<div class="of-question">' +
+        '<span class="of-question-number">PERGUNTA ' + (i + 1) + '</span>' +
+        '<p class="of-question-text">' + q + '</p>' +
+        '<textarea class="of-question-answer" data-q-index="' + i + '" rows="3" placeholder="Digite a resposta do entrevistado..."></textarea>' +
+      '</div>';
+    }).join('');
+
+    questionsArea.style.display = 'block';
+  });
+
+  // Clear form
+  btnClear.addEventListener('click', function() {
+    document.getElementById('of-entrevistador').value = '';
+    document.getElementById('of-nome').value = '';
+    document.getElementById('of-cargo').value = '';
+    areaSelect.value = '';
+    document.getElementById('of-observacoes').value = '';
+    questionsArea.style.display = 'none';
+    questionsList.innerHTML = '';
+  });
+
+  // Save
+  btnSave.addEventListener('click', function() {
+    var entrevistador = document.getElementById('of-entrevistador').value.trim();
+    var nome = document.getElementById('of-nome').value.trim();
+    var cargo = document.getElementById('of-cargo').value.trim();
+    var area = areaSelect.value;
+    var data = document.getElementById('of-data').value;
+    var nivel = document.getElementById('of-nivel').value;
+    var observacoes = document.getElementById('of-observacoes').value.trim();
+    var iaReady = document.getElementById('of-ia-ready').checked;
+
+    if (!nome || !cargo || !area) {
+      alert('Preencha nome, cargo e \u00e1rea');
+      return;
+    }
+
+    // Build transcript from answers
+    var areaData = AREA_QUESTIONS[area];
+    var transcript = '';
+    var answered = 0;
+    var total = 0;
+
+    if (areaData) {
+      var textareas = questionsList.querySelectorAll('.of-question-answer');
+      textareas.forEach(function(ta, i) {
+        total++;
+        var answer = ta.value.trim();
+        transcript += 'P: ' + areaData.questions[i] + '\n';
+        transcript += 'R: ' + (answer || '(sem resposta)') + '\n\n';
+        if (answer) answered++;
+      });
+    }
+
+    if (observacoes) {
+      transcript += 'OBSERVA\u00c7\u00d5ES:\n' + observacoes + '\n';
+    }
+
+    // Save to backend
+    btnSave.textContent = 'Salvando...';
+    btnSave.disabled = true;
+
+    fetch('/api/interviews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        interviewer: entrevistador,
+        interviewee: nome,
+        role: cargo,
+        department: area,
+        level: nivel,
+        date: data,
+        transcript: transcript,
+        ia_ready: iaReady && answered > 0
+      })
+    }).then(function(r) { return r.json(); })
+    .then(function(result) {
+      if (iaReady && answered > 0) triggerPipeline();
+
+      // Create card
+      var parts = nome.split(' ');
+      var initials = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+      var months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+      var dateStr = data ? (new Date(data + 'T12:00:00').getDate() + ' ' + months[new Date(data + 'T12:00:00').getMonth()] + ' ' + new Date(data + 'T12:00:00').getFullYear()) : 'Hoje';
+
+      var areaLabels = {
+        'supply-chain': 'SUPPLY CHAIN', 'producao': 'PRODU\u00c7\u00c3O', 'comercial': 'COMERCIAL',
+        'logistica': 'LOG\u00cdSTICA', 'ti': 'TI', 'financeiro': 'FINANCEIRO',
+        'qualidade': 'QUALIDADE', 'compras': 'COMPRAS', 'rh': 'RH', 'diretoria': 'DIRETORIA'
+      };
+
+      var card = document.createElement('div');
+      card.className = 'interview-card';
+      card.setAttribute('data-interview-area', area);
+      card.style.animation = 'fadeIn 0.3s ease-out';
+      card.innerHTML =
+        '<div class="interview-card-top">' +
+          '<div class="interview-avatar">' + initials + '</div>' +
+          '<div class="interview-info">' +
+            '<span class="interview-name">' + escapeHtml(nome) + '</span>' +
+            '<span class="interview-role">' + escapeHtml(cargo) + '</span>' +
+          '</div>' +
+          '<span class="interview-ai-tag font-mono">' + (iaReady && answered > 0 ? 'PROCESSANDO...' : answered + '/' + total + ' resp.') + '</span>' +
+        '</div>' +
+        '<div class="interview-tags">' +
+          '<span class="interview-tag" style="color: var(--text-muted)">' + (areaLabels[area] || area.toUpperCase()) + '</span>' +
+        '</div>' +
+        '<div class="interview-footer">' +
+          '<span class="interview-date font-mono">' + dateStr + '</span>' +
+          '<span class="interview-duration font-mono">' + answered + '/' + total + ' respostas</span>' +
+        '</div>';
+
+      var grid = document.getElementById('interview-grid');
+      if (grid) {
+        grid.insertBefore(card, grid.firstChild);
+        var emptyState = document.getElementById('interview-empty');
+        if (emptyState) emptyState.style.display = 'none';
+      }
+
+      // Reset form
+      btnClear.click();
+      btnSave.textContent = 'Salvar Entrevista';
+      btnSave.disabled = false;
+    })
+    .catch(function(err) {
+      alert('Erro: ' + err.message);
+      btnSave.textContent = 'Salvar Entrevista';
+      btnSave.disabled = false;
+    });
+  });
+}
+
+/* ── Area Filter — filter interview cards by department ────────────────── */
+function initAreaFilter() {
+  var tabs = document.querySelectorAll('.area-tab[data-area-filter]');
+  if (!tabs.length) return;
+
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var filter = tab.getAttribute('data-area-filter');
+      tabs.forEach(function(t) { t.classList.toggle('active', t === tab); });
+
+      var cards = document.querySelectorAll('.interview-card');
+      cards.forEach(function(card) {
+        var cardArea = card.getAttribute('data-interview-area');
+        if (filter === 'all' || cardArea === filter) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+}
 
 /* ══════════════════════════════════════════════════════════════════════════
    FORM EXPORT / IMPORT

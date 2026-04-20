@@ -1469,6 +1469,100 @@ html:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
   .forms-grid { grid-template-columns: 1fr; }
 }
 
+/* ── Online Form Questions ──────────────────────────────────────────────── */
+.of-questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.of-question {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  background: var(--bg);
+  transition: var(--transition-fast);
+}
+
+.of-question:focus-within {
+  border-color: var(--accent);
+}
+
+.of-question-number {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+  display: block;
+}
+
+.of-question-text {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: var(--space-3);
+  line-height: 1.5;
+}
+
+.of-question-answer {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  width: 100%;
+  resize: vertical;
+  min-height: 60px;
+  line-height: 1.6;
+  transition: var(--transition-fast);
+}
+
+.of-question-answer:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.of-question-answer::placeholder {
+  color: var(--text-subtle);
+  font-style: italic;
+}
+
+/* ── Area Filter Tabs ──────────────────────────────────────────────────── */
+.area-tabs {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--space-3);
+}
+
+.area-tab {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-3);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding-bottom: var(--space-3);
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.area-tab:hover { color: var(--text); }
+.area-tab.active {
+  color: var(--text);
+  font-weight: 500;
+  border-bottom-color: var(--accent);
+}
+
 /* ── Coverage Table ────────────────────────────────────────────────────── */
 .coverage-table-wrap {
   overflow-x: auto;
