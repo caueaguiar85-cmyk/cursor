@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
   initRouter();
   initDiagTabs();
   initInsightFilters();
-  initAgents();
   initNovaEntrevista();
+  try { initAgents(); } catch(e) { console.warn('Agents init:', e); }
 });
 
 /* ── Theme Toggle ──────��───────────────────────────────────────────────── */
