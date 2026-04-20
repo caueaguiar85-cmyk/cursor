@@ -627,14 +627,78 @@ LANDING_HTML = """<!DOCTYPE html>
         </div>
         <div class="page-header-divider"></div>
 
+        <!-- Formularios: Exportar / Importar -->
+        <div class="forms-section">
+          <div class="forms-section-header">
+            <h2 class="section-heading">Formul&aacute;rios de Entrevista</h2>
+            <p class="card-subtitle">Exporte formul&aacute;rios com perguntas por &aacute;rea para aplicar offline. Importe de volta com as respostas preenchidas.</p>
+          </div>
+          <div class="forms-grid">
+            <!-- Exportar -->
+            <div class="card-section">
+              <h3 class="card-label-heading">EXPORTAR FORMUL&Aacute;RIO</h3>
+              <p class="forms-desc">Selecione a &aacute;rea e gere um formul&aacute;rio .txt com perguntas prontas para aplicar na entrevista.</p>
+              <div class="form-group" style="margin-top: var(--space-4)">
+                <label class="form-label">&Aacute;rea / Departamento</label>
+                <select class="form-input form-select" id="export-area">
+                  <option value="">Selecione a &aacute;rea...</option>
+                  <option value="supply-chain">Supply Chain</option>
+                  <option value="producao">Produ&ccedil;&atilde;o / PCP</option>
+                  <option value="comercial">Comercial / Vendas</option>
+                  <option value="logistica">Log&iacute;stica</option>
+                  <option value="ti">Tecnologia / TI</option>
+                  <option value="financeiro">Financeiro / Controladoria</option>
+                  <option value="qualidade">Qualidade</option>
+                  <option value="compras">Compras / Procurement</option>
+                  <option value="rh">RH / Pessoas</option>
+                  <option value="diretoria">Diretoria Geral</option>
+                </select>
+              </div>
+              <div class="form-row" style="margin-top: var(--space-4)">
+                <div class="form-group">
+                  <label class="form-label">Entrevistado</label>
+                  <input class="form-input" type="text" id="export-nome" placeholder="Nome do entrevistado" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Cargo</label>
+                  <input class="form-input" type="text" id="export-cargo" placeholder="Cargo" />
+                </div>
+              </div>
+              <button class="btn btn--primary" id="btn-export-form" style="margin-top: var(--space-4)">Exportar Formul&aacute;rio (.txt)</button>
+            </div>
+
+            <!-- Importar -->
+            <div class="card-section">
+              <h3 class="card-label-heading">IMPORTAR FORMUL&Aacute;RIO PREENCHIDO</h3>
+              <p class="forms-desc">Importe um formul&aacute;rio j&aacute; preenchido (.txt) para criar a entrevista automaticamente com transcri&ccedil;&atilde;o.</p>
+              <div class="import-dropzone" id="import-dropzone">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <p>Arraste o arquivo aqui ou clique para selecionar</p>
+                <span class="form-hint">Aceita .txt exportados pela plataforma</span>
+                <input type="file" id="import-file" accept=".txt" style="display:none" />
+              </div>
+              <div class="import-preview" id="import-preview" style="display:none">
+                <span class="card-label-heading">PR&Eacute;-VISUALIZA&Ccedil;&Atilde;O</span>
+                <div class="import-preview-content" id="import-preview-content"></div>
+                <div class="import-preview-actions">
+                  <button class="btn btn--glass" id="btn-import-cancel">Cancelar</button>
+                  <button class="btn btn--primary" id="btn-import-confirm">Importar e Criar Entrevista</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-header-divider" style="margin-top: var(--space-8)"></div>
+
         <!-- Entrevistados -->
+        <h2 class="section-heading" style="margin-bottom: var(--space-5);">Entrevistas Cadastradas</h2>
         <div class="interview-grid" id="interview-grid">
-          <!-- Cards ser&atilde;o adicionados via bot&atilde;o "Nova Entrevista" -->
         </div>
 
         <div class="empty-state" id="interview-empty">
           <svg class="empty-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-          <p class="empty-text">Nenhuma entrevista cadastrada. Clique em "Nova Entrevista" para come&ccedil;ar.</p>
+          <p class="empty-text">Nenhuma entrevista cadastrada. Use o formul&aacute;rio acima ou clique em "Nova Entrevista".</p>
         </div>
 
         <!-- Mapa de Cobertura -->

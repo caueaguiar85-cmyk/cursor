@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initLogout();
   initUserManagement();
   initCurrentUser();
+  initFormExportImport();
   try { initAgents(); } catch(e) { console.warn('Agents init:', e); }
 });
 
@@ -1038,6 +1039,239 @@ setTimeout(function() {
   loadDiagnosticData();
   loadInsightsData();
 }, 500);
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FORM EXPORT / IMPORT
+   ══════════════════════════════════════════════════════════════════════════ */
+
+function initFormExportImport() {
+  // ── EXPORT ──
+  var btnExport = document.getElementById('btn-export-form');
+  if (btnExport) {
+    btnExport.addEventListener('click', function() {
+      var area = document.getElementById('export-area').value;
+      var nome = document.getElementById('export-nome').value.trim() || '_______________';
+      var cargo = document.getElementById('export-cargo').value.trim() || '_______________';
+
+      if (!area) { alert('Selecione uma \u00e1rea'); return; }
+
+      var areaData = AREA_QUESTIONS[area];
+      if (!areaData) return;
+
+      var today = new Date();
+      var months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+      var dateStr = today.getDate() + ' ' + months[today.getMonth()] + ' ' + today.getFullYear();
+
+      var content = '========================================\n';
+      content += 'STOKEN ADVISORY - FORMULARIO DE ENTREVISTA\n';
+      content += '========================================\n\n';
+      content += 'AREA: ' + areaData.title + '\n';
+      content += 'ENTREVISTADO: ' + nome + '\n';
+      content += 'CARGO: ' + cargo + '\n';
+      content += 'DATA: ' + dateStr + '\n';
+      content += 'ENTREVISTADOR: _______________\n\n';
+      content += '----------------------------------------\n';
+      content += 'PERGUNTAS - ' + areaData.title.toUpperCase() + '\n';
+      content += '----------------------------------------\n\n';
+
+      areaData.questions.forEach(function(q, i) {
+        content += (i + 1) + '. ' + q + '\n\n';
+        content += 'R: \n\n\n';
+      });
+
+      content += '----------------------------------------\n';
+      content += 'OBSERVACOES ADICIONAIS\n';
+      content += '----------------------------------------\n\n';
+      content += '\n\n\n';
+      content += '----------------------------------------\n';
+      content += 'FIM DO FORMULARIO\n';
+      content += '========================================\n';
+
+      // Download as .txt
+      var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'formulario_' + area + '_' + (nome.replace(/\s+/g, '_').replace(/_+/g, '_').toLowerCase()) + '.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  // ── IMPORT ──
+  var dropzone = document.getElementById('import-dropzone');
+  var fileInput = document.getElementById('import-file');
+  var preview = document.getElementById('import-preview');
+  var previewContent = document.getElementById('import-preview-content');
+  var btnCancel = document.getElementById('btn-import-cancel');
+  var btnConfirm = document.getElementById('btn-import-confirm');
+  var importedData = null;
+
+  if (!dropzone || !fileInput) return;
+
+  dropzone.addEventListener('click', function() { fileInput.click(); });
+
+  dropzone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+  });
+  dropzone.addEventListener('dragleave', function() {
+    dropzone.classList.remove('dragover');
+  });
+  dropzone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) processImportFile(e.dataTransfer.files[0]);
+  });
+
+  fileInput.addEventListener('change', function() {
+    if (fileInput.files.length) processImportFile(fileInput.files[0]);
+  });
+
+  function processImportFile(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var text = e.target.result;
+      importedData = parseFormulario(text);
+
+      if (importedData) {
+        previewContent.textContent =
+          'Entrevistado: ' + importedData.interviewee + '\n' +
+          'Cargo: ' + importedData.role + '\n' +
+          'Area: ' + importedData.department + '\n' +
+          'Data: ' + importedData.date + '\n' +
+          'Perguntas respondidas: ' + importedData.answeredCount + '/' + importedData.totalCount + '\n\n' +
+          'Transcri\u00e7\u00e3o (' + importedData.transcript.length + ' caracteres):\n' +
+          importedData.transcript.substring(0, 500) + (importedData.transcript.length > 500 ? '...' : '');
+        dropzone.style.display = 'none';
+        preview.style.display = 'block';
+      } else {
+        alert('Formato de arquivo n\u00e3o reconhecido. Use um formul\u00e1rio exportado pela plataforma.');
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  function parseFormulario(text) {
+    var lines = text.split('\n');
+    var data = { interviewee: '', role: '', department: '', date: '', transcript: '', answeredCount: 0, totalCount: 0 };
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (line.startsWith('ENTREVISTADO:')) data.interviewee = line.replace('ENTREVISTADO:', '').trim();
+      if (line.startsWith('CARGO:')) data.role = line.replace('CARGO:', '').trim();
+      if (line.startsWith('AREA:')) data.department = line.replace('AREA:', '').trim();
+      if (line.startsWith('DATA:')) data.date = line.replace('DATA:', '').trim();
+      if (line.startsWith('ENTREVISTADOR:')) data.interviewer = line.replace('ENTREVISTADOR:', '').trim();
+    }
+
+    // Extract Q&A pairs
+    var transcript = '';
+    var inQuestions = false;
+    var currentQ = '';
+    for (var j = 0; j < lines.length; j++) {
+      var l = lines[j];
+      if (l.includes('PERGUNTAS -')) { inQuestions = true; continue; }
+      if (l.includes('OBSERVACOES ADICIONAIS')) { inQuestions = false; continue; }
+      if (l.includes('FIM DO FORMULARIO')) break;
+
+      if (inQuestions) {
+        var qMatch = l.match(/^\d+\.\s+(.+)/);
+        if (qMatch) {
+          currentQ = qMatch[1];
+          data.totalCount++;
+          transcript += 'P: ' + currentQ + '\n';
+        } else if (l.startsWith('R:')) {
+          var answer = l.replace('R:', '').trim();
+          // Collect multi-line answer
+          var k = j + 1;
+          while (k < lines.length && !lines[k].match(/^\d+\.\s/) && !lines[k].includes('---')) {
+            if (lines[k].trim()) answer += ' ' + lines[k].trim();
+            k++;
+          }
+          if (answer) {
+            data.answeredCount++;
+            transcript += 'R: ' + answer + '\n\n';
+          } else {
+            transcript += 'R: (sem resposta)\n\n';
+          }
+        }
+      }
+    }
+
+    data.transcript = transcript.trim();
+    if (!data.interviewee || data.interviewee.includes('___')) return null;
+    return data;
+  }
+
+  if (btnCancel) {
+    btnCancel.addEventListener('click', function() {
+      preview.style.display = 'none';
+      dropzone.style.display = '';
+      fileInput.value = '';
+      importedData = null;
+    });
+  }
+
+  if (btnConfirm) {
+    btnConfirm.addEventListener('click', function() {
+      if (!importedData) return;
+
+      // Save to backend
+      fetch('/api/interviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interviewer: importedData.interviewer || '',
+          interviewee: importedData.interviewee,
+          role: importedData.role,
+          department: importedData.department,
+          date: importedData.date,
+          transcript: importedData.transcript,
+          ia_ready: importedData.answeredCount > 0
+        })
+      }).then(function(r) { return r.json(); })
+      .then(function(result) {
+        if (importedData.answeredCount > 0) triggerPipeline();
+      });
+
+      // Create card visually
+      var parts = importedData.interviewee.split(' ');
+      var initials = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+      var aiTag = importedData.answeredCount > 0 ? 'PROCESSANDO...' : 'IMPORTADO';
+
+      var card = document.createElement('div');
+      card.className = 'interview-card';
+      card.style.animation = 'fadeIn 0.3s ease-out';
+      card.innerHTML =
+        '<div class="interview-card-top">' +
+          '<div class="interview-avatar">' + initials + '</div>' +
+          '<div class="interview-info">' +
+            '<span class="interview-name">' + escapeHtml(importedData.interviewee) + '</span>' +
+            '<span class="interview-role">' + escapeHtml(importedData.role) + '</span>' +
+          '</div>' +
+          '<span class="interview-ai-tag font-mono">' + aiTag + '</span>' +
+        '</div>' +
+        '<div class="interview-footer">' +
+          '<span class="interview-date font-mono">' + escapeHtml(importedData.date) + '</span>' +
+          '<span class="interview-duration font-mono">' + importedData.answeredCount + '/' + importedData.totalCount + ' respostas</span>' +
+        '</div>';
+
+      var grid = document.getElementById('interview-grid');
+      if (grid) {
+        grid.insertBefore(card, grid.firstChild);
+        var emptyState = document.getElementById('interview-empty');
+        if (emptyState) emptyState.style.display = 'none';
+      }
+
+      // Reset import
+      preview.style.display = 'none';
+      dropzone.style.display = '';
+      fileInput.value = '';
+      importedData = null;
+    });
+  }
+}
 
 /* ══════════════════════════════════════════════════════════════════════════
    AUTH — Logout + Current User
