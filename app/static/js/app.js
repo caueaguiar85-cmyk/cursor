@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initDiagTabs();
   initInsightFilters();
   initInsightReadmore();
+  initTimeline();
   initNovaEntrevista();
   initDiagActions();
   try { initAgents(); } catch(e) { console.warn('Agents init:', e); }
@@ -209,6 +210,30 @@ function initInsightReadmore() {
         var isExpanded = body.classList.toggle('expanded');
         link.textContent = isExpanded ? 'recolher' : 'ler mais';
       }
+    });
+  });
+}
+
+/* ── Timeline — expand/collapse items ──────────────────────────────────── */
+function initTimeline() {
+  var items = document.querySelectorAll('.timeline-item[data-tl-status]');
+  items.forEach(function(item) {
+    var headerRow = item.querySelector('.timeline-header-row');
+    var detail = item.querySelector('.timeline-detail');
+    if (!headerRow || !detail) return;
+
+    headerRow.addEventListener('click', function(e) {
+      // Don't toggle if clicking a button inside
+      if (e.target.closest('button') || e.target.closest('a')) return;
+
+      var isOpen = detail.style.display !== 'none';
+      // Close all others
+      items.forEach(function(other) {
+        var otherDetail = other.querySelector('.timeline-detail');
+        if (otherDetail && other !== item) otherDetail.style.display = 'none';
+      });
+      // Toggle this one
+      detail.style.display = isOpen ? 'none' : 'block';
     });
   });
 }

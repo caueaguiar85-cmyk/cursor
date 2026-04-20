@@ -239,39 +239,141 @@ LANDING_HTML = """<!DOCTYPE html>
         <div class="card-section">
           <h2 class="section-heading">Timeline do projeto</h2>
           <div class="timeline-simple">
-            <div class="timeline-item timeline-item--done">
+            <div class="timeline-item timeline-item--done" data-tl-status="done">
               <div class="timeline-marker"></div>
               <div class="timeline-content">
-                <span class="timeline-date font-mono">01&ndash;10 mar</span>
-                <span class="timeline-label">Kickoff &amp; alinhamento</span>
+                <div class="timeline-header-row">
+                  <div>
+                    <span class="timeline-date font-mono">01&ndash;10 mar</span>
+                    <span class="timeline-label">Kickoff &amp; alinhamento</span>
+                  </div>
+                  <span class="timeline-status-badge timeline-status--done font-mono">Conclu&iacute;do</span>
+                </div>
+                <div class="timeline-detail" style="display:none">
+                  <div class="timeline-detail-section">
+                    <span class="timeline-detail-label">DELIVERABLES</span>
+                    <ul class="timeline-checklist">
+                      <li class="timeline-check timeline-check--done">Reuni&atilde;o de kickoff com diretoria</li>
+                      <li class="timeline-check timeline-check--done">Defini&ccedil;&atilde;o de escopo e pilares</li>
+                      <li class="timeline-check timeline-check--done">Cronograma aprovado</li>
+                      <li class="timeline-check timeline-check--done">Acesso a dados e sistemas concedido</li>
+                    </ul>
+                  </div>
+                  <div class="timeline-detail-section">
+                    <span class="timeline-detail-label">NOTAS</span>
+                    <p class="timeline-note">Diretoria engajada. Prioridade confirmada pelo CEO. Budget aprovado para consultoria de 3 meses.</p>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="timeline-item timeline-item--done">
+
+            <div class="timeline-item timeline-item--done" data-tl-status="done">
               <div class="timeline-marker"></div>
               <div class="timeline-content">
-                <span class="timeline-date font-mono">11&ndash;25 mar</span>
-                <span class="timeline-label">Entrevistas com stakeholders</span>
+                <div class="timeline-header-row">
+                  <div>
+                    <span class="timeline-date font-mono">11&ndash;25 mar</span>
+                    <span class="timeline-label">Entrevistas com stakeholders</span>
+                  </div>
+                  <span class="timeline-status-badge timeline-status--done font-mono">Conclu&iacute;do</span>
+                </div>
+                <div class="timeline-detail" style="display:none">
+                  <div class="timeline-detail-section">
+                    <span class="timeline-detail-label">DELIVERABLES</span>
+                    <ul class="timeline-checklist">
+                      <li class="timeline-check timeline-check--done">Entrevista Dir. Industrial (R. Mendes)</li>
+                      <li class="timeline-check timeline-check--done">Entrevista Ger. Comercial (C. Pinheiro)</li>
+                      <li class="timeline-check timeline-check--done">Entrevista Dir. TI (L. Torres)</li>
+                      <li class="timeline-check timeline-check--done">Entrevista Coord. Qualidade (A. Farias)</li>
+                      <li class="timeline-check">Entrevista CFO (pendente)</li>
+                      <li class="timeline-check">Entrevista Ger. Log&iacute;stica (pendente)</li>
+                    </ul>
+                  </div>
+                  <div class="timeline-detail-section">
+                    <span class="timeline-detail-label">NOTAS</span>
+                    <p class="timeline-note">4 de 6 entrevistas conclu&iacute;das. 2 pendentes por conflito de agenda. Transcri&ccedil;&otilde;es enviadas para an&aacute;lise de IA.</p>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="timeline-item timeline-item--active">
+
+            <div class="timeline-item timeline-item--active" data-tl-status="active">
               <div class="timeline-marker"></div>
               <div class="timeline-content">
-                <span class="timeline-date font-mono">26 mar&ndash;10 abr</span>
-                <span class="timeline-label">An&aacute;lise e diagn&oacute;stico por pilar</span>
+                <div class="timeline-header-row">
+                  <div>
+                    <span class="timeline-date font-mono">26 mar&ndash;10 abr</span>
+                    <span class="timeline-label">An&aacute;lise e diagn&oacute;stico por pilar</span>
+                  </div>
+                  <span class="timeline-status-badge timeline-status--active font-mono">Em andamento</span>
+                </div>
+                <div class="timeline-detail" style="display:none">
+                  <div class="timeline-detail-section">
+                    <span class="timeline-detail-label">DELIVERABLES</span>
+                    <ul class="timeline-checklist">
+                      <li class="timeline-check timeline-check--done">Processamento de entrevistas pela IA</li>
+                      <li class="timeline-check timeline-check--done">Score preliminar por pilar</li>
+                      <li class="timeline-check">Valida&ccedil;&atilde;o de scores com cliente</li>
+                      <li class="timeline-check">Relat&oacute;rio de diagn&oacute;stico por pilar</li>
+                      <li class="timeline-check">Benchmark vs setor t&ecirc;xtil (ABIT)</li>
+                    </ul>
+                  </div>
+                  <div class="timeline-detail-section">
+                    <span class="timeline-detail-label">NOTAS</span>
+                    <p class="timeline-note">Score geral 1.9/5.0. Defasagem cr&iacute;tica em Sistemas &amp; Dados (1.5). Agentes IA processando dados.</p>
+                  </div>
+                  <div class="timeline-detail-actions">
+                    <button class="btn btn--ghost" onclick="navigateTo('diagnostico')">Ir para Diagn&oacute;stico &rarr;</button>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="timeline-item">
+
+            <div class="timeline-item" data-tl-status="pending">
               <div class="timeline-marker"></div>
               <div class="timeline-content">
-                <span class="timeline-date font-mono">11&ndash;20 abr</span>
-                <span class="timeline-label">Gera&ccedil;&atilde;o de insights e roadmap</span>
+                <div class="timeline-header-row">
+                  <div>
+                    <span class="timeline-date font-mono">11&ndash;20 abr</span>
+                    <span class="timeline-label">Gera&ccedil;&atilde;o de insights e roadmap</span>
+                  </div>
+                  <span class="timeline-status-badge timeline-status--pending font-mono">Pendente</span>
+                </div>
+                <div class="timeline-detail" style="display:none">
+                  <div class="timeline-detail-section">
+                    <span class="timeline-detail-label">DELIVERABLES</span>
+                    <ul class="timeline-checklist">
+                      <li class="timeline-check">Gera&ccedil;&atilde;o de insights via IA</li>
+                      <li class="timeline-check">Prioriza&ccedil;&atilde;o de quick wins por ROI</li>
+                      <li class="timeline-check">Business case por iniciativa</li>
+                      <li class="timeline-check">Roadmap de transforma&ccedil;&atilde;o em 3 ondas</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="timeline-item">
+
+            <div class="timeline-item" data-tl-status="pending">
               <div class="timeline-marker"></div>
               <div class="timeline-content">
-                <span class="timeline-date font-mono">21&ndash;25 abr</span>
-                <span class="timeline-label">Apresenta&ccedil;&atilde;o executiva</span>
+                <div class="timeline-header-row">
+                  <div>
+                    <span class="timeline-date font-mono">21&ndash;25 abr</span>
+                    <span class="timeline-label">Apresenta&ccedil;&atilde;o executiva</span>
+                  </div>
+                  <span class="timeline-status-badge timeline-status--pending font-mono">Pendente</span>
+                </div>
+                <div class="timeline-detail" style="display:none">
+                  <div class="timeline-detail-section">
+                    <span class="timeline-detail-label">DELIVERABLES</span>
+                    <ul class="timeline-checklist">
+                      <li class="timeline-check">Deck executivo para diretoria</li>
+                      <li class="timeline-check">Relat&oacute;rio final de diagn&oacute;stico</li>
+                      <li class="timeline-check">Sess&atilde;o de apresenta&ccedil;&atilde;o (2h)</li>
+                      <li class="timeline-check">Handoff e pr&oacute;ximos passos</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
