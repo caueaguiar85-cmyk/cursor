@@ -17,6 +17,7 @@ import traceback
 from app.forecast import run_forecast
 from app.inventory import run_inventory
 from app.pricing import run_pricing
+from app.agents import get_all_agents, get_agent, run_agent
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -103,6 +104,11 @@ LANDING_HTML = """<!DOCTYPE html>
       <a class="sidebar-item" data-page="roadmap" href="#roadmap">
         <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
         <span>Roadmap</span>
+      </a>
+      <a class="sidebar-item" data-page="agentes" href="#agentes">
+        <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a2 2 0 110 4h-1.07A7.001 7.001 0 0113 23h-2a7.001 7.001 0 01-6.93-5H3a2 2 0 110-4h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/></svg>
+        <span>Agentes IA</span>
+        <span class="sidebar-badge">&middot; 7</span>
       </a>
 
       <div class="sidebar-divider" style="margin-top: auto;"></div>
@@ -999,6 +1005,143 @@ LANDING_HTML = """<!DOCTYPE html>
         </div>
       </div>
 
+      <!-- ══ PAGE: AGENTES IA ══ -->
+      <div class="page" id="page-agentes" style="display:none">
+        <div class="page-header">
+          <div class="page-header-text">
+            <h1 class="page-title">Agentes IA</h1>
+            <p class="page-subtitle">7 agentes especializados em consultoria estrat&eacute;gica de supply chain</p>
+          </div>
+          <div class="page-header-actions">
+            <span class="page-counter font-mono">7 agentes &middot; Claude API</span>
+          </div>
+        </div>
+        <div class="page-header-divider"></div>
+
+        <!-- Agent Grid -->
+        <div class="agent-grid" id="agent-grid">
+
+          <div class="agent-card" data-agent="aria">
+            <div class="agent-card-header">
+              <span class="agent-name font-mono">ARIA</span>
+              <span class="agent-status">Pronto</span>
+            </div>
+            <span class="agent-role">Diagn&oacute;stico de Maturidade</span>
+            <p class="agent-desc">Avalia maturidade operacional usando CMMI adaptado para supply chain. Scoring 1&ndash;5 por pilar.</p>
+            <div class="agent-frameworks">
+              <span class="agent-fw">CMMI</span>
+              <span class="agent-fw">SCOR</span>
+              <span class="agent-fw">Gartner</span>
+            </div>
+          </div>
+
+          <div class="agent-card" data-agent="strategos">
+            <div class="agent-card-header">
+              <span class="agent-name font-mono">STRATEGOS</span>
+              <span class="agent-status">Pronto</span>
+            </div>
+            <span class="agent-role">An&aacute;lise de Gaps Estrat&eacute;gicos</span>
+            <p class="agent-desc">Identifica gaps entre estado atual e alvo com McKinsey 7S e princ&iacute;pios MECE. Mapeia interdepend&ecirc;ncias.</p>
+            <div class="agent-frameworks">
+              <span class="agent-fw">McKinsey 7S</span>
+              <span class="agent-fw">MECE</span>
+              <span class="agent-fw">Porter</span>
+            </div>
+          </div>
+
+          <div class="agent-card" data-agent="sentinel">
+            <div class="agent-card-header">
+              <span class="agent-name font-mono">SENTINEL</span>
+              <span class="agent-status">Pronto</span>
+            </div>
+            <span class="agent-role">Avalia&ccedil;&atilde;o de Riscos</span>
+            <p class="agent-desc">Matriz de riscos probabilidade&times;impacto. Planos de mitiga&ccedil;&atilde;o com respons&aacute;veis e prazos.</p>
+            <div class="agent-frameworks">
+              <span class="agent-fw">ISO 31000</span>
+              <span class="agent-fw">COSO ERM</span>
+              <span class="agent-fw">Bow-Tie</span>
+            </div>
+          </div>
+
+          <div class="agent-card" data-agent="nexus">
+            <div class="agent-card-header">
+              <span class="agent-name font-mono">NEXUS</span>
+              <span class="agent-status">Pronto</span>
+            </div>
+            <span class="agent-role">Benchmark &amp; Intelig&ecirc;ncia de Mercado</span>
+            <p class="agent-desc">Compara performance com benchmarks ABIT/IEMI e best practices globais do setor t&ecirc;xtil.</p>
+            <div class="agent-frameworks">
+              <span class="agent-fw">Benchmarking</span>
+              <span class="agent-fw">Best Practices</span>
+              <span class="agent-fw">CI</span>
+            </div>
+          </div>
+
+          <div class="agent-card" data-agent="catalyst">
+            <div class="agent-card-header">
+              <span class="agent-name font-mono">CATALYST</span>
+              <span class="agent-status">Pronto</span>
+            </div>
+            <span class="agent-role">Business Case &amp; ROI</span>
+            <p class="agent-desc">Business cases com NPV, payback e IRR. Modela 3 cen&aacute;rios com an&aacute;lise de sensibilidade.</p>
+            <div class="agent-frameworks">
+              <span class="agent-fw">DCF/NPV</span>
+              <span class="agent-fw">IRR</span>
+              <span class="agent-fw">Monte Carlo</span>
+            </div>
+          </div>
+
+          <div class="agent-card" data-agent="prism">
+            <div class="agent-card-header">
+              <span class="agent-name font-mono">PRISM</span>
+              <span class="agent-status">Pronto</span>
+            </div>
+            <span class="agent-role">An&aacute;lise de Entrevistas</span>
+            <p class="agent-desc">Extrai temas, sentimentos, contradi&ccedil;&otilde;es e insights n&atilde;o-&oacute;bvios das transcri&ccedil;&otilde;es de entrevistas.</p>
+            <div class="agent-frameworks">
+              <span class="agent-fw">Grounded Theory</span>
+              <span class="agent-fw">Thematic</span>
+              <span class="agent-fw">NLP</span>
+            </div>
+          </div>
+
+          <div class="agent-card" data-agent="atlas">
+            <div class="agent-card-header">
+              <span class="agent-name font-mono">ATLAS</span>
+              <span class="agent-status">Pronto</span>
+            </div>
+            <span class="agent-role">Roadmap &amp; Transforma&ccedil;&atilde;o</span>
+            <p class="agent-desc">Roadmaps em ondas com depend&ecirc;ncias, milestones, OKRs e plano de change management.</p>
+            <div class="agent-frameworks">
+              <span class="agent-fw">Wave Planning</span>
+              <span class="agent-fw">OKR</span>
+              <span class="agent-fw">Kotter</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Agent Chat Panel (hidden by default) -->
+        <div class="agent-chat-panel" id="agent-chat-panel" style="display:none">
+          <div class="agent-chat-header">
+            <button class="btn btn--ghost agent-back-btn" id="agent-back-btn">&larr; Voltar</button>
+            <div class="agent-chat-title">
+              <span class="agent-chat-name font-mono" id="agent-chat-name">ARIA</span>
+              <span class="agent-chat-role" id="agent-chat-role">Diagn&oacute;stico de Maturidade</span>
+            </div>
+          </div>
+          <div class="agent-chat-messages" id="agent-chat-messages">
+            <div class="agent-welcome">
+              <p class="body-text">Envie uma mensagem para iniciar a an&aacute;lise. O agente usar&aacute; o contexto do projeto Santista S.A. automaticamente.</p>
+            </div>
+          </div>
+          <div class="agent-chat-input-area">
+            <textarea class="agent-input" id="agent-input" rows="3" placeholder="Ex: Analise o pilar de Sistemas &amp; Dados e sugira as 3 a&ccedil;&otilde;es mais urgentes..."></textarea>
+            <button class="btn btn--primary agent-send-btn" id="agent-send-btn">Enviar</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ══ PAGE: CONFIGURACOES ══ -->
       <div class="page" id="page-configuracoes" style="display:none">
         <div class="page-header">
@@ -1149,3 +1292,36 @@ def pricing(payload: RequestPayload):
     except Exception as e:
         logger.error(f"/pricing erro: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─── AI Agents ───────────────────────────────────────────────────────────────
+
+class AgentRequest(BaseModel):
+    message: str
+    context: Optional[str] = ""
+
+@app.get("/api/agents")
+def list_agents():
+    """Lista todos os agentes de IA disponíveis."""
+    agents = get_all_agents()
+    return {"status": "ok", "agents": [
+        {k: v for k, v in a.items() if k != "system_prompt"}
+        for a in agents
+    ]}
+
+@app.get("/api/agents/{agent_id}")
+def agent_detail(agent_id: str):
+    """Detalhe de um agente específico."""
+    agent = get_agent(agent_id)
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agente não encontrado")
+    return {"status": "ok", "agent": {k: v for k, v in agent.items() if k != "system_prompt"}}
+
+@app.post("/api/agents/{agent_id}/run")
+async def agent_run(agent_id: str, req: AgentRequest):
+    """Executa um agente com uma mensagem do usuário."""
+    logger.info(f"/api/agents/{agent_id}/run → mensagem: {req.message[:80]}...")
+    result = await run_agent(agent_id, req.message, req.context)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result)
+    return {"status": "ok", **result}

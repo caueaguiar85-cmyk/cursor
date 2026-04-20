@@ -1654,6 +1654,256 @@ html:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   AGENTES IA PAGE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Agent Grid ────────────────────────────────────────────────────────── */
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+.agent-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.agent-card:hover {
+  border-color: var(--accent);
+  background: var(--bg-subtle);
+}
+
+.agent-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.agent-name {
+  font-size: var(--text-lg);
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.agent-status {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--success);
+}
+
+.agent-role {
+  font-family: var(--font-serif);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.agent-desc {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.agent-frameworks {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.agent-fw {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Agent Chat Panel ──────────────────────────────────────────────────── */
+.agent-chat-panel {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--topbar-height) - var(--space-16) - var(--space-8));
+  min-height: 400px;
+}
+
+.agent-chat-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-4);
+}
+
+.agent-chat-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.agent-chat-name {
+  font-size: var(--text-lg);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.agent-chat-role {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.agent-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-4) 0;
+}
+
+.agent-welcome {
+  padding: var(--space-6);
+  background: var(--bg-subtle);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+/* ── Agent Messages ────────────────────────────────────────────────────── */
+.agent-msg {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.agent-msg-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.agent-msg--user .agent-msg-text {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.agent-msg--agent .agent-msg-text {
+  font-size: var(--text-sm);
+  color: var(--text);
+  line-height: 1.7;
+  border-left: 2px solid var(--accent);
+  padding-left: var(--space-4);
+}
+
+.agent-msg-markdown h2,
+.agent-msg-markdown h3,
+.agent-msg-markdown h4 {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.agent-msg-markdown h3 { font-size: var(--text-lg); }
+.agent-msg-markdown h4 { font-size: var(--text-base); font-weight: 600; }
+
+.agent-msg-markdown ul,
+.agent-msg-markdown ol {
+  padding-left: var(--space-5);
+  margin: var(--space-2) 0;
+}
+
+.agent-msg-markdown li {
+  margin-bottom: var(--space-1);
+}
+
+.agent-msg-markdown code {
+  background: var(--bg-subtle);
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+}
+
+.agent-msg-markdown strong { font-weight: 600; }
+
+.agent-msg-meta {
+  font-size: 10px;
+  color: var(--text-subtle);
+  margin-top: var(--space-1);
+}
+
+.agent-typing {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.agent-typing::after {
+  content: '...';
+  animation: typingDots 1s steps(3) infinite;
+}
+
+@keyframes typingDots {
+  0% { content: '.'; }
+  33% { content: '..'; }
+  66% { content: '...'; }
+}
+
+/* ── Agent Input ───────────────────────────────────────────────────────── */
+.agent-chat-input-area {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-end;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.agent-input {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  resize: none;
+  line-height: 1.5;
+  transition: var(--transition-fast);
+}
+
+.agent-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.agent-input::placeholder {
+  color: var(--text-subtle);
+}
+
+.agent-send-btn {
+  flex-shrink: 0;
+  height: fit-content;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    RESPONSIVE — ALL PAGES
    ═══════════════════════════════════════════════════════════════════════════ */
 

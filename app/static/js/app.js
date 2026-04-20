@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initRouter();
   initDiagTabs();
   initInsightFilters();
+  initAgents();
 });
 
 /* ── Theme Toggle ──────��───────────────────────────────────────────────── */
@@ -102,6 +103,7 @@ var PAGE_NAMES = {
   'diagnostico': 'Diagn\u00f3stico',
   'insights': 'Insights',
   'roadmap': 'Roadmap',
+  'agentes': 'Agentes IA',
   'configuracoes': 'Configura\u00e7\u00f5es'
 };
 
@@ -166,7 +168,182 @@ function initInsightFilters() {
   filters.forEach(function(btn) {
     btn.addEventListener('click', function() {
       filters.forEach(function(f) { f.classList.toggle('active', f === btn); });
-      // Future: actual filtering logic
     });
   });
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   AI AGENTS — Card selection + Chat interface
+   ══════════════════════════════════════════════════════════════════════════ */
+
+var currentAgent = null;
+
+function initAgents() {
+  var cards = document.querySelectorAll('.agent-card[data-agent]');
+  var chatPanel = document.getElementById('agent-chat-panel');
+  var agentGrid = document.getElementById('agent-grid');
+  var backBtn = document.getElementById('agent-back-btn');
+  var sendBtn = document.getElementById('agent-send-btn');
+  var input = document.getElementById('agent-input');
+
+  if (!cards.length) return;
+
+  // Click agent card → open chat
+  cards.forEach(function(card) {
+    card.addEventListener('click', function() {
+      currentAgent = card.getAttribute('data-agent');
+      openAgentChat(currentAgent);
+    });
+  });
+
+  // Back button
+  if (backBtn) {
+    backBtn.addEventListener('click', function() {
+      chatPanel.style.display = 'none';
+      agentGrid.style.display = '';
+      currentAgent = null;
+    });
+  }
+
+  // Send message
+  if (sendBtn && input) {
+    sendBtn.addEventListener('click', function() { sendAgentMessage(); });
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendAgentMessage();
+      }
+    });
+  }
+}
+
+var AGENT_INFO = {
+  'aria':      { name: 'ARIA',      role: 'Diagn\u00f3stico de Maturidade' },
+  'strategos': { name: 'STRATEGOS', role: 'An\u00e1lise de Gaps Estrat\u00e9gicos' },
+  'sentinel':  { name: 'SENTINEL',  role: 'Avalia\u00e7\u00e3o de Riscos' },
+  'nexus':     { name: 'NEXUS',     role: 'Benchmark & Intelig\u00eancia de Mercado' },
+  'catalyst':  { name: 'CATALYST',  role: 'Business Case & ROI' },
+  'prism':     { name: 'PRISM',     role: 'An\u00e1lise de Entrevistas' },
+  'atlas':     { name: 'ATLAS',     role: 'Roadmap & Transforma\u00e7\u00e3o' }
+};
+
+function openAgentChat(agentId) {
+  var chatPanel = document.getElementById('agent-chat-panel');
+  var agentGrid = document.getElementById('agent-grid');
+  var nameEl = document.getElementById('agent-chat-name');
+  var roleEl = document.getElementById('agent-chat-role');
+  var messagesEl = document.getElementById('agent-chat-messages');
+
+  var info = AGENT_INFO[agentId];
+  if (!info) return;
+
+  nameEl.textContent = info.name;
+  roleEl.textContent = info.role;
+
+  // Clear previous messages, show welcome
+  messagesEl.innerHTML = '<div class="agent-welcome"><p class="body-text">' +
+    'Agente <strong>' + info.name + '</strong> pronto. Envie sua pergunta sobre o projeto Santista S.A. ' +
+    'O agente usar\u00e1 frameworks de consultoria de classe mundial para responder.</p></div>';
+
+  agentGrid.style.display = 'none';
+  chatPanel.style.display = 'flex';
+
+  document.getElementById('agent-input').focus();
+}
+
+function sendAgentMessage() {
+  var input = document.getElementById('agent-input');
+  var messagesEl = document.getElementById('agent-chat-messages');
+  var sendBtn = document.getElementById('agent-send-btn');
+  var message = input.value.trim();
+
+  if (!message || !currentAgent) return;
+
+  // Add user message
+  var userDiv = document.createElement('div');
+  userDiv.className = 'agent-msg agent-msg--user';
+  userDiv.innerHTML = '<div class="agent-msg-label">VOC\u00ca</div><div class="agent-msg-text">' + escapeHtml(message) + '</div>';
+  messagesEl.appendChild(userDiv);
+
+  // Clear input
+  input.value = '';
+  sendBtn.textContent = 'Processando...';
+  sendBtn.disabled = true;
+
+  // Add loading indicator
+  var loadingDiv = document.createElement('div');
+  loadingDiv.className = 'agent-msg agent-msg--agent';
+  loadingDiv.id = 'agent-loading';
+  loadingDiv.innerHTML = '<div class="agent-msg-label font-mono">' + (AGENT_INFO[currentAgent]?.name || 'AGENTE') + '</div><div class="agent-msg-text"><span class="agent-typing">Analisando</span></div>';
+  messagesEl.appendChild(loadingDiv);
+
+  // Scroll to bottom
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  // Call API
+  fetch('/api/agents/' + currentAgent + '/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: message })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    var loading = document.getElementById('agent-loading');
+    if (loading) loading.remove();
+
+    var agentDiv = document.createElement('div');
+    agentDiv.className = 'agent-msg agent-msg--agent';
+
+    if (data.status === 'ok' && data.response) {
+      agentDiv.innerHTML = '<div class="agent-msg-label font-mono">' + (data.agent_name || 'AGENTE') +
+        '</div><div class="agent-msg-text agent-msg-markdown">' + renderMarkdown(data.response) + '</div>' +
+        '<div class="agent-msg-meta font-mono">' + (data.usage ? data.usage.input_tokens + ' in \u00b7 ' + data.usage.output_tokens + ' out' : '') + '</div>';
+    } else {
+      var errMsg = data.detail ? (data.detail.error || data.detail) : 'Erro desconhecido';
+      var hint = data.detail && data.detail.hint ? '<br><span style="color:var(--text-muted)">' + data.detail.hint + '</span>' : '';
+      agentDiv.innerHTML = '<div class="agent-msg-label font-mono">ERRO</div><div class="agent-msg-text" style="color:var(--danger)">' + escapeHtml(String(errMsg)) + hint + '</div>';
+    }
+
+    messagesEl.appendChild(agentDiv);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  })
+  .catch(function(err) {
+    var loading = document.getElementById('agent-loading');
+    if (loading) loading.remove();
+
+    var errDiv = document.createElement('div');
+    errDiv.className = 'agent-msg agent-msg--agent';
+    errDiv.innerHTML = '<div class="agent-msg-label font-mono">ERRO</div><div class="agent-msg-text" style="color:var(--danger)">' + escapeHtml(err.message) + '</div>';
+    messagesEl.appendChild(errDiv);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  })
+  .finally(function() {
+    sendBtn.textContent = 'Enviar';
+    sendBtn.disabled = false;
+    input.focus();
+  });
+}
+
+function escapeHtml(text) {
+  var d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML;
+}
+
+function renderMarkdown(text) {
+  // Basic markdown → HTML
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/^### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^## (.+)$/gm, '<h3 class="section-heading">$1</h3>')
+    .replace(/^# (.+)$/gm, '<h2 class="section-heading">$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code class="font-mono">$1</code>')
+    .replace(/^\- (.+)$/gm, '<li>$1</li>')
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>').replace(/$/, '</p>');
 }
