@@ -9,7 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
   initRouter();
   initDiagTabs();
   initInsightFilters();
+  initInsightReadmore();
   initNovaEntrevista();
+  initDiagActions();
   try { initAgents(); } catch(e) { console.warn('Agents init:', e); }
 });
 
@@ -161,15 +163,118 @@ function initDiagTabs() {
   });
 }
 
-/* ── Insight Filters ───────────────────────────────────────────────────── */
+/* ── Insight Filters (functional) ──────────────────────────────────────── */
 function initInsightFilters() {
   var filters = document.querySelectorAll('.insight-filter');
   if (!filters.length) return;
 
   filters.forEach(function(btn) {
     btn.addEventListener('click', function() {
+      var category = btn.getAttribute('data-filter');
       filters.forEach(function(f) { f.classList.toggle('active', f === btn); });
+
+      var items = document.querySelectorAll('.insight-item');
+      var dividers = document.querySelectorAll('.insight-divider');
+
+      items.forEach(function(item) {
+        if (category === 'all' || item.getAttribute('data-category') === category) {
+          item.classList.remove('hidden');
+        } else {
+          item.classList.add('hidden');
+        }
+      });
+
+      // Show/hide dividers based on visible adjacent items
+      dividers.forEach(function(d) {
+        var prev = d.previousElementSibling;
+        var next = d.nextElementSibling;
+        var prevVisible = prev && !prev.classList.contains('hidden') && prev.classList.contains('insight-item');
+        var nextVisible = next && !next.classList.contains('hidden') && next.classList.contains('insight-item');
+        d.classList.toggle('hidden', !prevVisible || !nextVisible);
+      });
     });
+  });
+}
+
+/* ── Insight "ler mais" — expand truncated text ───────────────────────── */
+function initInsightReadmore() {
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('insight-readmore')) {
+      e.preventDefault();
+      var body = e.target.closest('.insight-body');
+      if (body) {
+        body.classList.toggle('expanded');
+        e.target.textContent = body.classList.contains('expanded') ? 'recolher' : 'ler mais';
+      }
+    }
+  });
+}
+
+/* ── Diagnostico Actions — Rodar diag + Agente dropdown + Pilar links ── */
+function initDiagActions() {
+  // "Rodar diagnóstico completo" → navigate to ARIA agent with full diagnostic prompt
+  var btnRodar = document.getElementById('btn-rodar-diag');
+  if (btnRodar) {
+    btnRodar.addEventListener('click', function() {
+      navigateTo('agentes');
+      setTimeout(function() {
+        // Open ARIA agent chat
+        currentAgent = 'aria';
+        openAgentChat('aria');
+        // Pre-fill the input
+        var input = document.getElementById('agent-input');
+        if (input) {
+          input.value = 'Execute o diagn\u00f3stico completo de maturidade da Santista S.A. nos 5 pilares (Processos, Sistemas & Dados, Opera\u00e7\u00f5es, Organiza\u00e7\u00e3o, Roadmap). Para cada pilar, forne\u00e7a: score de 1 a 5, justificativa, gap vs benchmark do setor t\u00eaxtil, e top 3 a\u00e7\u00f5es recomendadas.';
+        }
+      }, 100);
+    });
+  }
+
+  // "Agente individual ▾" dropdown
+  var btnDropdown = document.getElementById('btn-agente-dropdown');
+  var dropdown = document.getElementById('dropdown-agentes');
+  if (btnDropdown && dropdown) {
+    btnDropdown.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', function() {
+      dropdown.style.display = 'none';
+    });
+
+    // Dropdown items → navigate to agent
+    dropdown.querySelectorAll('[data-goto-agent]').forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        var agentId = item.getAttribute('data-goto-agent');
+        dropdown.style.display = 'none';
+        navigateTo('agentes');
+        setTimeout(function() {
+          currentAgent = agentId;
+          openAgentChat(agentId);
+        }, 100);
+      });
+    });
+  }
+
+  // "Gerar agora →" on pilar cards → navigate to ARIA with pilar-specific prompt
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest('[data-run-pilar]');
+    if (link) {
+      e.preventDefault();
+      var pilar = link.getAttribute('data-run-pilar');
+      navigateTo('agentes');
+      setTimeout(function() {
+        currentAgent = 'aria';
+        openAgentChat('aria');
+        var input = document.getElementById('agent-input');
+        if (input) {
+          input.value = 'Analise o pilar "' + pilar + '" da Santista S.A. em detalhe. Forne\u00e7a: score CMMI (1-5), justificativa com evid\u00eancias, gap vs benchmark ABIT, e as 5 a\u00e7\u00f5es mais urgentes priorizadas por impacto.';
+        }
+      }, 100);
+    }
   });
 }
 

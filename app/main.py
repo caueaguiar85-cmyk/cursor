@@ -460,8 +460,19 @@ LANDING_HTML = """<!DOCTYPE html>
             <p class="page-subtitle">Centro de an&aacute;lise estrat&eacute;gica</p>
           </div>
           <div class="page-header-actions">
-            <button class="btn btn--ghost">&#9655; Rodar diagn&oacute;stico completo</button>
-            <button class="btn btn--ghost">Agente individual &#9662;</button>
+            <button class="btn btn--ghost" id="btn-rodar-diag">&#9655; Rodar diagn&oacute;stico completo</button>
+            <div class="dropdown-wrap">
+              <button class="btn btn--ghost" id="btn-agente-dropdown">Agente individual &#9662;</button>
+              <div class="dropdown-menu" id="dropdown-agentes" style="display:none">
+                <a class="dropdown-item" data-goto-agent="aria">ARIA &mdash; Diagn&oacute;stico de Maturidade</a>
+                <a class="dropdown-item" data-goto-agent="strategos">STRATEGOS &mdash; Gap Analysis</a>
+                <a class="dropdown-item" data-goto-agent="sentinel">SENTINEL &mdash; Riscos</a>
+                <a class="dropdown-item" data-goto-agent="nexus">NEXUS &mdash; Benchmark</a>
+                <a class="dropdown-item" data-goto-agent="catalyst">CATALYST &mdash; Business Case</a>
+                <a class="dropdown-item" data-goto-agent="prism">PRISM &mdash; Entrevistas</a>
+                <a class="dropdown-item" data-goto-agent="atlas">ATLAS &mdash; Roadmap</a>
+              </div>
+            </div>
           </div>
         </div>
         <div class="page-header-divider"></div>
@@ -614,7 +625,7 @@ LANDING_HTML = """<!DOCTYPE html>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span>Aguardando an&aacute;lise</span>
               </div>
-              <a class="pilar-card-action" href="#">Gerar agora &rarr;</a>
+              <a class="pilar-card-action" href="#" data-run-pilar="Processos">Gerar agora &rarr;</a>
             </div>
             <div class="pilar-card" style="border-top-color: var(--pilar-sistemas)">
               <h3 class="pilar-card-title">Sistemas &amp; Dados</h3>
@@ -622,7 +633,7 @@ LANDING_HTML = """<!DOCTYPE html>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span>Aguardando an&aacute;lise</span>
               </div>
-              <a class="pilar-card-action" href="#">Gerar agora &rarr;</a>
+              <a class="pilar-card-action" href="#" data-run-pilar="Sistemas e Dados">Gerar agora &rarr;</a>
             </div>
             <div class="pilar-card" style="border-top-color: var(--pilar-operacoes)">
               <h3 class="pilar-card-title">Opera&ccedil;&otilde;es</h3>
@@ -630,7 +641,7 @@ LANDING_HTML = """<!DOCTYPE html>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span>Aguardando an&aacute;lise</span>
               </div>
-              <a class="pilar-card-action" href="#">Gerar agora &rarr;</a>
+              <a class="pilar-card-action" href="#" data-run-pilar="Operacoes">Gerar agora &rarr;</a>
             </div>
             <div class="pilar-card" style="border-top-color: var(--pilar-organizacao)">
               <h3 class="pilar-card-title">Organiza&ccedil;&atilde;o</h3>
@@ -638,7 +649,7 @@ LANDING_HTML = """<!DOCTYPE html>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span>Aguardando an&aacute;lise</span>
               </div>
-              <a class="pilar-card-action" href="#">Gerar agora &rarr;</a>
+              <a class="pilar-card-action" href="#" data-run-pilar="Organizacao">Gerar agora &rarr;</a>
             </div>
             <div class="pilar-card" style="border-top-color: var(--pilar-roadmap)">
               <h3 class="pilar-card-title">Roadmap</h3>
@@ -646,7 +657,7 @@ LANDING_HTML = """<!DOCTYPE html>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span>Aguardando an&aacute;lise</span>
               </div>
-              <a class="pilar-card-action" href="#">Gerar agora &rarr;</a>
+              <a class="pilar-card-action" href="#" data-run-pilar="Roadmap">Gerar agora &rarr;</a>
             </div>
           </div>
 
@@ -730,7 +741,7 @@ LANDING_HTML = """<!DOCTYPE html>
         <div class="insights-feed">
 
           <!-- Insight 1 -->
-          <article class="insight-item">
+          <article class="insight-item" data-category="risco">
             <div class="insight-tags">
               <span class="insight-tag insight-tag--critical">ALTO IMPACTO</span>
               <span class="insight-tag-sep">&middot;</span>
@@ -766,7 +777,7 @@ LANDING_HTML = """<!DOCTYPE html>
           <div class="insight-divider"></div>
 
           <!-- Insight 2 -->
-          <article class="insight-item">
+          <article class="insight-item" data-category="oportunidade">
             <div class="insight-tags">
               <span class="insight-tag insight-tag--critical">ALTO IMPACTO</span>
               <span class="insight-tag-sep">&middot;</span>
@@ -802,7 +813,7 @@ LANDING_HTML = """<!DOCTYPE html>
           <div class="insight-divider"></div>
 
           <!-- Insight 3 -->
-          <article class="insight-item">
+          <article class="insight-item" data-category="quickwin">
             <div class="insight-tags">
               <span class="insight-tag">M&Eacute;DIO IMPACTO</span>
               <span class="insight-tag-sep">&middot;</span>
@@ -838,7 +849,7 @@ LANDING_HTML = """<!DOCTYPE html>
           <div class="insight-divider"></div>
 
           <!-- Insight 4 -->
-          <article class="insight-item">
+          <article class="insight-item" data-category="estrategico">
             <div class="insight-tags">
               <span class="insight-tag insight-tag--critical">ALTO IMPACTO</span>
               <span class="insight-tag-sep">&middot;</span>
