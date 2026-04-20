@@ -1107,6 +1107,13 @@ LANDING_HTML = """<!DOCTYPE html>
         </div>
         <div class="page-header-divider"></div>
 
+        <div class="roadmap-summary">
+          <p>O roadmap de transforma&ccedil;&atilde;o da Santista S.A. est&aacute; estruturado em 3 ondas progressivas: come&ccedil;amos com quick wins de alto ROI e baixo risco que geram resultados em 30&ndash;90 dias e financiam as fases seguintes.
+          A segunda onda ataca os problemas estruturais &mdash; migra&ccedil;&atilde;o de ERP, redesenho de processos e capacita&ccedil;&atilde;o &mdash; que destravam a maturidade digital.
+          Na terceira onda, implementamos IA preditiva, torre de controle e automa&ccedil;&atilde;o avan&ccedil;ada, posicionando a Santista no top quartil do setor t&ecirc;xtil.
+          Cada iniciativa tem owner, prazo, investimento e KPI de sucesso definidos &mdash; o progresso &eacute; revisado em ciclos quinzenais com a diretoria.</p>
+        </div>
+
         <!-- Fase 1 — Quick Wins -->
         <div class="roadmap-phase">
           <div class="roadmap-phase-header">
