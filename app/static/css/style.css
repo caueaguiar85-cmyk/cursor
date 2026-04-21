@@ -1202,6 +1202,10 @@ html:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
   font-size: var(--text-base);
   color: var(--text-muted);
   line-height: 1.7;
+  overflow: visible;
+  display: block;
+  -webkit-line-clamp: unset;
+  max-height: none;
 }
 
 .insight-readmore {
@@ -2063,13 +2067,7 @@ html:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
    INSIGHT — expanded state
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.insight-body.expanded {
-  -webkit-line-clamp: unset;
-  -webkit-box-orient: unset;
-  display: block;
-  overflow: visible;
-  max-height: none;
-}
+/* expanded state removed — texts are complete */
 
 .insight-item.hidden,
 .insight-divider.hidden {

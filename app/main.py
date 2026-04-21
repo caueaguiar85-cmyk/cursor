@@ -251,7 +251,7 @@ LANDING_HTML = """<!DOCTYPE html>
 <meta name="description" content="Plataforma B2B de diagn&oacute;stico estrat&eacute;gico de supply chain. Stoken Advisory para Santista S.A."/>
 <link rel="icon" type="image/png" href="/static/santista.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="/static/css/style.css"/>
+<link rel="stylesheet" href="/static/css/style.css?v=20260421"/>
 <script>
 (function(){
   var t = localStorage.getItem('theme');
@@ -1917,7 +1917,7 @@ LANDING_HTML = """<!DOCTYPE html>
   </div>
 </div>
 
-<script src="/static/js/app.js"></script>
+<script src="/static/js/app.js?v=20260421"></script>
 </body>
 </html>
 """
