@@ -393,7 +393,7 @@ LANDING_HTML = """<!DOCTYPE html>
           </div>
           <div class="metric-cell">
             <span class="metric-label">ENTREVISTAS</span>
-            <span class="metric-value font-mono">4 / 6</span>
+            <span class="metric-value font-mono" id="metric-entrevistas">0</span>
           </div>
           <div class="metric-cell">
             <span class="metric-label">SCORE GERAL</span>

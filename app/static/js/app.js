@@ -708,6 +708,7 @@ function initNovaEntrevista() {
       grid.insertBefore(card, grid.firstChild);
       var emptyState = document.getElementById('interview-empty');
       if (emptyState) emptyState.style.display = 'none';
+      loadInterviewCount();
     }
 
     closeModal();
@@ -1040,7 +1041,20 @@ function loadInsightsData() {
 setTimeout(function() {
   loadDiagnosticData();
   loadInsightsData();
+  loadInterviewCount();
 }, 500);
+
+function loadInterviewCount() {
+  fetch('/api/interviews')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status !== 'ok') return;
+      var total = data.interviews.length;
+      var el = document.getElementById('metric-entrevistas');
+      if (el) el.textContent = total;
+    })
+    .catch(function() {});
+}
 
 /* ══════════════════════════════════════════════════════════════════════════
    ONLINE INTERVIEW FORM — fill questions interactively
@@ -1191,6 +1205,7 @@ function initOnlineForm() {
         grid.insertBefore(card, grid.firstChild);
         var emptyState = document.getElementById('interview-empty');
         if (emptyState) emptyState.style.display = 'none';
+      loadInterviewCount();
       }
 
       // Reset form
@@ -1364,6 +1379,7 @@ function initFormExportImport() {
         grid.insertBefore(card, grid.firstChild);
         var emptyState = document.getElementById('interview-empty');
         if (emptyState) emptyState.style.display = 'none';
+      loadInterviewCount();
       }
 
       // Reset import
