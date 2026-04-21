@@ -415,24 +415,31 @@ LANDING_HTML = """<!DOCTYPE html>
             <h2 class="section-heading">Equipe Stoken</h2>
             <div class="team-list">
               <div class="team-member">
+                <div class="team-avatar">CS</div>
+                <div class="team-info">
+                  <span class="team-name">Carolina Stocche</span>
+                  <span class="team-role">CEO</span>
+                </div>
+              </div>
+              <div class="team-member">
+                <div class="team-avatar">LK</div>
+                <div class="team-info">
+                  <span class="team-name">Leo Koki</span>
+                  <span class="team-role">Analista de Dados</span>
+                </div>
+              </div>
+              <div class="team-member">
+                <div class="team-avatar">VA</div>
+                <div class="team-info">
+                  <span class="team-name">Val&eacute;ria Araujo</span>
+                  <span class="team-role">Desenvolvedora</span>
+                </div>
+              </div>
+              <div class="team-member">
                 <div class="team-avatar">CA</div>
                 <div class="team-info">
                   <span class="team-name">Cau&ecirc; Aguiar</span>
-                  <span class="team-role">Lead Consultant</span>
-                </div>
-              </div>
-              <div class="team-member">
-                <div class="team-avatar">JP</div>
-                <div class="team-info">
-                  <span class="team-name">Julia Pereira</span>
-                  <span class="team-role">Data Analyst</span>
-                </div>
-              </div>
-              <div class="team-member">
-                <div class="team-avatar">MB</div>
-                <div class="team-info">
-                  <span class="team-name">Marcos Bastos</span>
-                  <span class="team-role">AI Engineer</span>
+                  <span class="team-role">Desenvolvedor</span>
                 </div>
               </div>
             </div>
