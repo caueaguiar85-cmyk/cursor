@@ -1123,7 +1123,7 @@ LANDING_HTML = """<!DOCTYPE html>
         <!-- Insights Feed -->
         <div class="insights-feed">
 
-          <!-- Insight 1 -->
+          <!-- Insight 1 — RISCO -->
           <article class="insight-item" data-category="risco">
             <div class="insight-tags">
               <span class="insight-tag insight-tag--critical">ALTO IMPACTO</span>
@@ -1133,7 +1133,7 @@ LANDING_HTML = """<!DOCTYPE html>
               <span class="insight-tag">SISTEMAS &amp; DADOS</span>
             </div>
             <h3 class="insight-title">ERP fora de suporte representa risco cr&iacute;tico de continuidade operacional</h3>
-            <p class="insight-body">O sistema ERP atual (vers&atilde;o 2018) perdeu suporte oficial do fornecedor em jan 2025. Falhas recorrentes no m&oacute;dulo fiscal j&aacute; causaram 3 paradas n&atilde;o planejadas no Q1. Sem plano de migra&ccedil;&atilde;o&hellip; <a class="insight-readmore" href="#">ler mais</a></p>
+            <p class="insight-body">O sistema ERP atual (vers&atilde;o 2018) perdeu suporte oficial do fornecedor em janeiro de 2025, o que significa que corre&ccedil;&otilde;es de seguran&ccedil;a, patches de compliance fiscal e atualiza&ccedil;&otilde;es regulat&oacute;rias n&atilde;o s&atilde;o mais disponibilizadas. Falhas recorrentes no m&oacute;dulo fiscal j&aacute; causaram 3 paradas n&atilde;o planejadas somente no Q1 2026, resultando em atrasos de faturamento de 48h e multas de ICMS por declara&ccedil;&atilde;o fora do prazo. A base de dados do ERP opera sem redundância geogr&aacute;fica &mdash; um incidente no servidor principal causaria perda de dados transacionais de 72h (RPO atual). Segundo o framework SCOR, a disponibilidade de sistemas de gest&atilde;o &eacute; pilar fundamental da m&eacute;trica &ldquo;Enable&rdquo;, e a Santista opera hoje com risco de score 25 (probabilidade 5 &times; impacto 5) na matriz ISO 31000. Al&eacute;m disso, a vers&atilde;o legada impede integra&ccedil;&atilde;o com ferramentas modernas de BI, WMS e TMS, bloqueando toda a agenda de transforma&ccedil;&atilde;o digital da cadeia de suprimentos.</p>
             <div class="insight-meta">
               <div class="insight-meta-item">
                 <span class="insight-meta-label">VALOR ESTIMADO</span>
@@ -1145,12 +1145,12 @@ LANDING_HTML = """<!DOCTYPE html>
               </div>
               <div class="insight-meta-item">
                 <span class="insight-meta-label">BENCHMARK</span>
-                <span class="insight-meta-value insight-meta-italic">78% do setor j&aacute; migrou para cloud ERP</span>
+                <span class="insight-meta-value insight-meta-italic">78% do setor t&ecirc;xtil brasileiro j&aacute; migrou para cloud ERP (ABIT 2025). Tempo m&eacute;dio de migra&ccedil;&atilde;o: 9&ndash;14 meses.</span>
               </div>
             </div>
             <div class="insight-action-block">
               <span class="insight-action-label">A&Ccedil;&Atilde;O SUGERIDA</span>
-              <span class="insight-action-text">Iniciar RFP para migra&ccedil;&atilde;o de ERP com foco em m&oacute;dulos fiscal e supply chain. Prazo recomendado: Q3 2026.</span>
+              <span class="insight-action-text">Iniciar RFP com 3 fornecedores (SAP S/4HANA Cloud, Oracle Cloud, TOTVS Protheus) em 30 dias. Priorizar m&oacute;dulos fiscal e supply chain na primeira onda de migra&ccedil;&atilde;o. Implementar backup geogr&aacute;fico imediato como mitiga&ccedil;&atilde;o de curto prazo. Budget estimado: R$ 1.2&ndash;2.0M em 12 meses. Payback em 18 meses considerando redu&ccedil;&atilde;o de paradas e multas.</span>
             </div>
             <div class="insight-footer">
               <span class="insight-validated font-mono">&#10003; Validado</span>
@@ -1159,7 +1159,43 @@ LANDING_HTML = """<!DOCTYPE html>
 
           <div class="insight-divider"></div>
 
-          <!-- Insight 2 -->
+          <!-- Insight 2 — RISCO -->
+          <article class="insight-item" data-category="risco">
+            <div class="insight-tags">
+              <span class="insight-tag insight-tag--critical">ALTO IMPACTO</span>
+              <span class="insight-tag-sep">&middot;</span>
+              <span class="insight-tag">RISCO</span>
+              <span class="insight-tag-sep">&middot;</span>
+              <span class="insight-tag">OPERA&Ccedil;&Otilde;ES</span>
+            </div>
+            <h3 class="insight-title">Depend&ecirc;ncia de fornecedor &uacute;nico de corantes expõe a cadeia a ruptura de 15&ndash;20 dias</h3>
+            <p class="insight-body">A Santista concentra 87% do volume de corantes reativos em um &uacute;nico fornecedor (Dystar), sem contrato formal de conting&ecirc;ncia ou estoque estrat&eacute;gico dimensionado para absorver interrup&ccedil;&otilde;es. A an&aacute;lise de risco na cadeia de suprimentos (Supply Chain Risk Management &mdash; ISO 28000) identifica que um &uacute;nico evento disruptivo &mdash; greve portu&aacute;ria, problema log&iacute;stico internacional ou falha do fornecedor &mdash; causaria parada de 15 a 20 dias nas linhas de tingimento, impactando 60% da produ&ccedil;&atilde;o. O custo de oportunidade estimado por dia de parada &eacute; de R$ 180k (baseado no faturamento m&eacute;dio di&aacute;rio das linhas afetadas). A pr&aacute;tica recomendada pelo modelo SCOR &eacute; manter no m&iacute;nimo 2 fornecedores qualificados por insumo cr&iacute;tico (dual sourcing) com participa&ccedil;&atilde;o m&aacute;xima de 60% por fornecedor. Empresas do top quartil do setor t&ecirc;xtil mant&ecirc;m safety stock de 21 dias para insumos importados.</p>
+            <div class="insight-meta">
+              <div class="insight-meta-item">
+                <span class="insight-meta-label">VALOR ESTIMADO</span>
+                <span class="insight-meta-value font-mono" style="color: var(--danger)">&minus;R$ 2.7M (cen&aacute;rio de ruptura 15d)</span>
+              </div>
+              <div class="insight-meta-item">
+                <span class="insight-meta-label">ORIGEM</span>
+                <span class="insight-meta-value">Entrevista &mdash; Dir. Industrial + Compras</span>
+              </div>
+              <div class="insight-meta-item">
+                <span class="insight-meta-label">BENCHMARK</span>
+                <span class="insight-meta-value insight-meta-italic">Top quartil do setor mant&eacute;m dual sourcing e 21 dias de safety stock para insumos importados (IEMI 2025)</span>
+              </div>
+            </div>
+            <div class="insight-action-block">
+              <span class="insight-action-label">A&Ccedil;&Atilde;O SUGERIDA</span>
+              <span class="insight-action-text">Qualificar 2 fornecedores alternativos em 90 dias (Huntsman e Archroma s&atilde;o candidatos). Dimensionar safety stock para 28 dias nos 5 corantes de maior volume. Negociar contrato com cl&aacute;usula de SLA de entrega e penalidade com fornecedor atual.</span>
+            </div>
+            <div class="insight-footer">
+              <span class="insight-validated font-mono">&#10003; Validado</span>
+            </div>
+          </article>
+
+          <div class="insight-divider"></div>
+
+          <!-- Insight 3 — OPORTUNIDADE -->
           <article class="insight-item" data-category="oportunidade">
             <div class="insight-tags">
               <span class="insight-tag insight-tag--critical">ALTO IMPACTO</span>
@@ -1168,8 +1204,8 @@ LANDING_HTML = """<!DOCTYPE html>
               <span class="insight-tag-sep">&middot;</span>
               <span class="insight-tag">PROCESSOS</span>
             </div>
-            <h3 class="insight-title">Processo de S&amp;OP inexistente gera desalinhamento entre comercial e produ&ccedil;&atilde;o</h3>
-            <p class="insight-body">N&atilde;o existe reuni&atilde;o formal de Sales &amp; Operations Planning. Comercial promete prazos sem consultar capacidade fabril, gerando 23% de pedidos atrasados no &uacute;ltimo trimestre&hellip; <a class="insight-readmore" href="#">ler mais</a></p>
+            <h3 class="insight-title">Processo de S&amp;OP inexistente gera desalinhamento cr&ocirc;nico entre demanda comercial e capacidade produtiva</h3>
+            <p class="insight-body">A Santista n&atilde;o possui processo formal de Sales &amp; Operations Planning (S&amp;OP). A &aacute;rea comercial compromete prazos de entrega sem consultar a capacidade fabril dispon&iacute;vel, gerando 23% de pedidos entregues fora do prazo no &uacute;ltimo trimestre &mdash; contra uma m&eacute;dia de 8% no setor t&ecirc;xtil brasileiro (ABIT). N&atilde;o existe consenso de demanda: cada &aacute;rea opera com sua pr&oacute;pria previs&atilde;o de vendas, resultando em 3 vers&otilde;es conflitantes da verdade. O PCP recebe altera&ccedil;&otilde;es de pedidos com menos de 48h de anteced&ecirc;ncia, for&ccedil;ando reproramações que reduzem o OEE em 12 pontos percentuais. Segundo o framework de maturidade de S&amp;OP da Gartner, a Santista se encontra no Est&aacute;gio 1 (&ldquo;React&rdquo;) de 5 est&aacute;gios poss&iacute;veis. Empresas que implementam S&amp;OP maduro (Est&aacute;gios 3&ndash;4) reportam redu&ccedil;&atilde;o m&eacute;dia de 20&ndash;30% em estoque, melhoria de 15% no OTIF e aumento de 3&ndash;5pp na margem bruta.</p>
             <div class="insight-meta">
               <div class="insight-meta-item">
                 <span class="insight-meta-label">VALOR ESTIMADO</span>
@@ -1177,16 +1213,16 @@ LANDING_HTML = """<!DOCTYPE html>
               </div>
               <div class="insight-meta-item">
                 <span class="insight-meta-label">ORIGEM</span>
-                <span class="insight-meta-value">Entrevista &mdash; Ger. Comercial</span>
+                <span class="insight-meta-value">Entrevista &mdash; Ger. Comercial + Dir. Industrial</span>
               </div>
               <div class="insight-meta-item">
                 <span class="insight-meta-label">BENCHMARK</span>
-                <span class="insight-meta-value insight-meta-italic">92% das empresas l&iacute;deres t&ecirc;m S&amp;OP mensal</span>
+                <span class="insight-meta-value insight-meta-italic">92% das empresas l&iacute;deres do setor t&ecirc;xtil t&ecirc;m S&amp;OP mensal estruturado. OTIF m&eacute;dio do setor: 92% vs Santista: 77%.</span>
               </div>
             </div>
             <div class="insight-action-block">
               <span class="insight-action-label">A&Ccedil;&Atilde;O SUGERIDA</span>
-              <span class="insight-action-text">Implementar ciclo de S&amp;OP mensal com participa&ccedil;&atilde;o de Comercial, PCP, Log&iacute;stica e Financeiro. Piloto em 30 dias.</span>
+              <span class="insight-action-text">Implementar ciclo de S&amp;OP mensal em 5 etapas: (1) coleta de dados de demanda, (2) revis&atilde;o de supply, (3) pr&eacute;-S&amp;OP com ger&ecirc;ncia, (4) reuni&atilde;o executiva de consenso, (5) publica&ccedil;&atilde;o do plano. Participantes: Comercial, PCP, Log&iacute;stica, Financeiro e Diretoria Industrial. Piloto com as 3 fam&iacute;lias de produto de maior volume. Prazo para 1&ordm; ciclo: 30 dias.</span>
             </div>
             <div class="insight-footer">
               <span class="insight-validated font-mono">&#10003; Validado</span>
@@ -1195,7 +1231,43 @@ LANDING_HTML = """<!DOCTYPE html>
 
           <div class="insight-divider"></div>
 
-          <!-- Insight 3 -->
+          <!-- Insight 4 — OPORTUNIDADE -->
+          <article class="insight-item" data-category="oportunidade">
+            <div class="insight-tags">
+              <span class="insight-tag">M&Eacute;DIO IMPACTO</span>
+              <span class="insight-tag-sep">&middot;</span>
+              <span class="insight-tag">OPORTUNIDADE</span>
+              <span class="insight-tag-sep">&middot;</span>
+              <span class="insight-tag">PROCESSOS</span>
+            </div>
+            <h3 class="insight-title">Gest&atilde;o de estoque sem classifica&ccedil;&atilde;o ABC gera capital de giro excessivo em SKUs de baixo giro</h3>
+            <p class="insight-body">A Santista mant&eacute;m a mesma pol&iacute;tica de estoque para todos os 1.200+ SKUs ativos, sem segmenta&ccedil;&atilde;o por curva ABC, criticidade ou variabilidade de demanda. A an&aacute;lise preliminar indica que 18% dos SKUs (classe C) concentram R$ 12M em estoque parado h&aacute; mais de 90 dias, representando 34% do capital de giro imobilizado. O modelo cl&aacute;ssico de gest&atilde;o de estoque (baseado no framework SCOR m&eacute;trica &ldquo;Inventory Days of Supply&rdquo;) recomenda pol&iacute;ticas diferenciadas: itens A com reposi&ccedil;&atilde;o cont&iacute;nua e safety stock calculado por z-score; itens B com reposi&ccedil;&atilde;o peri&oacute;dica; itens C com revis&atilde;o trimestral e pol&iacute;tica de phase-out. A implementa&ccedil;&atilde;o de classifica&ccedil;&atilde;o ABC multidimensional (receita &times; margem &times; frequ&ecirc;ncia) permitiria liberar entre R$ 3.5&ndash;5M em capital de giro nos primeiros 6 meses.</p>
+            <div class="insight-meta">
+              <div class="insight-meta-item">
+                <span class="insight-meta-label">VALOR ESTIMADO</span>
+                <span class="insight-meta-value font-mono" style="color: var(--success)">+R$ 3.5&ndash;5M (libera&ccedil;&atilde;o de capital)</span>
+              </div>
+              <div class="insight-meta-item">
+                <span class="insight-meta-label">ORIGEM</span>
+                <span class="insight-meta-value">Entrevista &mdash; Coord. Estoque + Financeiro</span>
+              </div>
+              <div class="insight-meta-item">
+                <span class="insight-meta-label">BENCHMARK</span>
+                <span class="insight-meta-value insight-meta-italic">Giro m&eacute;dio do setor t&ecirc;xtil: 6.2x/ano. Santista atual: 3.8x/ano. Gap de 38% vs m&eacute;dia (IEMI 2025).</span>
+              </div>
+            </div>
+            <div class="insight-action-block">
+              <span class="insight-action-label">A&Ccedil;&Atilde;O SUGERIDA</span>
+              <span class="insight-action-text">Implementar classifica&ccedil;&atilde;o ABC multicrit&eacute;rio em 4 semanas. Definir pol&iacute;tica de estoque diferenciada por classe. Criar campanha de liquida&ccedil;&atilde;o para SKUs classe C com estoque &gt;90 dias. Automatizar alertas de ponto de reposi&ccedil;&atilde;o para classe A via ERP.</span>
+            </div>
+            <div class="insight-footer">
+              <span class="insight-validated font-mono">&#10003; Validado</span>
+            </div>
+          </article>
+
+          <div class="insight-divider"></div>
+
+          <!-- Insight 5 — QUICK WIN -->
           <article class="insight-item" data-category="quickwin">
             <div class="insight-tags">
               <span class="insight-tag">M&Eacute;DIO IMPACTO</span>
@@ -1204,25 +1276,25 @@ LANDING_HTML = """<!DOCTYPE html>
               <span class="insight-tag-sep">&middot;</span>
               <span class="insight-tag">OPERA&Ccedil;&Otilde;ES</span>
             </div>
-            <h3 class="insight-title">Checklists de qualidade manuais causam retrabalho de 12% na linha de fios</h3>
-            <p class="insight-body">Inspe&ccedil;&atilde;o de qualidade ainda &eacute; feita em papel. Dados n&atilde;o alimentam indicadores e falhas s&oacute; s&atilde;o detectadas no final do lote. Digitaliza&ccedil;&atilde;o reduziria retrabalho em 60%&hellip; <a class="insight-readmore" href="#">ler mais</a></p>
+            <h3 class="insight-title">Checklists de qualidade manuais causam retrabalho de 12% e perda de rastreabilidade na linha de fios</h3>
+            <p class="insight-body">O controle de qualidade nas linhas de fia&ccedil;&atilde;o e tecelagem &eacute; feito inteiramente em formul&aacute;rios de papel, preenchidos manualmente pelos operadores a cada troca de lote. Os dados n&atilde;o alimentam nenhum indicador em tempo real &mdash; falhas de qualidade (irregularidade de t&iacute;tulo, resist&ecirc;ncia, torção) s&oacute; s&atilde;o detectadas no final do lote, quando j&aacute; foram produzidas entre 2 e 8 toneladas de fio. O &iacute;ndice de retrabalho atual &eacute; de 12.3%, contra 4.5% da m&eacute;dia do setor (ABIT). A perda anual estimada com retrabalho &eacute; de R$ 320k (custo de reprocessamento + energia + horas extras). Al&eacute;m disso, a aus&ecirc;ncia de rastreabilidade digital impede a correla&ccedil;&atilde;o entre par&acirc;metros de processo e defeitos &mdash; a equipe de qualidade opera de forma reativa, sem capacidade anal&iacute;tica preditiva. A digitaliza&ccedil;&atilde;o com tablets na linha (investimento de R$ 45k) permitiria detec&ccedil;&atilde;o de desvios em tempo real e redu&ccedil;&atilde;o de 60% no retrabalho em 90 dias.</p>
             <div class="insight-meta">
               <div class="insight-meta-item">
                 <span class="insight-meta-label">VALOR ESTIMADO</span>
-                <span class="insight-meta-value font-mono" style="color: var(--success)">+R$ 95k/ano</span>
+                <span class="insight-meta-value font-mono" style="color: var(--success)">+R$ 192k/ano (redu&ccedil;&atilde;o de retrabalho)</span>
               </div>
               <div class="insight-meta-item">
                 <span class="insight-meta-label">ORIGEM</span>
-                <span class="insight-meta-value">Entrevista &mdash; Coord. Qualidade</span>
+                <span class="insight-meta-value">Entrevista &mdash; Coord. Qualidade + Superv. Produ&ccedil;&atilde;o</span>
               </div>
               <div class="insight-meta-item">
                 <span class="insight-meta-label">BENCHMARK</span>
-                <span class="insight-meta-value insight-meta-italic">Checklist digital &eacute; pr&aacute;tica padr&atilde;o no setor</span>
+                <span class="insight-meta-value insight-meta-italic">Retrabalho m&eacute;dio no setor: 4.5%. Best-in-class: 2.1%. 95% das empresas l&iacute;deres usam checklist digital (Deloitte MFG Survey 2025).</span>
               </div>
             </div>
             <div class="insight-action-block">
               <span class="insight-action-label">A&Ccedil;&Atilde;O SUGERIDA</span>
-              <span class="insight-action-text">Adotar ferramenta de checklist digital (ex: Checkify) na linha de fios como piloto. Escalar para tecelagem em 60 dias.</span>
+              <span class="insight-action-text">Adotar solu&ccedil;&atilde;o de checklist digital com tablets industriais nas 3 linhas de fia&ccedil;&atilde;o (piloto em 3 semanas). Dashboard de qualidade em tempo real com alertas de desvio. Escalar para tecelagem e acabamento em 60 dias. ROI de 4.2x no primeiro ano.</span>
             </div>
             <div class="insight-footer">
               <span class="insight-validated font-mono">&#10003; Validado</span>
@@ -1231,7 +1303,43 @@ LANDING_HTML = """<!DOCTYPE html>
 
           <div class="insight-divider"></div>
 
-          <!-- Insight 4 -->
+          <!-- Insight 6 — QUICK WIN -->
+          <article class="insight-item" data-category="quickwin">
+            <div class="insight-tags">
+              <span class="insight-tag">M&Eacute;DIO IMPACTO</span>
+              <span class="insight-tag-sep">&middot;</span>
+              <span class="insight-tag">QUICK WIN</span>
+              <span class="insight-tag-sep">&middot;</span>
+              <span class="insight-tag">PROCESSOS</span>
+            </div>
+            <h3 class="insight-title">Automa&ccedil;&atilde;o de compras recorrentes liberaria 30% do tempo da equipe para negocia&ccedil;&otilde;es estrat&eacute;gicas</h3>
+            <p class="insight-body">A equipe de compras (4 pessoas) dedica 70% do tempo a pedidos de reposi&ccedil;&atilde;o rotineiros &mdash; emitindo manualmente ordens de compra para insumos com demanda est&aacute;vel e previs&iacute;vel. A an&aacute;lise dos &uacute;ltimos 12 meses mostra que 68% das ordens de compra s&atilde;o para apenas 50 SKUs com padr&atilde;o de consumo regular (coeficiente de varia&ccedil;&atilde;o &lt;0.3). Estes itens poderiam ser gerenciados via VMI (Vendor Managed Inventory) ou recompra autom&aacute;tica parametrizada no ERP, com ponto de reposi&ccedil;&atilde;o calculado e aprova&ccedil;&atilde;o autom&aacute;tica at&eacute; um teto de valor. A libera&ccedil;&atilde;o de 30% da capacidade da equipe permitiria focar em sourcing estrat&eacute;gico, negocia&ccedil;&atilde;o de contratos de longo prazo e desenvolvimento de fornecedores alternativos &mdash; atividades que, segundo o modelo de maturidade de Procurement da Deloitte, separam opera&ccedil;&otilde;es transacionais (n&iacute;vel 1) de estrat&eacute;gicas (n&iacute;vel 3&ndash;4).</p>
+            <div class="insight-meta">
+              <div class="insight-meta-item">
+                <span class="insight-meta-label">VALOR ESTIMADO</span>
+                <span class="insight-meta-value font-mono" style="color: var(--success)">+R$ 180k/ano (savings estrat&eacute;gicos)</span>
+              </div>
+              <div class="insight-meta-item">
+                <span class="insight-meta-label">ORIGEM</span>
+                <span class="insight-meta-value">Entrevista &mdash; Ger. Compras</span>
+              </div>
+              <div class="insight-meta-item">
+                <span class="insight-meta-label">BENCHMARK</span>
+                <span class="insight-meta-value insight-meta-italic">Empresas com procurement automatizado reportam 12&ndash;18% de saving adicional em categorias estrat&eacute;gicas (Deloitte CPO Survey 2025).</span>
+              </div>
+            </div>
+            <div class="insight-action-block">
+              <span class="insight-action-label">A&Ccedil;&Atilde;O SUGERIDA</span>
+              <span class="insight-action-text">Mapear os 50 SKUs de compra recorrente e parametrizar recompra autom&aacute;tica no ERP (ponto de reposi&ccedil;&atilde;o + lote econ&ocirc;mico). Implementar aprova&ccedil;&atilde;o autom&aacute;tica para OCs &lt;R$ 15k. Negociar VMI com os 3 principais fornecedores. Prazo: 6 semanas.</span>
+            </div>
+            <div class="insight-footer">
+              <span class="insight-validated font-mono">&#10003; Validado</span>
+            </div>
+          </article>
+
+          <div class="insight-divider"></div>
+
+          <!-- Insight 7 — ESTRATEGICO -->
           <article class="insight-item" data-category="estrategico">
             <div class="insight-tags">
               <span class="insight-tag insight-tag--critical">ALTO IMPACTO</span>
@@ -1240,25 +1348,61 @@ LANDING_HTML = """<!DOCTYPE html>
               <span class="insight-tag-sep">&middot;</span>
               <span class="insight-tag">ORGANIZA&Ccedil;&Atilde;O</span>
             </div>
-            <h3 class="insight-title">Aus&ecirc;ncia de cultura data-driven limita capacidade de decis&atilde;o da ger&ecirc;ncia</h3>
-            <p class="insight-body">Apenas 15% das decis&otilde;es operacionais s&atilde;o baseadas em dados estruturados. Ger&ecirc;ncia m&eacute;dia opera por experi&ecirc;ncia e intui&ccedil;&atilde;o. KPIs existem mas n&atilde;o s&atilde;o revisados&hellip; <a class="insight-readmore" href="#">ler mais</a></p>
+            <h3 class="insight-title">Aus&ecirc;ncia de cultura data-driven limita a capacidade de decis&atilde;o e velocidade de resposta da ger&ecirc;ncia</h3>
+            <p class="insight-body">Apenas 15% das decis&otilde;es operacionais da Santista s&atilde;o baseadas em dados estruturados &mdash; as demais dependem de experi&ecirc;ncia individual e intui&ccedil;&atilde;o dos gestores. Os KPIs existem formalmente (definidos em 2023), mas n&atilde;o s&atilde;o revisados com frequ&ecirc;ncia regular: apenas 2 de 8 gestores entrevistados conseguiram citar o OTIF do m&ecirc;s anterior. N&atilde;o existe ritual de gest&atilde;o &agrave; vista nem dashboard acess&iacute;vel no ch&atilde;o de f&aacute;brica. Segundo a pesquisa da McKinsey &ldquo;Data-driven organizations&rdquo; (2024), empresas no quartil superior de maturidade anal&iacute;tica apresentam 23x mais probabilidade de adquirir novos clientes, 6x mais probabilidade de reter clientes e 19x mais probabilidade de ser rent&aacute;veis. O gap da Santista &eacute; estrutural: n&atilde;o &eacute; falta de dados (o ERP gera dados), mas aus&ecirc;ncia de processo, ferramentas de visualiza&ccedil;&atilde;o e capacita&ccedil;&atilde;o para transformar dados em a&ccedil;&atilde;o. A ger&ecirc;ncia m&eacute;dia reporta frustração com a qualidade dos relat&oacute;rios &mdash; &ldquo;os n&uacute;meros nunca batem entre os sistemas&rdquo; (Dir. Industrial).</p>
             <div class="insight-meta">
               <div class="insight-meta-item">
                 <span class="insight-meta-label">VALOR ESTIMADO</span>
-                <span class="insight-meta-value font-mono" style="color: var(--success)">+R$ 600k/ano</span>
+                <span class="insight-meta-value font-mono" style="color: var(--success)">+R$ 600k/ano (produtividade + reten&ccedil;&atilde;o)</span>
               </div>
               <div class="insight-meta-item">
                 <span class="insight-meta-label">ORIGEM</span>
-                <span class="insight-meta-value">Entrevista &mdash; Dir. Industrial</span>
+                <span class="insight-meta-value">Entrevista &mdash; Dir. Industrial + 4 ger&ecirc;ncias</span>
               </div>
               <div class="insight-meta-item">
                 <span class="insight-meta-label">BENCHMARK</span>
-                <span class="insight-meta-value insight-meta-italic">Empresas data-driven t&ecirc;m 23x mais chance de adquirir clientes</span>
+                <span class="insight-meta-value insight-meta-italic">Empresas data-driven: 23x aquisi&ccedil;&atilde;o, 6x reten&ccedil;&atilde;o, 19x rentabilidade (McKinsey 2024). Maturidade anal&iacute;tica m&eacute;dia do setor: 2.8/5 vs Santista: 1.3/5.</span>
               </div>
             </div>
             <div class="insight-action-block">
               <span class="insight-action-label">A&Ccedil;&Atilde;O SUGERIDA</span>
-              <span class="insight-action-text">Programa de letramento em dados para ger&ecirc;ncia m&eacute;dia + dashboard de KPIs operacionais com revis&atilde;o semanal obrigat&oacute;ria.</span>
+              <span class="insight-action-text">Programa em 3 frentes: (1) Dashboard de KPIs operacionais com refresh di&aacute;rio, acess&iacute;vel via TV no ch&atilde;o de f&aacute;brica e mobile. (2) Treinamento de 40h em an&aacute;lise de dados para 25 gestores com certifica&ccedil;&atilde;o interna. (3) Ritual de gest&atilde;o semanal obrigat&oacute;rio com revis&atilde;o de KPIs e plano de a&ccedil;&atilde;o por desvio. Investimento: R$ 85k. Prazo: 12 semanas.</span>
+            </div>
+            <div class="insight-footer">
+              <span class="insight-validated font-mono">&#10003; Validado</span>
+            </div>
+          </article>
+
+          <div class="insight-divider"></div>
+
+          <!-- Insight 8 — ESTRATEGICO -->
+          <article class="insight-item" data-category="estrategico">
+            <div class="insight-tags">
+              <span class="insight-tag insight-tag--critical">ALTO IMPACTO</span>
+              <span class="insight-tag-sep">&middot;</span>
+              <span class="insight-tag">ESTRAT&Eacute;GICO</span>
+              <span class="insight-tag-sep">&middot;</span>
+              <span class="insight-tag">SISTEMAS &amp; DADOS</span>
+            </div>
+            <h3 class="insight-title">Aus&ecirc;ncia de visibilidade end-to-end impede gest&atilde;o proativa de exce&ccedil;&otilde;es na cadeia</h3>
+            <p class="insight-body">A Santista n&atilde;o possui visibilidade integrada da cadeia de suprimentos &mdash; cada &aacute;rea opera em silos com seus pr&oacute;prios relat&oacute;rios e planilhas. Compras n&atilde;o tem visibilidade de estoque em tr&acirc;nsito; PCP n&atilde;o v&ecirc; a carteira de pedidos atualizada; Log&iacute;stica n&atilde;o sabe quais lotes est&atilde;o prontos para expedi&ccedil;&atilde;o. O tempo m&eacute;dio para identificar e responder a uma exce&ccedil;&atilde;o (ruptura de insumo, atraso de fornecedor, desvio de qualidade) &eacute; de 72h &mdash; contra 4h nas empresas que operam com torre de controle de supply chain. Segundo o Gartner Supply Chain Top 25, empresas com visibilidade end-to-end reduzem custos de supply chain em 15&ndash;20% e melhoram o cash-to-cash cycle em 25&ndash;35%. A constru&ccedil;&atilde;o de uma torre de controle digital &eacute; a base para toda a transforma&ccedil;&atilde;o: sem visibilidade, n&atilde;o h&aacute; como otimizar. O investimento se paga na redu&ccedil;&atilde;o de estoques de seguran&ccedil;a (mantidos altos justamente pela falta de informa&ccedil;&atilde;o) e na redu&ccedil;&atilde;o de fretes emergenciais (R$ 380k/ano atualmente).</p>
+            <div class="insight-meta">
+              <div class="insight-meta-item">
+                <span class="insight-meta-label">VALOR ESTIMADO</span>
+                <span class="insight-meta-value font-mono" style="color: var(--success)">+R$ 1.2M/ano (estoque + frete + produtividade)</span>
+              </div>
+              <div class="insight-meta-item">
+                <span class="insight-meta-label">ORIGEM</span>
+                <span class="insight-meta-value">Entrevista &mdash; todas as &aacute;reas (consenso)</span>
+              </div>
+              <div class="insight-meta-item">
+                <span class="insight-meta-label">BENCHMARK</span>
+                <span class="insight-meta-value insight-meta-italic">Tempo de resposta a exce&ccedil;&otilde;es: Santista 72h vs best-in-class 4h. Redu&ccedil;&atilde;o de custo SC com torre de controle: 15&ndash;20% (Gartner 2025).</span>
+              </div>
+            </div>
+            <div class="insight-action-block">
+              <span class="insight-action-label">A&Ccedil;&Atilde;O SUGERIDA</span>
+              <span class="insight-action-text">Fase 1 (Q2): Dashboard unificado integrando ERP + planilhas cr&iacute;ticas com KPIs de cada elo. Fase 2 (Q3&ndash;Q4): Torre de controle digital com alertas autom&aacute;ticos e workflow de exce&ccedil;&atilde;o. Fase 3 (2027): IA preditiva para antecipar rupturas com 5 dias de anteced&ecirc;ncia. Investimento total: R$ 450k em 18 meses.</span>
             </div>
             <div class="insight-footer">
               <span class="insight-validated font-mono">&#10003; Validado</span>
