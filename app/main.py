@@ -868,6 +868,7 @@ LANDING_HTML = """<!DOCTYPE html>
                 <a class="dropdown-item" data-goto-agent="catalyst">CATALYST &mdash; Business Case</a>
                 <a class="dropdown-item" data-goto-agent="prism">PRISM &mdash; Entrevistas</a>
                 <a class="dropdown-item" data-goto-agent="atlas">ATLAS &mdash; Roadmap</a>
+                <a class="dropdown-item" data-goto-agent="synapse">SYNAPSE &mdash; Workflow Integrado</a>
               </div>
             </div>
           </div>
@@ -1574,10 +1575,10 @@ LANDING_HTML = """<!DOCTYPE html>
         <div class="page-header">
           <div class="page-header-text">
             <h1 class="page-title">Agentes IA</h1>
-            <p class="page-subtitle">7 agentes especializados em consultoria estrat&eacute;gica de supply chain</p>
+            <p class="page-subtitle">8 agentes especializados em consultoria estrat&eacute;gica de supply chain</p>
           </div>
           <div class="page-header-actions">
-            <span class="page-counter font-mono">7 agentes &middot; Claude API</span>
+            <span class="page-counter font-mono">8 agentes &middot; Claude API</span>
           </div>
         </div>
         <div class="page-header-divider"></div>
@@ -1680,6 +1681,20 @@ LANDING_HTML = """<!DOCTYPE html>
               <span class="agent-fw">Wave Planning</span>
               <span class="agent-fw">OKR</span>
               <span class="agent-fw">Kotter</span>
+            </div>
+          </div>
+
+          <div class="agent-card" data-agent="synapse">
+            <div class="agent-card-header">
+              <span class="agent-name font-mono">SYNAPSE</span>
+              <span class="agent-status">Pronto</span>
+            </div>
+            <span class="agent-role">An&aacute;lise Integrada do Workflow</span>
+            <p class="agent-desc">An&aacute;lise consolidada de todo o processo da consultoria, cruzando diagn&oacute;stico, gaps, riscos, benchmarks e roadmap numa vis&atilde;o hol&iacute;stica.</p>
+            <div class="agent-frameworks">
+              <span class="agent-fw">Balanced Scorecard</span>
+              <span class="agent-fw">Systems Thinking</span>
+              <span class="agent-fw">PDCA</span>
             </div>
           </div>
 
