@@ -442,6 +442,13 @@ LANDING_HTML = """<!DOCTYPE html>
                   <span class="team-role">Desenvolvedor</span>
                 </div>
               </div>
+              <div class="team-member">
+                <div class="team-avatar">IV</div>
+                <div class="team-info">
+                  <span class="team-name">Isabela Vanucchi</span>
+                  <span class="team-role">PMO</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
