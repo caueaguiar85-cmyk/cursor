@@ -251,7 +251,7 @@ LANDING_HTML = """<!DOCTYPE html>
 <meta name="description" content="Plataforma B2B de diagn&oacute;stico estrat&eacute;gico de supply chain. Stoken Advisory para Santista S.A."/>
 <link rel="icon" type="image/png" href="/static/santista.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="/static/css/style.css?v=20260421"/>
+<link rel="stylesheet" href="/static/css/style.css?v=20260422"/>
 <script>
 (function(){
   var t = localStorage.getItem('theme');
@@ -461,7 +461,7 @@ LANDING_HTML = """<!DOCTYPE html>
               <div class="timeline-content">
                 <div class="timeline-header-row">
                   <div>
-                    <span class="timeline-date font-mono">01&ndash;10 mar</span>
+                    <input type="text" class="timeline-date-input" placeholder="A definir" value="" data-tl-date />
                     <span class="timeline-label">Kickoff &amp; alinhamento</span>
                   </div>
                   <select class="tl-status-select font-mono" data-tl-select>
@@ -494,7 +494,7 @@ LANDING_HTML = """<!DOCTYPE html>
               <div class="timeline-content">
                 <div class="timeline-header-row">
                   <div>
-                    <span class="timeline-date font-mono">11&ndash;25 mar</span>
+                    <input type="text" class="timeline-date-input" placeholder="A definir" value="" data-tl-date />
                     <span class="timeline-label">Entrevistas com stakeholders</span>
                   </div>
                   <select class="tl-status-select font-mono" data-tl-select>
@@ -529,7 +529,7 @@ LANDING_HTML = """<!DOCTYPE html>
               <div class="timeline-content">
                 <div class="timeline-header-row">
                   <div>
-                    <span class="timeline-date font-mono">26 mar&ndash;10 abr</span>
+                    <input type="text" class="timeline-date-input" placeholder="A definir" value="" data-tl-date />
                     <span class="timeline-label">An&aacute;lise e diagn&oacute;stico por pilar</span>
                   </div>
                   <select class="tl-status-select font-mono" data-tl-select>
@@ -566,7 +566,7 @@ LANDING_HTML = """<!DOCTYPE html>
               <div class="timeline-content">
                 <div class="timeline-header-row">
                   <div>
-                    <span class="timeline-date font-mono">11&ndash;20 abr</span>
+                    <input type="text" class="timeline-date-input" placeholder="A definir" value="" data-tl-date />
                     <span class="timeline-label">Gera&ccedil;&atilde;o de insights e roadmap</span>
                   </div>
                   <select class="tl-status-select font-mono" data-tl-select>
@@ -599,7 +599,7 @@ LANDING_HTML = """<!DOCTYPE html>
               <div class="timeline-content">
                 <div class="timeline-header-row">
                   <div>
-                    <span class="timeline-date font-mono">21&ndash;25 abr</span>
+                    <input type="text" class="timeline-date-input" placeholder="A definir" value="" data-tl-date />
                     <span class="timeline-label">Apresenta&ccedil;&atilde;o executiva</span>
                   </div>
                   <select class="tl-status-select font-mono" data-tl-select>
@@ -1931,7 +1931,7 @@ LANDING_HTML = """<!DOCTYPE html>
   </div>
 </div>
 
-<script src="/static/js/app.js?v=20260421"></script>
+<script src="/static/js/app.js?v=20260422"></script>
 </body>
 </html>
 """

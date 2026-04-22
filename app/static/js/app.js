@@ -289,6 +289,16 @@ function initTimeline() {
       });
     });
 
+    // Date input — stopPropagation + auto-save
+    var dateInput = item.querySelector('[data-tl-date]');
+    if (dateInput) {
+      dateInput.addEventListener('click', function(e) { e.stopPropagation(); });
+      dateInput.addEventListener('blur', function() { saveTimelineState(); });
+      if (saved[id] && saved[id].date) {
+        dateInput.value = saved[id].date;
+      }
+    }
+
     // Notes auto-save on blur
     var noteInput = item.querySelector('.tl-note-input');
     if (noteInput) {
@@ -326,10 +336,12 @@ function initTimeline() {
       item.querySelectorAll('.tl-checkbox').forEach(function(cb) { checks.push(cb.checked); });
       var select = item.querySelector('[data-tl-select]');
       var noteInput = item.querySelector('.tl-note-input');
+      var dateInput = item.querySelector('[data-tl-date]');
       state[id] = {
         checks: checks,
         status: select ? select.value : 'pending',
-        note: noteInput ? noteInput.value : ''
+        note: noteInput ? noteInput.value : '',
+        date: dateInput ? dateInput.value : ''
       };
     });
     localStorage.setItem('tl-state', JSON.stringify(state));
