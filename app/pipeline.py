@@ -58,6 +58,16 @@ async def _call_agent(agent_id: str, message: str, context: str = "") -> Optiona
         return None
 
 
+def _load_vexia_context() -> str:
+    """Loads Vexia BPO analysis summary for pipeline context."""
+    data_dir = os.path.join(os.path.dirname(__file__), "data")
+    summary_path = os.path.join(data_dir, "vexia_resumo.txt")
+    if os.path.exists(summary_path):
+        with open(summary_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
+
+
 async def run_full_pipeline():
     """Executa o pipeline completo de análise."""
     from app.datastore import (
@@ -153,7 +163,11 @@ Retorne EXATAMENTE este JSON (sem markdown, sem explicação, apenas o JSON):
     logger.info("Pipeline Step 3: SENTINEL + NEXUS + CATALYST (parallel)")
     update_pipeline_status(step="Executando SENTINEL, NEXUS, CATALYST em paralelo")
 
+    # Include Vexia BPO analysis as additional context
+    vexia_context = _load_vexia_context()
     context_for_agents = f"Dados das entrevistas:\n{interview_context}\n\nScores ARIA:\n{diag_result or 'não disponível'}"
+    if vexia_context:
+        context_for_agents += f"\n\nDIAGNÓSTICO BPO VEXIA (consultoria que opera Fiscal, Financeiro, RH/Folha, Contabilidade, Suprimentos, Compliance e TI da Santista):\n{vexia_context}"
 
     sentinel_task = _call_agent("sentinel",
         "Com base nos dados do diagnóstico, identifique os TOP 5 riscos da Santista S.A. "

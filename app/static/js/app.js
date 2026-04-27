@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initOnlineForm();
   initAreaFilter();
   try { initAgents(); } catch(e) { console.warn('Agents init:', e); }
+  initVexia();
 });
 
 /* ── Theme Toggle ──────��───────────────────────────────────────────────── */
@@ -114,6 +115,7 @@ var PAGE_NAMES = {
   'insights': 'Insights',
   'roadmap': 'Roadmap',
   'agentes': 'Agentes IA',
+  'vexia': 'Vexia',
   'usuarios': 'Usu\u00e1rios',
   'configuracoes': 'Configura\u00e7\u00f5es'
 };
@@ -1619,4 +1621,43 @@ function renderMarkdown(text) {
     .replace(/\n{2,}/g, '</p><p>')
     .replace(/\n/g, '<br>')
     .replace(/^/, '<p>').replace(/$/, '</p>');
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   VEXIA — BPO area filters + transcription loader
+   ══════════════════════════════════════════════════════════════════════════ */
+
+function initVexia() {
+  // Area filter tabs
+  var filterBar = document.getElementById('vexia-area-filter');
+  if (!filterBar) return;
+
+  var tabs = filterBar.querySelectorAll('[data-vexia-area]');
+  var cards = document.querySelectorAll('.vexia-area-card');
+
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      var area = tab.getAttribute('data-vexia-area');
+      cards.forEach(function(card) {
+        if (area === 'all' || card.getAttribute('data-vexia-area') === area) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Load transcription
+  fetch('/api/vexia/transcricao')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === 'ok') {
+        var el = document.getElementById('vexia-transcricao');
+        if (el) el.textContent = data.text;
+      }
+    })
+    .catch(function() {});
 }

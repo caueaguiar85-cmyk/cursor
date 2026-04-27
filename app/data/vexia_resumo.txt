@@ -1,0 +1,63 @@
+ANÁLISE CONSOLIDADA — PROCESSOS BPO VEXIA → SANTISTA
+=====================================================
+
+A Vexia (300 colaboradores) opera BPO full da Santista nas áreas: Fiscal, Suprimentos, Financeiro, RH/Folha, Contabilidade, Compliance e Tecnologia. Exceções: análise de crédito e compras (internas Santista).
+
+FISCAL:
+- Processos arcaicos, uso intenso de papel (DANF, CTE), documentos escaneados por e-mail
+- ~1.300 notas não digitadas ou auditadas por ano
+- CTEs de entrada não reconhecidos em tempo hábil — exposição fiscal e contábil
+- Falta de responsabilidade clara entre áreas para gestão documental fiscal
+- Oportunidade: digitalização completa, plataforma única NFs, inteligência fiscal automática
+
+SUPRIMENTOS:
+- Recebimentos descentralizados, cadastro de fornecedores fragmentado
+- Falta de integração entre ordens de compra, fornecedores e contas contábeis
+- Oportunidade: centralização, automação e workflows
+
+FINANCEIRO:
+- Contas a pagar e receber gerenciados pela Vexia, SLA 2 dias
+- 10% de pagamentos manuais gerando inconsistências
+- Conciliação bancária parcialmente automatizada, uso intenso de planilhas
+- Sem controle de PDD por título, gestão de inadimplência manual
+- Pagamento de matérias-primas (algodão) com descompasso fiscal/operacional
+- Oportunidade: gestão ativa de contas a pagar, automação de conciliações
+
+RH / FOLHA DE PAGAMENTO:
+- Admissão digital via HR360 (OCR), demandas via Request com SLA
+- Cadastro manual no Senior (não integrado com HR360)
+- 1.661 ativos, 193 afastados, ~65 admissões e ~60 rescisões/mês, R$13,5M/mês
+- Rescisão: processo crítico, prazo 10 dias, alto risco de multas
+- Admissões fora do prazo por urgência da produção + cancelamentos frequentes
+- Afastados: descontrole financeiro (plano médico sem reembolso, farmácia)
+- Saldo devedor de demitidos não descontado na rescisão — perdas financeiras
+- Pendências contábeis entre folha e financeiro sem rastreabilidade
+- Gestores sem visibilidade do custo de mão de obra
+- Controle de ativos em poder de funcionários inexistente
+- Segurança do trabalho desvinculada do RH — EPI sem controle integrado
+- Oportunidade: automação HR360→Senior, workflows reembolso, RPA para kits
+
+CONTABILIDADE:
+- Lançamentos, fechamento e provisões majoritariamente manuais
+- Conciliações com planilhas e e-mails, integração PeopleSoft limitada
+- Controle de PDD por título inexistente
+- Operações internacionais (Argentina, energia) manuais
+- Relatórios gerenciais em Excel
+- Oportunidade: parametrizações ERP, ferramentas de auditoria integradas
+
+COMPLIANCE & AUDITORIA:
+- Auditoria eletrônica contratada mas pouco utilizada
+- Apuração de impostos pela Vexia sem visibilidade da Santista
+- Multas por atrasos com pouca gestão ativa
+- GRC limitado, baseline de segurança básico
+- Oportunidade: expansão auditorias eletrônicas, governança de riscos
+
+SEGURANÇA & TECNOLOGIA:
+- Ecossistema: PeopleSoft, Senior, HR360, Request, Anfe, GSEC
+- Automação parcial via RPA (extratos, processos repetitivos)
+- Riscos de fraude em cobranças (2ª via boletos, golpes WhatsApp)
+- Falta de padronização tecnológica e integração sistêmica
+- Oportunidade: controles antifraude, centralização tecnológica
+
+CONCLUSÃO:
+Base sólida de operação BPO, mas desafios relevantes: elevada manualidade, baixa integração tecnológica, ausência de controles robustos, procedimentos desatualizados (sobretudo fiscal e financeiro). Prioridades: automação, integração sistêmica, governança e compliance.

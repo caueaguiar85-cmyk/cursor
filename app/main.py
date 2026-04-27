@@ -308,6 +308,11 @@ LANDING_HTML = """<!DOCTYPE html>
         <span>Agentes IA</span>
         <span class="sidebar-badge">&middot; 7</span>
       </a>
+      <a class="sidebar-item" data-page="vexia" href="#vexia">
+        <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span>Vexia</span>
+        <span class="sidebar-badge">&middot; 7</span>
+      </a>
 
       <div class="sidebar-divider" style="margin-top: auto;"></div>
 
@@ -1761,6 +1766,403 @@ LANDING_HTML = """<!DOCTYPE html>
         </div>
       </div>
 
+      <!-- ══ PAGE: VEXIA ══ -->
+      <div class="page" id="page-vexia" style="display:none">
+        <div class="page-header">
+          <div class="page-header-text">
+            <h1 class="page-title">Vexia &mdash; BPO &amp; Consultoria</h1>
+            <p class="page-subtitle">An&aacute;lise consolidada dos processos de BPO operados pela Vexia para a Santista</p>
+          </div>
+          <div class="page-header-actions">
+            <span class="page-counter font-mono">7 &aacute;reas mapeadas &middot; 300 colaboradores Vexia</span>
+          </div>
+        </div>
+        <div class="page-header-divider"></div>
+
+        <!-- RESUMO EXECUTIVO -->
+        <div class="forms-section">
+          <div class="forms-section-header">
+            <h2 class="section-heading">Resumo Executivo</h2>
+          </div>
+          <div class="card-section" style="line-height:1.7">
+            <p>A <strong>Vexia</strong> (300 colaboradores) &eacute; especialista em BPO e ITO, operando &aacute;reas cr&iacute;ticas da Santista: <strong>Fiscal, Suprimentos, Financeiro, RH/Folha, Contabilidade, Compliance e Tecnologia</strong>. A Santista contrata BPO full, exceto an&aacute;lise de cr&eacute;dito e compras (internas).</p>
+            <p style="margin-top:var(--space-3)">Os principais desafios envolvem <strong>processos arcaicos</strong> (especialmente fiscal), <strong>alta depend&ecirc;ncia de documentos f&iacute;sicos</strong>, baixa integra&ccedil;&atilde;o sist&ecirc;mica e elevado grau de manualidade. A falta de controle documental eficiente e aus&ecirc;ncia de procedimentos claros impacta qualidade e conformidade, gerando <strong>riscos fiscais e financeiros</strong>.</p>
+          </div>
+        </div>
+
+        <div class="page-header-divider" style="margin-top:var(--space-6)"></div>
+
+        <!-- HIGHLIGHTS TABLE -->
+        <div class="forms-section">
+          <div class="forms-section-header">
+            <h2 class="section-heading">Highlights</h2>
+            <p class="card-subtitle">Vis&atilde;o consolidada dos principais pontos cr&iacute;ticos identificados</p>
+          </div>
+          <div class="card-section" style="overflow-x:auto">
+            <table class="data-table" style="width:100%">
+              <thead>
+                <tr>
+                  <th style="width:15%">Aspecto</th>
+                  <th style="width:30%">Descri&ccedil;&atilde;o</th>
+                  <th style="width:25%">Impacto / Risco</th>
+                  <th style="width:30%">Oportunidade</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>Fiscal</strong></td><td>Processo arcaico com uso intenso de papel (DANF, CTE), documentos f&iacute;sicos escaneados e enviados por e-mail</td><td>Risco elevado de erros, atraso e exposi&ccedil;&atilde;o fiscal</td><td>Digitaliza&ccedil;&atilde;o completa, padroniza&ccedil;&atilde;o e automatiza&ccedil;&atilde;o</td></tr>
+                <tr><td><strong>Gest&atilde;o Documental</strong></td><td>Falta de sistema para gest&atilde;o de NFs e docs fiscais; ~1.300 notas n&atilde;o digitadas/ano</td><td>Inconsist&ecirc;ncias fiscais e financeiras</td><td>Plataforma robusta e controle de fluxo</td></tr>
+                <tr><td><strong>Integra&ccedil;&atilde;o</strong></td><td>Baixa integra&ccedil;&atilde;o entre PeopleSoft, Senior, Request, GSEC; uso extensivo de planilhas</td><td>Riscos operacionais e baixa efici&ecirc;ncia</td><td>Automa&ccedil;&atilde;o, integra&ccedil;&atilde;o sist&ecirc;mica e RPA</td></tr>
+                <tr><td><strong>Financeiro</strong></td><td>Pagamentos com SLA 2 dias, mas 10% manuais geram inconsist&ecirc;ncias</td><td>Risco de pagamentos indevidos e atrasos</td><td>Automa&ccedil;&atilde;o e valida&ccedil;&atilde;o de dados</td></tr>
+                <tr><td><strong>Contas a Receber</strong></td><td>Estruturado via ERP, mas desafios em concilia&ccedil;&atilde;o e gest&atilde;o de inadimpl&ecirc;ncia</td><td>Dificuldade na gest&atilde;o financeira e cont&aacute;bil</td><td>Controle de PDD por t&iacute;tulo e concilia&ccedil;&otilde;es automatizadas</td></tr>
+                <tr><td><strong>RH / Folha</strong></td><td>Plataformas HR360 e Request; integra&ccedil;&atilde;o manual com Senior; 193 afastados</td><td>Sensibilidade em rescis&otilde;es, controle manual de afastados</td><td>Integra&ccedil;&atilde;o de sistemas e workflows formais</td></tr>
+                <tr><td><strong>Compliance</strong></td><td>Auditorias pouco utilizadas, visibilidade limitada, processos manuais</td><td>Risco de n&atilde;o conformidade fiscal e trabalhista</td><td>Auditoria eletr&ocirc;nica e transpar&ecirc;ncia</td></tr>
+                <tr><td><strong>Seguran&ccedil;a</strong></td><td>Riscos de fraude em cobran&ccedil;as (2&ordf; via boletos, golpes WhatsApp)</td><td>Exposi&ccedil;&atilde;o a fraudes e perda financeira</td><td>Controles adicionais e alertas preventivos</td></tr>
+                <tr><td><strong>Fornecedores</strong></td><td>Cadastro e habilita&ccedil;&atilde;o descentralizados e manuais</td><td>Risco de inconsist&ecirc;ncias e erros fiscais</td><td>Centralizar e automatizar cadastro</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="page-header-divider" style="margin-top:var(--space-6)"></div>
+
+        <!-- DETALHAMENTO POR AREAS -->
+        <div class="forms-section">
+          <div class="forms-section-header">
+            <h2 class="section-heading">Detalhamento por &Aacute;rea</h2>
+            <p class="card-subtitle">Processo atual, problemas identificados e oportunidades de melhoria</p>
+          </div>
+
+          <!-- FILTRO DE AREAS -->
+          <div class="area-filter-bar" id="vexia-area-filter" style="display:flex; gap:var(--space-2); flex-wrap:wrap; margin-bottom:var(--space-5)">
+            <button class="area-tab active" data-vexia-area="all">Todas</button>
+            <button class="area-tab" data-vexia-area="fiscal">Fiscal</button>
+            <button class="area-tab" data-vexia-area="suprimentos">Suprimentos</button>
+            <button class="area-tab" data-vexia-area="financeiro">Financeiro</button>
+            <button class="area-tab" data-vexia-area="rh">RH / Folha</button>
+            <button class="area-tab" data-vexia-area="contabilidade">Contabilidade</button>
+            <button class="area-tab" data-vexia-area="compliance">Compliance</button>
+            <button class="area-tab" data-vexia-area="tecnologia">Tecnologia</button>
+          </div>
+
+          <!-- 3.1 FISCAL -->
+          <div class="card-section vexia-area-card" data-vexia-area="fiscal" style="margin-bottom:var(--space-5)">
+            <h3 class="card-label-heading" style="color:var(--accent)">FISCAL</h3>
+            <details open>
+              <summary style="cursor:pointer; font-weight:600; margin-bottom:var(--space-3)">Processo Atual</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Processos predominantemente manuais e f&iacute;sicos para controle fiscal, principalmente recebimento de materiais com DANF escaneados e enviados por e-mail</li>
+                <li>Confer&ecirc;ncia f&iacute;sica pela Santista, lan&ccedil;amento e registro pela Vexia &mdash; documentos frequentemente incompletos</li>
+                <li>Aus&ecirc;ncia de sistema dedicado para gest&atilde;o de NFs; ~1.300 notas n&atilde;o digitadas ou auditadas por ano</li>
+                <li>Falta de responsabilidade clara entre &aacute;reas para gest&atilde;o de documentos fiscais</li>
+                <li>Problemas com tributa&ccedil;&atilde;o, erros na emiss&atilde;o e baixa intelig&ecirc;ncia para bloqueio de erros</li>
+                <li>CTEs de entrada n&atilde;o reconhecidos em tempo h&aacute;bil &mdash; exposi&ccedil;&atilde;o fiscal e cont&aacute;bil</li>
+                <li>Devolu&ccedil;&otilde;es, adiantamentos e compras com cart&atilde;o desvinculados e manuais</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--danger); margin-bottom:var(--space-3)">Problemas Identificados</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Processo muito manual e descentralizado</li>
+                <li>Falta de padroniza&ccedil;&atilde;o e defini&ccedil;&atilde;o clara de processos e rotas para NFs</li>
+                <li>Exposi&ccedil;&atilde;o a riscos fiscais e atrasos no pagamento</li>
+                <li>Documentos fiscais e financeiros que n&atilde;o &ldquo;conversam&rdquo; entre si</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--success); margin-bottom:var(--space-3)">Oportunidades</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Digitaliza&ccedil;&atilde;o e automa&ccedil;&atilde;o do processo fiscal</li>
+                <li>Plataforma &uacute;nica para gest&atilde;o de documentos fiscais</li>
+                <li>Intelig&ecirc;ncia fiscal para valida&ccedil;&atilde;o autom&aacute;tica</li>
+                <li>Redesenho ponta a ponta para CTE e fretes</li>
+              </ul>
+            </details>
+          </div>
+
+          <!-- 3.2 SUPRIMENTOS -->
+          <div class="card-section vexia-area-card" data-vexia-area="suprimentos" style="margin-bottom:var(--space-5)">
+            <h3 class="card-label-heading" style="color:var(--accent)">SUPRIMENTOS</h3>
+            <details open>
+              <summary style="cursor:pointer; font-weight:600; margin-bottom:var(--space-3)">Processo Atual</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Recebimentos descentralizados, m&uacute;ltiplas &aacute;reas enviando documentos &agrave; Vexia</li>
+                <li>Cadastro e habilita&ccedil;&atilde;o de fornecedores pelo Suprimentos da Santista, controle fragmentado</li>
+                <li>Falta de integra&ccedil;&atilde;o entre ordens de compra, cadastro de fornecedores e contas cont&aacute;beis</li>
+                <li>Devolu&ccedil;&otilde;es, adiantamentos e compras com cart&atilde;o desvinculados e manuais</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--danger); margin-bottom:var(--space-3)">Problemas Identificados</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Falta de controle e padroniza&ccedil;&atilde;o</li>
+                <li>Risco operacional e fiscal devido a processos manuais</li>
+                <li>Exposi&ccedil;&atilde;o por falta de visibilidade nas opera&ccedil;&otilde;es</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--success); margin-bottom:var(--space-3)">Oportunidades</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Centraliza&ccedil;&atilde;o e automatiza&ccedil;&atilde;o do cadastro e gest&atilde;o de fornecedores</li>
+                <li>Integra&ccedil;&atilde;o dos processos de compras, recebimentos e pagamentos</li>
+                <li>Implementa&ccedil;&atilde;o de workflows e controles automatizados</li>
+              </ul>
+            </details>
+          </div>
+
+          <!-- 3.3 FINANCEIRO -->
+          <div class="card-section vexia-area-card" data-vexia-area="financeiro" style="margin-bottom:var(--space-5)">
+            <h3 class="card-label-heading" style="color:var(--accent)">FINANCEIRO</h3>
+            <details open>
+              <summary style="cursor:pointer; font-weight:600; margin-bottom:var(--space-3)">Processo Atual</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Vexia gerencia contas a pagar e contas a receber da Santista</li>
+                <li>Pagamentos majoritariamente via arquivos banc&aacute;rios eletr&ocirc;nicos (SLA 2 dias)</li>
+                <li>10% de pagamentos manuais &mdash; fonte de inconsist&ecirc;ncias</li>
+                <li>Concilia&ccedil;&atilde;o banc&aacute;ria e fluxos de caixa parcialmente automatizados, uso intenso de planilhas</li>
+                <li>Carteira de receb&iacute;veis com acordos comerciais complexos, sem controle de PDD por t&iacute;tulo</li>
+                <li>Gest&atilde;o de inadimpl&ecirc;ncia manual e complexa, baixa automa&ccedil;&atilde;o</li>
+                <li>Pagamento de mat&eacute;rias-primas (algod&atilde;o) com descompassos fiscal/operacional</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--danger); margin-bottom:var(--space-3)">Problemas Identificados</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Falta de gest&atilde;o ativa de contas a pagar (apenas pagamento do aprovado)</li>
+                <li>Baixa visibilidade e controle em processos manuais</li>
+                <li>Concilia&ccedil;&otilde;es e contabiliza&ccedil;&otilde;es complexas e demoradas</li>
+                <li>Riscos de pagamento indevido e atrasos</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--success); margin-bottom:var(--space-3)">Oportunidades</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Controle rigoroso e gest&atilde;o completa de contas a pagar</li>
+                <li>Automatizar concilia&ccedil;&otilde;es e controle de inadimpl&ecirc;ncia</li>
+                <li>Integra&ccedil;&atilde;o entre sistemas financeiros e fiscais</li>
+              </ul>
+            </details>
+          </div>
+
+          <!-- 3.4 RH / FOLHA -->
+          <div class="card-section vexia-area-card" data-vexia-area="rh" style="margin-bottom:var(--space-5)">
+            <h3 class="card-label-heading" style="color:var(--accent)">RH / FOLHA DE PAGAMENTO</h3>
+            <details open>
+              <summary style="cursor:pointer; font-weight:600; margin-bottom:var(--space-3)">Processo Atual</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Todos os processos de folha e benef&iacute;cios transacionados pela Vexia</li>
+                <li>Admiss&atilde;o digital via <strong>HR360</strong> (sistema Vexia com OCR)</li>
+                <li>Demandas gerenciadas via plataforma <strong>Request</strong> com SLA definidos</li>
+                <li>Cadastro e manuten&ccedil;&atilde;o cadastral manuais no sistema <strong>Senior</strong></li>
+                <li>F&eacute;rias, rescis&otilde;es, c&aacute;lculo de folha e pagamentos pela Vexia (incl. emiss&atilde;o banc&aacute;ria e integra&ccedil;&atilde;o cont&aacute;bil)</li>
+                <li>Controle de ponto gerenciado pela Santista, integra&ccedil;&atilde;o pela Vexia</li>
+                <li>Apura&ccedil;&atilde;o e transmiss&atilde;o de encargos/impostos pela Vexia (E-Social, INSS, FGTS)</li>
+                <li>Gest&atilde;o de afastados e benef&iacute;cios manual &mdash; 193 afastados ativos</li>
+                <li>Volume: ~1.661 ativos, m&eacute;dia 65 admiss&otilde;es e 60 rescis&otilde;es/m&ecirc;s, R$13,5M movimentados/m&ecirc;s</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--danger); margin-bottom:var(--space-3)">Problemas Identificados</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Integra&ccedil;&atilde;o HR360 &rarr; Senior &eacute; manual (n&atilde;o integrado)</li>
+                <li>Aus&ecirc;ncia de workflow formal para aprova&ccedil;&atilde;o de descontos e reembolsos</li>
+                <li>Fragilidade na gest&atilde;o de afastados &mdash; descontrole financeiro (plano m&eacute;dico sem reembolso, farm&aacute;cia)</li>
+                <li>Rescis&atilde;o: processo cr&iacute;tico, prazo curto (10 dias), alto risco de multas</li>
+                <li>Admiss&otilde;es fora do prazo por urg&ecirc;ncia da produ&ccedil;&atilde;o + cancelamentos frequentes</li>
+                <li>Saldo devedor de funcion&aacute;rios demitidos n&atilde;o descontado na rescis&atilde;o &mdash; perdas financeiras</li>
+                <li>Pend&ecirc;ncias cont&aacute;beis entre folha e financeiro n&atilde;o rastreadas</li>
+                <li>Gestores sem visibilidade do custo de m&atilde;o de obra do centro de custo</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--success); margin-bottom:var(--space-3)">Oportunidades</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Automa&ccedil;&atilde;o da integra&ccedil;&atilde;o entre plataformas de RH</li>
+                <li>Workflows formais para reembolsos e descontos</li>
+                <li>Gest&atilde;o de afastados e benef&iacute;cios para minimizar perdas financeiras</li>
+                <li>Otimiza&ccedil;&atilde;o de admiss&atilde;o e rescis&atilde;o (RPA para kit autom&aacute;tico)</li>
+                <li>Visibilidade de custos de m&atilde;o de obra para gestores</li>
+              </ul>
+            </details>
+          </div>
+
+          <!-- 3.5 CONTABILIDADE -->
+          <div class="card-section vexia-area-card" data-vexia-area="contabilidade" style="margin-bottom:var(--space-5)">
+            <h3 class="card-label-heading" style="color:var(--accent)">CONTABILIDADE</h3>
+            <details open>
+              <summary style="cursor:pointer; font-weight:600; margin-bottom:var(--space-3)">Processo Atual</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Lan&ccedil;amentos cont&aacute;beis, fechamento e provis&otilde;es majoritariamente manuais</li>
+                <li>Concilia&ccedil;&otilde;es com planilhas e e-mails, baixa automa&ccedil;&atilde;o</li>
+                <li>Integra&ccedil;&atilde;o com PeopleSoft existe mas limitada; muitos lan&ccedil;amentos manuais</li>
+                <li>Controle de PDD por t&iacute;tulo inexistente</li>
+                <li>Opera&ccedil;&otilde;es internacionais (Argentina, energia) contabilizadas manualmente</li>
+                <li>Relat&oacute;rios gerenciais em Excel, pouca gera&ccedil;&atilde;o autom&aacute;tica pelo ERP</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--danger); margin-bottom:var(--space-3)">Problemas Identificados</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Alta depend&ecirc;ncia de processos manuais, risco de erros e atrasos</li>
+                <li>Despadroniza&ccedil;&atilde;o e baixa efici&ecirc;ncia</li>
+                <li>Falta de ferramentas automatizadas para concilia&ccedil;&atilde;o e controle fiscal</li>
+                <li>Limita&ccedil;&otilde;es do ERP que impactam qualidade do controle</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--success); margin-bottom:var(--space-3)">Oportunidades</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Parametriza&ccedil;&otilde;es e automa&ccedil;&otilde;es para reduzir lan&ccedil;amentos manuais</li>
+                <li>Ferramentas de auditoria e controle fiscal integradas</li>
+                <li>Revis&atilde;o e atualiza&ccedil;&atilde;o do ERP</li>
+              </ul>
+            </details>
+          </div>
+
+          <!-- 3.6 COMPLIANCE -->
+          <div class="card-section vexia-area-card" data-vexia-area="compliance" style="margin-bottom:var(--space-5)">
+            <h3 class="card-label-heading" style="color:var(--accent)">COMPLIANCE &amp; AUDITORIA</h3>
+            <details open>
+              <summary style="cursor:pointer; font-weight:600; margin-bottom:var(--space-3)">Processo Atual</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Auditoria eletr&ocirc;nica (Revises) contratada, por&eacute;m pouco utilizada pela Santista</li>
+                <li>Apura&ccedil;&atilde;o de impostos e obriga&ccedil;&otilde;es fiscais pela Vexia sem ampla visibilidade da Santista</li>
+                <li>Encargos e multas por atrasos com pouca gest&atilde;o ativa</li>
+                <li>Controle e gest&atilde;o de riscos (GRC) limitados, baseline de seguran&ccedil;a b&aacute;sico</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--danger); margin-bottom:var(--space-3)">Problemas Identificados</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Falta de transpar&ecirc;ncia e integra&ccedil;&atilde;o no processo de auditoria</li>
+                <li>Risco de n&atilde;o conformidade fiscal e trabalhista</li>
+                <li>Processos manuais limitam efetividade do controle</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--success); margin-bottom:var(--space-3)">Oportunidades</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Expans&atilde;o do uso de auditorias eletr&ocirc;nicas</li>
+                <li>Melhoria na comunica&ccedil;&atilde;o e visibilidade para a Santista</li>
+                <li>Fortalecimento da governan&ccedil;a de riscos e compliance</li>
+              </ul>
+            </details>
+          </div>
+
+          <!-- 3.7 TECNOLOGIA -->
+          <div class="card-section vexia-area-card" data-vexia-area="tecnologia" style="margin-bottom:var(--space-5)">
+            <h3 class="card-label-heading" style="color:var(--accent)">SEGURAN&Ccedil;A &amp; TECNOLOGIA</h3>
+            <details open>
+              <summary style="cursor:pointer; font-weight:600; margin-bottom:var(--space-3)">Processo Atual</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Plataformas diversas: PeopleSoft, Senior, HR360, Request, Anfe, GSEC</li>
+                <li>Automa&ccedil;&atilde;o parcial via RPA (extratos banc&aacute;rios, processos repetitivos)</li>
+                <li>Riscos de fraude em cobran&ccedil;a (2&ordf; via boletos, golpes via WhatsApp)</li>
+                <li>Estudo de tokens para substitui&ccedil;&atilde;o de FTA em processos financeiros</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--danger); margin-bottom:var(--space-3)">Problemas Identificados</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Falta de padroniza&ccedil;&atilde;o tecnol&oacute;gica e integra&ccedil;&atilde;o sist&ecirc;mica</li>
+                <li>Vulnerabilidades em processos de cobran&ccedil;a e comunica&ccedil;&atilde;o</li>
+                <li>Resist&ecirc;ncia &agrave; ado&ccedil;&atilde;o de novos procedimentos</li>
+              </ul>
+            </details>
+            <details style="margin-top:var(--space-3)">
+              <summary style="cursor:pointer; font-weight:600; color:var(--success); margin-bottom:var(--space-3)">Oportunidades</summary>
+              <ul style="line-height:1.7; padding-left:var(--space-5)">
+                <li>Solu&ccedil;&otilde;es de seguran&ccedil;a avan&ccedil;adas e controles antifraude</li>
+                <li>Centraliza&ccedil;&atilde;o e integra&ccedil;&atilde;o tecnol&oacute;gica ampliada</li>
+                <li>Capacita&ccedil;&atilde;o e gest&atilde;o da mudan&ccedil;a</li>
+              </ul>
+            </details>
+          </div>
+        </div>
+
+        <div class="page-header-divider" style="margin-top:var(--space-6)"></div>
+
+        <!-- DADOS OPERACIONAIS -->
+        <div class="forms-section">
+          <div class="forms-section-header">
+            <h2 class="section-heading">Dados Operacionais (Folha/RH)</h2>
+            <p class="card-subtitle">Indicadores extra&iacute;dos da reuni&atilde;o com a equipe Vexia</p>
+          </div>
+          <div class="forms-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:var(--space-4)">
+            <div class="card-section" style="text-align:center">
+              <span class="card-label-heading">ATIVOS</span>
+              <p style="font-size:2rem; font-weight:700; margin-top:var(--space-2)">1.661</p>
+              <p class="card-subtitle">colaboradores ativos</p>
+            </div>
+            <div class="card-section" style="text-align:center">
+              <span class="card-label-heading">AFASTADOS</span>
+              <p style="font-size:2rem; font-weight:700; margin-top:var(--space-2); color:var(--danger)">193</p>
+              <p class="card-subtitle">funcion&aacute;rios afastados</p>
+            </div>
+            <div class="card-section" style="text-align:center">
+              <span class="card-label-heading">ADMISS&Otilde;ES/M&Ecirc;S</span>
+              <p style="font-size:2rem; font-weight:700; margin-top:var(--space-2)">~65</p>
+              <p class="card-subtitle">m&eacute;dia mensal</p>
+            </div>
+            <div class="card-section" style="text-align:center">
+              <span class="card-label-heading">RESCIS&Otilde;ES/M&Ecirc;S</span>
+              <p style="font-size:2rem; font-weight:700; margin-top:var(--space-2); color:var(--danger)">~60</p>
+              <p class="card-subtitle">m&eacute;dia mensal</p>
+            </div>
+            <div class="card-section" style="text-align:center">
+              <span class="card-label-heading">MOVIMENTA&Ccedil;&Atilde;O</span>
+              <p style="font-size:2rem; font-weight:700; margin-top:var(--space-2)">R$13,5M</p>
+              <p class="card-subtitle">m&eacute;dia/m&ecirc;s (2025)</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-header-divider" style="margin-top:var(--space-6)"></div>
+
+        <!-- SISTEMAS UTILIZADOS -->
+        <div class="forms-section">
+          <div class="forms-section-header">
+            <h2 class="section-heading">Ecossistema de Sistemas</h2>
+            <p class="card-subtitle">Plataformas utilizadas na opera&ccedil;&atilde;o Vexia &harr; Santista</p>
+          </div>
+          <div class="forms-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:var(--space-3)">
+            <div class="card-section" style="text-align:center; padding:var(--space-4)">
+              <strong>PeopleSoft</strong><br><span class="card-subtitle">ERP / Financeiro / Cont&aacute;bil</span>
+            </div>
+            <div class="card-section" style="text-align:center; padding:var(--space-4)">
+              <strong>Senior</strong><br><span class="card-subtitle">Folha / DP / Ponto</span>
+            </div>
+            <div class="card-section" style="text-align:center; padding:var(--space-4)">
+              <strong>HR360</strong><br><span class="card-subtitle">Admiss&atilde;o Digital (OCR)</span>
+            </div>
+            <div class="card-section" style="text-align:center; padding:var(--space-4)">
+              <strong>Request</strong><br><span class="card-subtitle">Gest&atilde;o de Demandas / SLA</span>
+            </div>
+            <div class="card-section" style="text-align:center; padding:var(--space-4)">
+              <strong>Anfe</strong><br><span class="card-subtitle">Nota Fiscal Eletr&ocirc;nica</span>
+            </div>
+            <div class="card-section" style="text-align:center; padding:var(--space-4)">
+              <strong>GSEC</strong><br><span class="card-subtitle">Seguran&ccedil;a / Controles</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-header-divider" style="margin-top:var(--space-6)"></div>
+
+        <!-- TRANSCRICAO -->
+        <div class="forms-section">
+          <div class="forms-section-header">
+            <h2 class="section-heading">Transcri&ccedil;&atilde;o da Reuni&atilde;o</h2>
+            <p class="card-subtitle">Reuni&atilde;o realizada na semana de 21/04/2026 com equipe Vexia</p>
+          </div>
+          <div class="card-section">
+            <details>
+              <summary style="cursor:pointer; font-weight:600">Clique para expandir a transcri&ccedil;&atilde;o completa</summary>
+              <div id="vexia-transcricao" style="margin-top:var(--space-4); max-height:500px; overflow-y:auto; padding:var(--space-4); background:var(--surface-2); border-radius:var(--radius-md); font-size:0.9rem; line-height:1.8; white-space:pre-wrap"></div>
+            </details>
+          </div>
+        </div>
+      </div>
+
       <!-- ══ PAGE: CONFIGURACOES ══ -->
       <div class="page" id="page-configuracoes" style="display:none">
         <div class="page-header">
@@ -2168,6 +2570,28 @@ def export_form(area: str, interviewee: str = "", role: str = "", date: str = ""
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/vexia/transcricao")
+def get_vexia_transcricao():
+    """Retorna a transcrição da reunião com a Vexia."""
+    import os
+    path = os.path.join(os.path.dirname(__file__), "data", "vexia_transcricao.txt")
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return {"status": "ok", "text": f.read()}
+    return {"status": "ok", "text": "Transcrição não disponível."}
+
+
+@app.get("/api/vexia/resumo")
+def get_vexia_resumo():
+    """Retorna o resumo consolidado da análise Vexia."""
+    import os
+    path = os.path.join(os.path.dirname(__file__), "data", "vexia_resumo.txt")
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return {"status": "ok", "text": f.read()}
+    return {"status": "ok", "text": "Resumo não disponível."}
+
 
 @app.post("/api/forms/import")
 async def import_form(file: UploadFile = File(...)):
