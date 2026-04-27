@@ -2775,7 +2775,7 @@ LANDING_HTML = """<!DOCTYPE html>
   </div>
 </div>
 
-<script src="/static/js/app.js?v=20260422"></script>
+<script src="/static/js/app.js?v=20260427"></script>
 </body>
 </html>
 """

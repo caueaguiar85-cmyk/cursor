@@ -1065,19 +1065,157 @@ function loadInsightsData() {
 setTimeout(function() {
   loadDiagnosticData();
   loadInsightsData();
-  loadInterviewCount();
+  loadInterviews();
 }, 500);
 
-function loadInterviewCount() {
+function loadInterviews() {
   fetch('/api/interviews')
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.status !== 'ok') return;
-      var total = data.interviews.length;
+      var interviews = data.interviews;
+
+      // Update counter
       var el = document.getElementById('metric-entrevistas');
-      if (el) el.textContent = total;
+      if (el) el.textContent = interviews.length;
+
+      // Render cards
+      var grid = document.getElementById('interview-grid');
+      var emptyState = document.getElementById('interview-empty');
+      if (!grid) return;
+
+      if (interviews.length === 0) {
+        if (emptyState) emptyState.style.display = '';
+        renderCoverageMap([]);
+        return;
+      }
+      if (emptyState) emptyState.style.display = 'none';
+
+      var areaLabels = {
+        'supply-chain': 'SUPPLY CHAIN', 'producao': 'PRODU\u00c7\u00c3O', 'comercial': 'COMERCIAL',
+        'logistica': 'LOG\u00cdSTICA', 'ti': 'TI', 'financeiro': 'FINANCEIRO',
+        'qualidade': 'QUALIDADE', 'compras': 'COMPRAS', 'rh': 'RH', 'diretoria': 'DIRETORIA'
+      };
+
+      grid.innerHTML = '';
+      interviews.forEach(function(iv) {
+        var parts = iv.interviewee.split(' ');
+        var initials = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+
+        var dateStr = 'Sem data';
+        if (iv.date) {
+          var d = new Date(iv.date + 'T12:00:00');
+          var months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+          dateStr = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+
+        var aiTag = iv.analysis ? 'ANALISADO' : (iv.ia_ready ? 'PROCESSANDO...' : (iv.transcript ? 'TRANSCRITO' : 'NOVO'));
+        var areaTag = areaLabels[iv.department] || (iv.department || '').toUpperCase();
+        var pilarInfo = PILAR_MAP[iv.pillar];
+        var pilarTag = pilarInfo ? '<span class="interview-tag" style="color:' + pilarInfo.color + '">' + pilarInfo.label + '</span>' : '';
+
+        var card = document.createElement('div');
+        card.className = 'interview-card';
+        card.setAttribute('data-interview-area', iv.department || '');
+        card.innerHTML =
+          '<div class="interview-card-top">' +
+            '<div class="interview-avatar">' + initials + '</div>' +
+            '<div class="interview-info">' +
+              '<span class="interview-name">' + escapeHtml(iv.interviewee) + '</span>' +
+              '<span class="interview-role">' + escapeHtml(iv.role) + '</span>' +
+            '</div>' +
+            '<span class="interview-ai-tag font-mono">' + aiTag + '</span>' +
+          '</div>' +
+          '<div class="interview-tags">' +
+            (areaTag ? '<span class="interview-tag" style="color: var(--text-muted)">' + areaTag + '</span>' : '') +
+            pilarTag +
+          '</div>' +
+          '<div class="interview-footer">' +
+            '<span class="interview-date font-mono">' + dateStr + '</span>' +
+          '</div>';
+
+        grid.appendChild(card);
+      });
+
+      // Render coverage map
+      renderCoverageMap(interviews);
     })
-    .catch(function() {});
+    .catch(function(err) { console.warn('Load interviews error:', err); });
+}
+
+function renderCoverageMap(interviews) {
+  var tbody = document.getElementById('coverage-tbody');
+  if (!tbody) return;
+
+  var pilars = ['processos', 'sistemas', 'operacoes', 'organizacao', 'roadmap'];
+  var areas = ['supply-chain', 'producao', 'comercial', 'logistica', 'ti', 'financeiro', 'qualidade', 'compras', 'rh', 'diretoria'];
+  var areaLabels = {
+    'supply-chain': 'Supply Chain', 'producao': 'Produ\u00e7\u00e3o', 'comercial': 'Comercial',
+    'logistica': 'Log\u00edstica', 'ti': 'TI', 'financeiro': 'Financeiro',
+    'qualidade': 'Qualidade', 'compras': 'Compras', 'rh': 'RH', 'diretoria': 'Diretoria'
+  };
+
+  // Build coverage matrix: area → pilar → count
+  var matrix = {};
+  areas.forEach(function(a) {
+    matrix[a] = {};
+    pilars.forEach(function(p) { matrix[a][p] = 0; });
+  });
+
+  // Count: each interview with a department counts for its pillar (if set),
+  // or counts as general coverage for the area
+  interviews.forEach(function(iv) {
+    var dept = iv.department || '';
+    var pilar = iv.pillar || '';
+    if (matrix[dept]) {
+      if (pilar && matrix[dept][pilar] !== undefined) {
+        matrix[dept][pilar]++;
+      } else {
+        // No specific pillar — count as coverage for all pillars
+        pilars.forEach(function(p) { matrix[dept][p] += 0.5; });
+      }
+    }
+  });
+
+  // Check which areas have any interviews
+  var activeAreas = areas.filter(function(a) {
+    return interviews.some(function(iv) { return iv.department === a; });
+  });
+
+  if (activeAreas.length === 0) {
+    tbody.innerHTML = '<tr><td class="coverage-name" colspan="6" style="text-align: center; color: var(--text-subtle); font-style: italic;">Adicione entrevistas para popular o mapa</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  activeAreas.forEach(function(area) {
+    var tr = document.createElement('tr');
+    var tdName = document.createElement('td');
+    tdName.className = 'coverage-name';
+    tdName.textContent = areaLabels[area] || area;
+    tr.appendChild(tdName);
+
+    pilars.forEach(function(p) {
+      var td = document.createElement('td');
+      td.className = 'coverage-cell';
+      var count = matrix[area][p];
+      if (count >= 1) {
+        td.innerHTML = '<span class="coverage-dot coverage-dot--done" title="' + Math.floor(count) + ' entrevista(s)"></span>';
+      } else if (count > 0) {
+        td.innerHTML = '<span class="coverage-dot coverage-dot--partial" title="Cobertura parcial"></span>';
+      } else {
+        td.innerHTML = '<span class="coverage-dot coverage-dot--empty" title="Sem cobertura"></span>';
+      }
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+function loadInterviewCount() {
+  // Backward compat — just calls loadInterviews
+  loadInterviews();
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

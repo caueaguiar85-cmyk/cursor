@@ -1627,6 +1627,27 @@ html:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
   font-size: var(--text-xs);
 }
 
+.coverage-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.coverage-dot--done {
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 20%, transparent);
+}
+
+.coverage-dot--partial {
+  background: var(--warning, #f59e0b);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning, #f59e0b) 20%, transparent);
+}
+
+.coverage-dot--empty {
+  background: var(--border);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    PROJETO PAGE — enriched
    ═══════════════════════════════════════════════════════════════════════════ */
