@@ -27,6 +27,7 @@ AGENTS = {
             "Priorização de melhorias por impacto",
             "Diagnóstico estruturado MECE"
         ],
+        "max_tokens": 4096,
         "system_prompt": """Você é ARIA, um agente sênior de diagnóstico de maturidade em supply chain da consultoria Stoken Advisory.
 
 CONTEXTO DO CLIENTE:
@@ -67,6 +68,7 @@ Use markdown estruturado com headers, bullets e tabelas quando apropriado. Comec
             "Árvore de problemas MECE",
             "Plano de fechamento de gaps"
         ],
+        "max_tokens": 6000,
         "system_prompt": """Você é STRATEGOS, um agente de análise estratégica de gaps da consultoria Stoken Advisory.
 
 CONTEXTO DO CLIENTE:
@@ -104,6 +106,7 @@ FORMATO: Markdown com headers hierárquicos. Comece com "Síntese Executiva"."""
             "Planos de mitigação com owners",
             "Cenários de stress test"
         ],
+        "max_tokens": 6000,
         "system_prompt": """Você é SENTINEL, um agente de inteligência de riscos da consultoria Stoken Advisory.
 
 CONTEXTO DO CLIENTE:
@@ -140,6 +143,7 @@ FORMATO: Markdown com tabela de riscos. Comece com "Top 3 Riscos Críticos"."""
             "Análise de tendências do setor",
             "Identificação de práticas líderes"
         ],
+        "max_tokens": 6000,
         "system_prompt": """Você é NEXUS, um agente de inteligência de mercado e benchmarking da consultoria Stoken Advisory.
 
 CONTEXTO DO CLIENTE:
@@ -176,6 +180,7 @@ FORMATO: Markdown com tabelas comparativas. Comece com "Posicionamento Competiti
             "Priorização por ROI ajustado a risco",
             "Modelagem de investimento vs retorno"
         ],
+        "max_tokens": 8000,
         "system_prompt": """Você é CATALYST, um agente de modelagem financeira e business case da consultoria Stoken Advisory.
 
 CONTEXTO DO CLIENTE:
@@ -215,6 +220,7 @@ FORMATO: Markdown com tabelas financeiras. Comece com "Resumo do Portfólio de I
             "Detecção de contradições entre áreas",
             "Insights não-óbvios e correlações"
         ],
+        "max_tokens": 4096,
         "system_prompt": """Você é PRISM, um agente de análise qualitativa de entrevistas da consultoria Stoken Advisory.
 
 CONTEXTO DO CLIENTE:
@@ -253,6 +259,7 @@ FORMATO: Markdown com seções por tema. Comece com "Mapa de Consenso & Dissenso
             "Plano de change management",
             "KPIs de acompanhamento"
         ],
+        "max_tokens": 8000,
         "system_prompt": """Você é ATLAS, um agente de planejamento de transformação da consultoria Stoken Advisory.
 
 CONTEXTO DO CLIENTE:
@@ -295,6 +302,7 @@ FORMATO: Markdown com timeline e tabelas. Comece com "Visão da Transformação"
             "Priorização integrada por valor estratégico",
             "Dashboard narrativo de status geral"
         ],
+        "max_tokens": 8000,
         "system_prompt": """Você é SYNAPSE, o agente integrador da consultoria Stoken Advisory. Sua função é gerar uma análise consolidada de todo o workflow da consultoria, cruzando os resultados de todos os pilares e agentes num relatório holístico.
 
 CONTEXTO DO CLIENTE:
@@ -368,7 +376,7 @@ async def run_agent(agent_id: str, user_message: str, context: str = "") -> dict
 
         message = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=4096,
+            max_tokens=agent.get("max_tokens", 4096),
             system=system,
             messages=[{"role": "user", "content": user_message}]
         )
