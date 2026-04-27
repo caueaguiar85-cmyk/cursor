@@ -303,6 +303,10 @@ LANDING_HTML = """<!DOCTYPE html>
         <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
         <span>Roadmap</span>
       </a>
+      <a class="sidebar-item" data-page="estrategia" href="#estrategia">
+        <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M6 20V10M12 20V4M18 20v-6"/></svg>
+        <span>Estrat&eacute;gia</span>
+      </a>
       <a class="sidebar-item" data-page="agentes" href="#agentes">
         <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a2 2 0 110 4h-1.07A7.001 7.001 0 0113 23h-2a7.001 7.001 0 01-6.93-5H3a2 2 0 110-4h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/></svg>
         <span>Agentes IA</span>
@@ -1575,6 +1579,368 @@ LANDING_HTML = """<!DOCTYPE html>
         </div>
       </div>
 
+      <!-- ══ PAGE: ESTRATÉGIA ══ -->
+      <div class="page" id="page-estrategia" style="display:none">
+        <div class="page-header">
+          <div class="page-header-text">
+            <h1 class="page-title">Estrat&eacute;gia de Automa&ccedil;&atilde;o</h1>
+            <p class="page-subtitle">Matriz de prioriza&ccedil;&atilde;o e roadmap BPO &mdash; Vexia &times; Santista</p>
+          </div>
+          <div class="page-header-actions">
+            <span class="page-counter font-mono">15 iniciativas &middot; 3 fases</span>
+          </div>
+        </div>
+        <div class="page-header-divider"></div>
+
+        <!-- Métricas resumo -->
+        <div class="metrics-strip" style="margin-bottom: var(--space-8)">
+          <div class="metric-cell">
+            <span class="metric-label">QUICK WINS</span>
+            <span class="metric-value font-mono" style="color: var(--success)">6</span>
+          </div>
+          <div class="metric-cell">
+            <span class="metric-label">ESTRAT&Eacute;GICOS</span>
+            <span class="metric-value font-mono" style="color: var(--accent)">5</span>
+          </div>
+          <div class="metric-cell">
+            <span class="metric-label">PADR&Atilde;O</span>
+            <span class="metric-value font-mono">4</span>
+          </div>
+          <div class="metric-cell">
+            <span class="metric-label">PRAZO FASE 1</span>
+            <span class="metric-value font-mono">0&ndash;30 dias</span>
+          </div>
+          <div class="metric-cell">
+            <span class="metric-label">&Aacute;REAS IMPACTADAS</span>
+            <span class="metric-value font-mono">7</span>
+          </div>
+        </div>
+
+        <!-- ─── MATRIZ DE PRIORIZAÇÃO ─── -->
+        <h2 class="section-heading">Matriz de Prioriza&ccedil;&atilde;o</h2>
+        <p class="body-text" style="margin-bottom: var(--space-6); color: var(--text-muted)">
+          Classifica&ccedil;&atilde;o por impacto no neg&oacute;cio versus esfor&ccedil;o de implementa&ccedil;&atilde;o.
+          Cada iniciativa &eacute; posicionada em seu quadrante estrat&eacute;gico.
+        </p>
+
+        <div class="matrix-wrapper">
+          <!-- Eixo Y -->
+          <div class="matrix-y-axis">
+            <span class="matrix-axis-label">IMPACTO</span>
+            <svg width="12" height="60" viewBox="0 0 12 60"><line x1="6" y1="55" x2="6" y2="5" stroke="currentColor" stroke-width="1.5"/><polyline points="2,10 6,2 10,10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+          </div>
+
+          <div class="matrix-body">
+            <div class="matrix-grid">
+
+              <!-- Q1: Alto impacto + Baixo esforço = QUICK WINS -->
+              <div class="matrix-quadrant matrix-q-qw">
+                <div class="matrix-q-header">
+                  <span class="matrix-q-tag font-mono">QUICK WINS</span>
+                  <span class="matrix-q-sub">Alto impacto &middot; Baixo esfor&ccedil;o</span>
+                </div>
+                <div class="matrix-items">
+                  <div class="matrix-item matrix-item--qw">
+                    <span class="matrix-item-num font-mono">01</span>
+                    <div>
+                      <span class="matrix-item-title">Workflow de rescis&atilde;o com alertas D+0</span>
+                      <span class="matrix-item-area font-mono">RH</span>
+                    </div>
+                  </div>
+                  <div class="matrix-item matrix-item--qw">
+                    <span class="matrix-item-num font-mono">02</span>
+                    <div>
+                      <span class="matrix-item-title">Integra&ccedil;&atilde;o HR360 &rarr; Senior (admiss&atilde;o)</span>
+                      <span class="matrix-item-area font-mono">RH</span>
+                    </div>
+                  </div>
+                  <div class="matrix-item matrix-item--qw">
+                    <span class="matrix-item-num font-mono">03</span>
+                    <div>
+                      <span class="matrix-item-title">Controle de saldo devedor na rescis&atilde;o</span>
+                      <span class="matrix-item-area font-mono">RH &middot; Financeiro</span>
+                    </div>
+                  </div>
+                  <div class="matrix-item matrix-item--qw">
+                    <span class="matrix-item-num font-mono">08</span>
+                    <div>
+                      <span class="matrix-item-title">Dashboard custo de m&atilde;o de obra por gestor</span>
+                      <span class="matrix-item-area font-mono">RH &middot; Contabilidade</span>
+                    </div>
+                  </div>
+                  <div class="matrix-item matrix-item--qw">
+                    <span class="matrix-item-num font-mono">09</span>
+                    <div>
+                      <span class="matrix-item-title">Ficha digital de EPI (assinatura eletr&ocirc;nica)</span>
+                      <span class="matrix-item-area font-mono">RH &middot; Seg. Trabalho</span>
+                    </div>
+                  </div>
+                  <div class="matrix-item matrix-item--qw">
+                    <span class="matrix-item-num font-mono">10</span>
+                    <div>
+                      <span class="matrix-item-title">Agente IA WhatsApp (autoatendimento RH)</span>
+                      <span class="matrix-item-area font-mono">RH</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Q2: Alto impacto + Alto esforço = ESTRATÉGICOS -->
+              <div class="matrix-quadrant matrix-q-es">
+                <div class="matrix-q-header">
+                  <span class="matrix-q-tag font-mono">ESTRAT&Eacute;GICOS</span>
+                  <span class="matrix-q-sub">Alto impacto &middot; Alto esfor&ccedil;o</span>
+                </div>
+                <div class="matrix-items">
+                  <div class="matrix-item matrix-item--es">
+                    <span class="matrix-item-num font-mono">04</span>
+                    <div>
+                      <span class="matrix-item-title">Matching OC &harr; NF &harr; Pagamento</span>
+                      <span class="matrix-item-area font-mono">Suprimentos &middot; Financeiro</span>
+                    </div>
+                  </div>
+                  <div class="matrix-item matrix-item--es">
+                    <span class="matrix-item-num font-mono">05</span>
+                    <div>
+                      <span class="matrix-item-title">Digitaliza&ccedil;&atilde;o NFs/CTEs via OCR</span>
+                      <span class="matrix-item-area font-mono">Fiscal</span>
+                    </div>
+                  </div>
+                  <div class="matrix-item matrix-item--es">
+                    <span class="matrix-item-num font-mono">06</span>
+                    <div>
+                      <span class="matrix-item-title">Controle de afastados (pl. m&eacute;dico + farm&aacute;cia)</span>
+                      <span class="matrix-item-area font-mono">RH &middot; Financeiro</span>
+                    </div>
+                  </div>
+                  <div class="matrix-item matrix-item--es">
+                    <span class="matrix-item-num font-mono">07</span>
+                    <div>
+                      <span class="matrix-item-title">Concilia&ccedil;&atilde;o banc&aacute;ria 100% automatizada</span>
+                      <span class="matrix-item-area font-mono">Financeiro</span>
+                    </div>
+                  </div>
+                  <div class="matrix-item matrix-item--es">
+                    <span class="matrix-item-num font-mono">14</span>
+                    <div>
+                      <span class="matrix-item-title">Integra&ccedil;&atilde;o PeopleSoft &harr; Senior (lotes cont&aacute;beis)</span>
+                      <span class="matrix-item-area font-mono">Contabilidade &middot; RH</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Q3: Médio impacto + Baixo/Médio esforço = PADRÃO -->
+              <div class="matrix-quadrant matrix-q-std">
+                <div class="matrix-q-header">
+                  <span class="matrix-q-tag font-mono">PADR&Atilde;O</span>
+                  <span class="matrix-q-sub">M&eacute;dio impacto &middot; Esfor&ccedil;o vari&aacute;vel</span>
+                </div>
+                <div class="matrix-items">
+                  <div class="matrix-item">
+                    <span class="matrix-item-num font-mono">12</span>
+                    <div>
+                      <span class="matrix-item-title">Controle de ativos corporativos na rescis&atilde;o</span>
+                      <span class="matrix-item-area font-mono">RH &middot; TI</span>
+                    </div>
+                  </div>
+                  <div class="matrix-item">
+                    <span class="matrix-item-num font-mono">13</span>
+                    <div>
+                      <span class="matrix-item-title">Relat&oacute;rios gerenciais automatizados</span>
+                      <span class="matrix-item-area font-mono">Contabilidade</span>
+                    </div>
+                  </div>
+                  <div class="matrix-item">
+                    <span class="matrix-item-num font-mono">15</span>
+                    <div>
+                      <span class="matrix-item-title">Plataforma antifraude em cobran&ccedil;as</span>
+                      <span class="matrix-item-area font-mono">Tecnologia</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Q4: Médio impacto + Alto esforço = PLANEJAR -->
+              <div class="matrix-quadrant matrix-q-plan">
+                <div class="matrix-q-header">
+                  <span class="matrix-q-tag font-mono">PLANEJAR</span>
+                  <span class="matrix-q-sub">M&eacute;dio impacto &middot; Alto esfor&ccedil;o</span>
+                </div>
+                <div class="matrix-items">
+                  <div class="matrix-item">
+                    <span class="matrix-item-num font-mono">11</span>
+                    <div>
+                      <span class="matrix-item-title">GRC automatizado + auditoria eletr&ocirc;nica ativa</span>
+                      <span class="matrix-item-area font-mono">Compliance</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /matrix-grid -->
+
+            <!-- Eixo X -->
+            <div class="matrix-x-axis">
+              <span class="matrix-axis-label">ESFOR&Ccedil;O</span>
+              <svg width="60" height="12" viewBox="0 0 60 12"><line x1="5" y1="6" x2="55" y2="6" stroke="currentColor" stroke-width="1.5"/><polyline points="50,2 58,6 50,10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            </div>
+          </div><!-- /matrix-body -->
+        </div><!-- /matrix-wrapper -->
+
+        <!-- ─── ROADMAP BPO ─── -->
+        <h2 class="section-heading" style="margin-top: var(--space-10)">Roadmap de Implementa&ccedil;&atilde;o BPO</h2>
+        <p class="body-text" style="margin-bottom: var(--space-6); color: var(--text-muted)">
+          Plano de execu&ccedil;&atilde;o em 3 fases baseado no diagn&oacute;stico das &aacute;reas Vexia &mdash; priorizando
+          estancar perdas financeiras imediatas antes de conectar os silos sistêmicos.
+        </p>
+
+        <!-- Fase 1 -->
+        <div class="roadmap-phase">
+          <div class="roadmap-phase-header">
+            <span class="roadmap-phase-tag font-mono">FASE 1</span>
+            <span class="roadmap-phase-name">Estancar as hemorragias</span>
+            <span class="roadmap-phase-period font-mono">0&ndash;30 dias</span>
+          </div>
+          <div class="roadmap-items">
+            <div class="roadmap-item">
+              <div class="roadmap-marker roadmap-marker--accent"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Workflow de rescis&atilde;o com alerta autom&aacute;tico D+0</span>
+                <span class="roadmap-item-meta font-mono">RH &middot; n8n + Request &middot; Impacto: alto</span>
+                <p class="roadmap-item-desc">Trigger no Request ao abrir chamado de rescis&atilde;o: calcula D+10, dispara alertas em D+5, D+8 e D+9 para o operador Vexia e gestor respons&aacute;vel. Elimina o risco de multa trabalhista por prazo estourado nos ~60 rescis&otilde;es/m&ecirc;s.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-marker roadmap-marker--accent"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Controle de saldo devedor antes da rescis&atilde;o</span>
+                <span class="roadmap-item-meta font-mono">RH &middot; Financeiro &middot; Query Senior &middot; Impacto: alto</span>
+                <p class="roadmap-item-desc">Query autom&aacute;tica no Senior ao receber chamado de rescis&atilde;o: verifica farm&aacute;cia, empr&eacute;stimos e outros d&eacute;bitos. Exibe alerta para operador antes do c&aacute;lculo. Evita a perda definitiva por saldo devedor n&atilde;o descontado.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-marker roadmap-marker--accent"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Controle centralizado de afastados (step intermedi&aacute;rio)</span>
+                <span class="roadmap-item-meta font-mono">RH &middot; Relat&oacute;rio autom&aacute;tico Senior &middot; Impacto: m&eacute;dio</span>
+                <p class="roadmap-item-desc">Relat&oacute;rio semanal autom&aacute;tico dos 193 afastados com status de reembolso (plano m&eacute;dico, farm&aacute;cia). Substitui o controle manual atual por uma planilha gerada pelo pr&oacute;prio sistema enquanto a integra&ccedil;&atilde;o completa &eacute; desenvolvida.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-marker roadmap-marker--accent"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Dashboard de custo de m&atilde;o de obra por centro de custo</span>
+                <span class="roadmap-item-meta font-mono">RH &middot; Contabilidade &middot; Senior API &middot; Impacto: m&eacute;dio</span>
+                <p class="roadmap-item-desc">Extrai dados de folha do Senior e exibe por &aacute;rea/gestor na plataforma. Gestores passam a ter visibilidade do custo de m&atilde;o de obra sem depender de relat&oacute;rios mensais manuais. Resolve a opacidade total apontada na entrevista.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fase 2 -->
+        <div class="roadmap-phase">
+          <div class="roadmap-phase-header">
+            <span class="roadmap-phase-tag font-mono">FASE 2</span>
+            <span class="roadmap-phase-name">Conectar os silos</span>
+            <span class="roadmap-phase-period font-mono">1&ndash;3 meses</span>
+          </div>
+          <div class="roadmap-items">
+            <div class="roadmap-item">
+              <div class="roadmap-marker"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Integra&ccedil;&atilde;o HR360 &rarr; Senior via RPA (cadastro de admiss&atilde;o)</span>
+                <span class="roadmap-item-meta font-mono">RH &middot; RPA/n8n &middot; Impacto: alto</span>
+                <p class="roadmap-item-desc">Automatiza a re-digita&ccedil;&atilde;o manual do HR360 para o Senior: ap&oacute;s admiss&atilde;o digital aprovada no HR360, RPA executa o cadastro no Senior com os mesmos dados. Elimina duplo trabalho e erros de digita&ccedil;&atilde;o nas ~65 admiss&otilde;es/m&ecirc;s.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-marker"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Digitaliza&ccedil;&atilde;o de NFs e CTEs via OCR + valida&ccedil;&atilde;o autom&aacute;tica</span>
+                <span class="roadmap-item-meta font-mono">Fiscal &middot; AWS Textract / Google Vision &middot; Impacto: alto</span>
+                <p class="roadmap-item-desc">Elimina as ~1.300 notas n&atilde;o digitadas/ano: pipeline OCR captura NFs e CTEs de entrada, valida CNPJ e valores, e lança automaticamente na plataforma fiscal. Reduz exposi&ccedil;&atilde;o fiscal e o backlog cr&ocirc;nico da &aacute;rea.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-marker"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Matching OC &harr; NF &harr; Pagamento no Financeiro</span>
+                <span class="roadmap-item-meta font-mono">Suprimentos &middot; Financeiro &middot; PostgreSQL &middot; Impacto: alto</span>
+                <p class="roadmap-item-desc">Cria tabela de concilia&ccedil;&atilde;o tripartite: cada pagamento referencia a OC de origem e a NF recebida. Identifica automaticamente pagamentos sem OC vinculada (risco de fraude) e NFs sem pagamento correspondente. Substitui concilia&ccedil;&atilde;o em planilha.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-marker"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Agente IA WhatsApp para autoatendimento RH</span>
+                <span class="roadmap-item-meta font-mono">RH &middot; Claude API + WhatsApp Business &middot; Impacto: m&eacute;dio</span>
+                <p class="roadmap-item-desc">Evolui o chatbot FAQ est&aacute;tico atual para um agente com IA: responde consultas de demonstrativo, espelho de ponto, status de benefícios e prazos de pagamento. Conecta ao Senior via API. Reduz volume de chamados no Request.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-marker"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Ficha digital de entrega de EPI com assinatura eletr&ocirc;nica</span>
+                <span class="roadmap-item-meta font-mono">RH &middot; Seg. Trabalho &middot; Impacto: m&eacute;dio</span>
+                <p class="roadmap-item-desc">Substitui a ficha de papel por formul&aacute;rio digital integrado ao cadastro do funcion&aacute;rio no Senior. Assinatura via app mobile na linha de produ&ccedil;&atilde;o. Elimina passivo trabalhista por aus&ecirc;ncia de comprovante de entrega de EPI.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fase 3 -->
+        <div class="roadmap-phase">
+          <div class="roadmap-phase-header">
+            <span class="roadmap-phase-tag font-mono">FASE 3</span>
+            <span class="roadmap-phase-name">Governan&ccedil;a e escala</span>
+            <span class="roadmap-phase-period font-mono">3&ndash;6 meses</span>
+          </div>
+          <div class="roadmap-items">
+            <div class="roadmap-item">
+              <div class="roadmap-marker"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Integra&ccedil;&atilde;o PeopleSoft &harr; Senior (lotes cont&aacute;beis autom&aacute;ticos)</span>
+                <span class="roadmap-item-meta font-mono">Contabilidade &middot; RH &middot; API/ETL &middot; Impacto: alto</span>
+                <p class="roadmap-item-desc">Elimina os lotes cont&aacute;beis manuais de folha: ap&oacute;s fechamento no Senior, dados s&atilde;o transmitidos automaticamente ao PeopleSoft com mapeamento de contas configurado. Resolve o principal foco de pend&ecirc;ncias cont&aacute;beis acumuladas.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-marker"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Concilia&ccedil;&atilde;o banc&aacute;ria 100% automatizada</span>
+                <span class="roadmap-item-meta font-mono">Financeiro &middot; API Bancos &middot; Impacto: alto</span>
+                <p class="roadmap-item-desc">Substitui as planilhas de concilia&ccedil;&atilde;o banc&aacute;ria por conector direto com API dos bancos utilizados. Concilia&ccedil;&atilde;o rodada diariamente de forma autom&aacute;tica; divergências ficam em fila de aprova&ccedil;&atilde;o humana. SLA de fechamento reduzido de dias para horas.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-marker"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">GRC automatizado com alertas proativos de compliance</span>
+                <span class="roadmap-item-meta font-mono">Compliance &middot; Auditoria &middot; Impacto: m&eacute;dio</span>
+                <p class="roadmap-item-desc">Ativa a ferramenta de auditoria eletr&ocirc;nica j&aacute; contratada e configura alertas autom&aacute;ticos para obrigações fiscais, prazos de guias e inconsist&ecirc;ncias entre e-Social e folha. Transforma compliance de reativo para preditivo.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-marker"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Controle de ativos corporativos integrado &agrave; rescis&atilde;o</span>
+                <span class="roadmap-item-meta font-mono">RH &middot; TI &middot; Impacto: m&eacute;dio</span>
+                <p class="roadmap-item-desc">Cadastro de ativos (notebooks, ve&iacute;culos, ferramentas) vinculado ao registro do funcion&aacute;rio no Senior. Ao abrir chamado de rescis&atilde;o, checklist de devolu&ccedil;&atilde;o &eacute; gerado automaticamente para RH e TI. Elimina ativos n&atilde;o recuperados.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-marker"></div>
+              <div class="roadmap-item-content">
+                <span class="roadmap-item-title">Dashboard executivo unificado Santista (vis&atilde;o cross-&aacute;reas)</span>
+                <span class="roadmap-item-meta font-mono">Todas as &aacute;reas &middot; Plataforma Stoken &middot; Impacto: estrat&eacute;gico</span>
+                <p class="roadmap-item-desc">Consolida m&eacute;tricas operacionais de todas as &aacute;reas BPO em um painel &uacute;nico acess&iacute;vel pela Santista: custo de folha, status fiscal, concilia&ccedil;&atilde;o financeira, KPIs de RH e alertas de compliance. Transforma o BPO de reativo para transparente.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
       <!-- ══ PAGE: AGENTES IA ══ -->
       <div class="page" id="page-agentes" style="display:none">
         <div class="page-header">

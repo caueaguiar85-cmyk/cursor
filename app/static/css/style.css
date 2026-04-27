@@ -2742,3 +2742,150 @@ button, .btn, a.btn { border-radius: var(--radius); }
 .page {
   animation: fadeIn 0.2s ease-out;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MATRIZ DE PRIORIZAÇÃO — página Estratégia
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.matrix-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+}
+
+.matrix-y-axis {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: 8px;
+  flex-shrink: 0;
+}
+
+.matrix-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.matrix-axis-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-subtle);
+  writing-mode: horizontal-tb;
+}
+
+.matrix-y-axis .matrix-axis-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.matrix-x-axis {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-left: calc(50% - 30px);
+}
+
+.matrix-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 2px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.matrix-quadrant {
+  background: var(--bg-elevated);
+  padding: var(--space-4);
+  min-height: 200px;
+}
+
+.matrix-q-qw { background: color-mix(in srgb, var(--success) 5%, var(--bg-elevated)); }
+.matrix-q-es { background: color-mix(in srgb, var(--accent) 4%, var(--bg-elevated)); }
+.matrix-q-std { background: var(--bg-elevated); }
+.matrix-q-plan { background: var(--bg-subtle); }
+
+.matrix-q-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.matrix-q-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+
+.matrix-q-qw .matrix-q-tag { color: var(--success); }
+.matrix-q-es .matrix-q-tag { color: var(--accent); }
+.matrix-q-plan .matrix-q-tag { color: var(--text-subtle); }
+
+.matrix-q-sub {
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+}
+
+.matrix-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.matrix-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.matrix-item--qw {
+  border-color: color-mix(in srgb, var(--success) 30%, var(--border));
+}
+
+.matrix-item--es {
+  border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+}
+
+.matrix-item-num {
+  font-size: 10px;
+  color: var(--text-subtle);
+  flex-shrink: 0;
+  margin-top: 1px;
+  min-width: 18px;
+}
+
+.matrix-item-title {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.matrix-item-area {
+  display: block;
+  font-size: 10px;
+  color: var(--text-subtle);
+  margin-top: 1px;
+}
+
+@media (max-width: 768px) {
+  .matrix-grid { grid-template-columns: 1fr; }
+  .matrix-y-axis { display: none; }
+  .matrix-x-axis { display: none; }
+}
