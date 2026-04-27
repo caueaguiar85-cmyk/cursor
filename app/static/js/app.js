@@ -446,7 +446,8 @@ var AREA_QUESTIONS = {
       'Como s\u00e3o definidos, acompanhados e revisados os KPIs da \u00e1rea?',
       'Quais s\u00e3o os maiores gargalos da cadeia de suprimentos hoje?',
       'Existe visibilidade end-to-end da cadeia? Quais ferramentas s\u00e3o usadas?',
-      'Como \u00e9 feita a gest\u00e3o de riscos da cadeia (fornecedores, log\u00edstica, demanda)?'
+      'Como \u00e9 feita a gest\u00e3o de riscos da cadeia (fornecedores, log\u00edstica, demanda)?',
+      'Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para execut\u00e1-la?'
     ]
   },
   'producao': {
@@ -457,7 +458,8 @@ var AREA_QUESTIONS = {
       'Como funciona o custeio de produtos? Qual a granularidade dispon\u00edvel?',
       'Qual o OEE m\u00e9dio das linhas? Como \u00e9 medido?',
       'Como s\u00e3o tratadas as paradas n\u00e3o planejadas? Existe manuten\u00e7\u00e3o preventiva?',
-      'Como \u00e9 feito o sequenciamento de produ\u00e7\u00e3o? Quais crit\u00e9rios de prioriza\u00e7\u00e3o?'
+      'Como \u00e9 feito o sequenciamento de produ\u00e7\u00e3o? Quais crit\u00e9rios de prioriza\u00e7\u00e3o?',
+      'Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para execut\u00e1-la?'
     ]
   },
   'comercial': {
@@ -468,7 +470,8 @@ var AREA_QUESTIONS = {
       'Como \u00e9 a pol\u00edtica de pre\u00e7os? Existe pricing din\u00e2mico?',
       'Qual o lead time prometido ao cliente vs realizado?',
       'Como \u00e9 gerenciado o portf\u00f3lio de clientes (ABC, segmenta\u00e7\u00e3o)?',
-      'Quais s\u00e3o as principais reclama\u00e7\u00f5es de clientes sobre entrega e atendimento?'
+      'Quais s\u00e3o as principais reclama\u00e7\u00f5es de clientes sobre entrega e atendimento?',
+      'Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para execut\u00e1-la?'
     ]
   },
   'logistica': {
@@ -479,7 +482,8 @@ var AREA_QUESTIONS = {
       'Como \u00e9 gerenciada a frota / transportadoras? Existe TMS?',
       'Qual o custo log\u00edstico como % do faturamento?',
       'Existe rastreabilidade de pedidos em tempo real?',
-      'Como \u00e9 feita a roteiriza\u00e7\u00e3o de entregas? Manual ou otimizada?'
+      'Como \u00e9 feita a roteiriza\u00e7\u00e3o de entregas? Manual ou otimizada?',
+      'Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para execut\u00e1-la?'
     ]
   },
   'ti': {
@@ -490,7 +494,8 @@ var AREA_QUESTIONS = {
       'Existem integra\u00e7\u00f5es autom\u00e1ticas entre sistemas ou \u00e9 tudo manual?',
       'Como \u00e9 a qualidade e confiabilidade dos dados para tomada de decis\u00e3o?',
       'Existe algum projeto de BI, data lake ou analytics em andamento?',
-      'Como \u00e9 o suporte de TI para a opera\u00e7\u00e3o? Qual o SLA?'
+      'Como \u00e9 o suporte de TI para a opera\u00e7\u00e3o? Qual o SLA?',
+      'Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para execut\u00e1-la?'
     ]
   },
   'financeiro': {
@@ -501,7 +506,8 @@ var AREA_QUESTIONS = {
       'Como s\u00e3o aprovados investimentos em supply chain? Qual o processo?',
       'Existe an\u00e1lise de capital de giro vinculada ao estoque?',
       'Como \u00e9 feito o or\u00e7amento anual de opera\u00e7\u00f5es? \u00c9 bottom-up ou top-down?',
-      'Quais KPIs financeiros s\u00e3o acompanhados com frequ\u00eancia mensal?'
+      'Quais KPIs financeiros s\u00e3o acompanhados com frequ\u00eancia mensal?',
+      'Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para execut\u00e1-la?'
     ]
   },
   'qualidade': {
@@ -512,7 +518,8 @@ var AREA_QUESTIONS = {
       'Qual o \u00edndice de retrabalho e refugo atual? Como \u00e9 medido?',
       'Existe sistema de rastreabilidade de lotes/mat\u00e9rias-primas?',
       'Como s\u00e3o tratadas as n\u00e3o-conformidades? Existe processo formal?',
-      'A empresa tem certifica\u00e7\u00f5es ISO? Como \u00e9 a manuten\u00e7\u00e3o?'
+      'A empresa tem certifica\u00e7\u00f5es ISO? Como \u00e9 a manuten\u00e7\u00e3o?',
+      'Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para execut\u00e1-la?'
     ]
   },
   'compras': {
@@ -523,7 +530,8 @@ var AREA_QUESTIONS = {
       'Qual o lead time m\u00e9dio de compra das principais mat\u00e9rias-primas?',
       'Existe depend\u00eancia cr\u00edtica de fornecedor \u00fanico em algum insumo?',
       'Como \u00e9 feita a negocia\u00e7\u00e3o de contratos? Existem contratos de longo prazo?',
-      'Qual o saving anual gerado pela \u00e1rea de compras?'
+      'Qual o saving anual gerado pela \u00e1rea de compras?',
+      'Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para execut\u00e1-la?'
     ]
   },
   'rh': {
@@ -534,7 +542,8 @@ var AREA_QUESTIONS = {
       'Qual o turnover da \u00e1rea? Quais os cargos mais cr\u00edticos para reter?',
       'Existe clareza de pap\u00e9is e responsabilidades (RACI) nos processos-chave?',
       'Como funciona a comunica\u00e7\u00e3o entre turnos e entre \u00e1reas?',
-      'Existem programas de reconhecimento por performance operacional?'
+      'Existem programas de reconhecimento por performance operacional?',
+      'Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para executá-la?'
     ]
   },
   'diretoria': {
@@ -545,7 +554,8 @@ var AREA_QUESTIONS = {
       'Como \u00e9 priorizado o investimento entre projetos concorrentes?',
       'A empresa tem vis\u00e3o de supply chain digital? Qual o horizonte?',
       'Quais foram as maiores mudan\u00e7as na opera\u00e7\u00e3o nos \u00faltimos 2 anos?',
-      'O que a diretoria considera como \u201cestado ideal\u201d da opera\u00e7\u00e3o em 3 anos?'
+      'O que a diretoria considera como \u201cestado ideal\u201d da opera\u00e7\u00e3o em 3 anos?',
+      'Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para execut\u00e1-la?'
     ]
   }
 };

@@ -25,6 +25,7 @@ AREA_QUESTIONS = {
             "Quais são os maiores gargalos da cadeia de suprimentos hoje?",
             "Existe visibilidade end-to-end da cadeia? Quais ferramentas são usadas?",
             "Como é feita a gestão de riscos da cadeia (fornecedores, logística, demanda)?",
+            "Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para executá-la?",
         ]
     },
     "producao": {
@@ -36,6 +37,7 @@ AREA_QUESTIONS = {
             "Qual o OEE médio das linhas? Como é medido?",
             "Como são tratadas as paradas não planejadas? Existe manutenção preventiva?",
             "Como é feito o sequenciamento de produção? Quais critérios de priorização?",
+            "Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para executá-la?",
         ]
     },
     "comercial": {
@@ -47,6 +49,7 @@ AREA_QUESTIONS = {
             "Qual o lead time prometido ao cliente vs realizado?",
             "Como é gerenciado o portfólio de clientes (ABC, segmentação)?",
             "Quais são as principais reclamações de clientes sobre entrega e atendimento?",
+            "Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para executá-la?",
         ]
     },
     "logistica": {
@@ -58,6 +61,7 @@ AREA_QUESTIONS = {
             "Qual o custo logístico como % do faturamento?",
             "Existe rastreabilidade de pedidos em tempo real?",
             "Como é feita a roteirização de entregas? Manual ou otimizada?",
+            "Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para executá-la?",
         ]
     },
     "ti": {
@@ -69,6 +73,7 @@ AREA_QUESTIONS = {
             "Como é a qualidade e confiabilidade dos dados para tomada de decisão?",
             "Existe algum projeto de BI, data lake ou analytics em andamento?",
             "Como é o suporte de TI para a operação? Qual o SLA?",
+            "Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para executá-la?",
         ]
     },
     "financeiro": {
@@ -80,6 +85,7 @@ AREA_QUESTIONS = {
             "Existe análise de capital de giro vinculada ao estoque?",
             "Como é feito o orçamento anual de operações? É bottom-up ou top-down?",
             "Quais KPIs financeiros são acompanhados com frequência mensal?",
+            "Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para executá-la?",
         ]
     },
     "qualidade": {
@@ -91,6 +97,7 @@ AREA_QUESTIONS = {
             "Existe sistema de rastreabilidade de lotes/matérias-primas?",
             "Como são tratadas as não-conformidades? Existe processo formal?",
             "A empresa tem certificações ISO? Como é a manutenção?",
+            "Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para executá-la?",
         ]
     },
     "compras": {
@@ -102,6 +109,7 @@ AREA_QUESTIONS = {
             "Existe dependência crítica de fornecedor único em algum insumo?",
             "Como é feita a negociação de contratos? Existem contratos de longo prazo?",
             "Qual o saving anual gerado pela área de compras?",
+            "Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para executá-la?",
         ]
     },
     "rh": {
@@ -113,6 +121,7 @@ AREA_QUESTIONS = {
             "Existe clareza de papéis e responsabilidades (RACI) nos processos-chave?",
             "Como funciona a comunicação entre turnos e entre áreas?",
             "Existem programas de reconhecimento por performance operacional?",
+            "Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para executá-la?",
         ]
     },
     "diretoria": {
@@ -124,6 +133,7 @@ AREA_QUESTIONS = {
             "A empresa tem visão de supply chain digital? Qual o horizonte?",
             "Quais foram as maiores mudanças na operação nos últimos 2 anos?",
             "O que a diretoria considera como 'estado ideal' da operação em 3 anos?",
+            "Na sua rotina de trabalho, qual a tarefa que te demanda mais tempo? Qual a maior dificuldade para executá-la?",
         ]
     },
 }
