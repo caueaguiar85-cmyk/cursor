@@ -1792,34 +1792,95 @@ LANDING_HTML = """<!DOCTYPE html>
 
         <div class="page-header-divider" style="margin-top:var(--space-6)"></div>
 
-        <!-- HIGHLIGHTS TABLE -->
+        <!-- HIGHLIGHTS CARDS -->
         <div class="forms-section">
           <div class="forms-section-header">
             <h2 class="section-heading">Highlights</h2>
             <p class="card-subtitle">Vis&atilde;o consolidada dos principais pontos cr&iacute;ticos identificados</p>
           </div>
-          <div class="card-section" style="overflow-x:auto">
-            <table class="data-table" style="width:100%">
-              <thead>
-                <tr>
-                  <th style="width:15%">Aspecto</th>
-                  <th style="width:30%">Descri&ccedil;&atilde;o</th>
-                  <th style="width:25%">Impacto / Risco</th>
-                  <th style="width:30%">Oportunidade</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td><strong>Fiscal</strong></td><td>Processo arcaico com uso intenso de papel (DANF, CTE), documentos f&iacute;sicos escaneados e enviados por e-mail</td><td>Risco elevado de erros, atraso e exposi&ccedil;&atilde;o fiscal</td><td>Digitaliza&ccedil;&atilde;o completa, padroniza&ccedil;&atilde;o e automatiza&ccedil;&atilde;o</td></tr>
-                <tr><td><strong>Gest&atilde;o Documental</strong></td><td>Falta de sistema para gest&atilde;o de NFs e docs fiscais; ~1.300 notas n&atilde;o digitadas/ano</td><td>Inconsist&ecirc;ncias fiscais e financeiras</td><td>Plataforma robusta e controle de fluxo</td></tr>
-                <tr><td><strong>Integra&ccedil;&atilde;o</strong></td><td>Baixa integra&ccedil;&atilde;o entre PeopleSoft, Senior, Request, GSEC; uso extensivo de planilhas</td><td>Riscos operacionais e baixa efici&ecirc;ncia</td><td>Automa&ccedil;&atilde;o, integra&ccedil;&atilde;o sist&ecirc;mica e RPA</td></tr>
-                <tr><td><strong>Financeiro</strong></td><td>Pagamentos com SLA 2 dias, mas 10% manuais geram inconsist&ecirc;ncias</td><td>Risco de pagamentos indevidos e atrasos</td><td>Automa&ccedil;&atilde;o e valida&ccedil;&atilde;o de dados</td></tr>
-                <tr><td><strong>Contas a Receber</strong></td><td>Estruturado via ERP, mas desafios em concilia&ccedil;&atilde;o e gest&atilde;o de inadimpl&ecirc;ncia</td><td>Dificuldade na gest&atilde;o financeira e cont&aacute;bil</td><td>Controle de PDD por t&iacute;tulo e concilia&ccedil;&otilde;es automatizadas</td></tr>
-                <tr><td><strong>RH / Folha</strong></td><td>Plataformas HR360 e Request; integra&ccedil;&atilde;o manual com Senior; 193 afastados</td><td>Sensibilidade em rescis&otilde;es, controle manual de afastados</td><td>Integra&ccedil;&atilde;o de sistemas e workflows formais</td></tr>
-                <tr><td><strong>Compliance</strong></td><td>Auditorias pouco utilizadas, visibilidade limitada, processos manuais</td><td>Risco de n&atilde;o conformidade fiscal e trabalhista</td><td>Auditoria eletr&ocirc;nica e transpar&ecirc;ncia</td></tr>
-                <tr><td><strong>Seguran&ccedil;a</strong></td><td>Riscos de fraude em cobran&ccedil;as (2&ordf; via boletos, golpes WhatsApp)</td><td>Exposi&ccedil;&atilde;o a fraudes e perda financeira</td><td>Controles adicionais e alertas preventivos</td></tr>
-                <tr><td><strong>Fornecedores</strong></td><td>Cadastro e habilita&ccedil;&atilde;o descentralizados e manuais</td><td>Risco de inconsist&ecirc;ncias e erros fiscais</td><td>Centralizar e automatizar cadastro</td></tr>
-              </tbody>
-            </table>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap:var(--space-4)">
+
+            <div class="card-section" style="border-left:4px solid var(--danger); padding:var(--space-4)">
+              <h3 style="margin:0 0 var(--space-2) 0; font-size:0.95rem; color:var(--accent)">Fiscal</h3>
+              <p style="font-size:0.88rem; line-height:1.6; margin:0 0 var(--space-3) 0">Processo arcaico com uso intenso de papel (DANF, CTE), documentos f&iacute;sicos escaneados e enviados por e-mail.</p>
+              <div style="display:flex; gap:var(--space-3); font-size:0.82rem">
+                <span style="background:rgba(220,53,69,0.1); color:var(--danger); padding:2px 8px; border-radius:var(--radius-sm)">Risco elevado de erros e exposi&ccedil;&atilde;o fiscal</span>
+                <span style="background:rgba(40,167,69,0.1); color:var(--success); padding:2px 8px; border-radius:var(--radius-sm)">Digitaliza&ccedil;&atilde;o e automatiza&ccedil;&atilde;o</span>
+              </div>
+            </div>
+
+            <div class="card-section" style="border-left:4px solid var(--danger); padding:var(--space-4)">
+              <h3 style="margin:0 0 var(--space-2) 0; font-size:0.95rem; color:var(--accent)">Gest&atilde;o Documental</h3>
+              <p style="font-size:0.88rem; line-height:1.6; margin:0 0 var(--space-3) 0">Falta de sistema para gest&atilde;o de NFs e docs fiscais. <strong>~1.300 notas n&atilde;o digitadas/ano.</strong></p>
+              <div style="display:flex; gap:var(--space-3); font-size:0.82rem">
+                <span style="background:rgba(220,53,69,0.1); color:var(--danger); padding:2px 8px; border-radius:var(--radius-sm)">Inconsist&ecirc;ncias fiscais e financeiras</span>
+                <span style="background:rgba(40,167,69,0.1); color:var(--success); padding:2px 8px; border-radius:var(--radius-sm)">Plataforma robusta e controle de fluxo</span>
+              </div>
+            </div>
+
+            <div class="card-section" style="border-left:4px solid var(--warning, #e6a817); padding:var(--space-4)">
+              <h3 style="margin:0 0 var(--space-2) 0; font-size:0.95rem; color:var(--accent)">Integra&ccedil;&atilde;o de Sistemas</h3>
+              <p style="font-size:0.88rem; line-height:1.6; margin:0 0 var(--space-3) 0">Baixa integra&ccedil;&atilde;o entre PeopleSoft, Senior, Request e GSEC. Uso extensivo de planilhas e controles manuais.</p>
+              <div style="display:flex; gap:var(--space-3); font-size:0.82rem">
+                <span style="background:rgba(220,53,69,0.1); color:var(--danger); padding:2px 8px; border-radius:var(--radius-sm)">Riscos operacionais e baixa efici&ecirc;ncia</span>
+                <span style="background:rgba(40,167,69,0.1); color:var(--success); padding:2px 8px; border-radius:var(--radius-sm)">Automa&ccedil;&atilde;o, integra&ccedil;&atilde;o e RPA</span>
+              </div>
+            </div>
+
+            <div class="card-section" style="border-left:4px solid var(--warning, #e6a817); padding:var(--space-4)">
+              <h3 style="margin:0 0 var(--space-2) 0; font-size:0.95rem; color:var(--accent)">Financeiro</h3>
+              <p style="font-size:0.88rem; line-height:1.6; margin:0 0 var(--space-3) 0">Pagamentos com SLA 2 dias, mas <strong>10% manuais</strong> geram inconsist&ecirc;ncias. Falta gest&atilde;o ativa de contas a pagar.</p>
+              <div style="display:flex; gap:var(--space-3); font-size:0.82rem">
+                <span style="background:rgba(220,53,69,0.1); color:var(--danger); padding:2px 8px; border-radius:var(--radius-sm)">Pagamentos indevidos e atrasos</span>
+                <span style="background:rgba(40,167,69,0.1); color:var(--success); padding:2px 8px; border-radius:var(--radius-sm)">Automa&ccedil;&atilde;o e valida&ccedil;&atilde;o</span>
+              </div>
+            </div>
+
+            <div class="card-section" style="border-left:4px solid var(--warning, #e6a817); padding:var(--space-4)">
+              <h3 style="margin:0 0 var(--space-2) 0; font-size:0.95rem; color:var(--accent)">Contas a Receber</h3>
+              <p style="font-size:0.88rem; line-height:1.6; margin:0 0 var(--space-3) 0">Estruturado via ERP, mas desafios em concilia&ccedil;&atilde;o e gest&atilde;o de inadimpl&ecirc;ncia. Acordos informais sem controle.</p>
+              <div style="display:flex; gap:var(--space-3); font-size:0.82rem">
+                <span style="background:rgba(220,53,69,0.1); color:var(--danger); padding:2px 8px; border-radius:var(--radius-sm)">Dificuldade na gest&atilde;o financeira</span>
+                <span style="background:rgba(40,167,69,0.1); color:var(--success); padding:2px 8px; border-radius:var(--radius-sm)">PDD por t&iacute;tulo e concilia&ccedil;&otilde;es auto</span>
+              </div>
+            </div>
+
+            <div class="card-section" style="border-left:4px solid var(--danger); padding:var(--space-4)">
+              <h3 style="margin:0 0 var(--space-2) 0; font-size:0.95rem; color:var(--accent)">RH / Folha</h3>
+              <p style="font-size:0.88rem; line-height:1.6; margin:0 0 var(--space-3) 0">HR360 e Request com integra&ccedil;&atilde;o manual ao Senior. <strong>193 afastados</strong> com descontrole financeiro.</p>
+              <div style="display:flex; gap:var(--space-3); font-size:0.82rem">
+                <span style="background:rgba(220,53,69,0.1); color:var(--danger); padding:2px 8px; border-radius:var(--radius-sm)">Rescis&otilde;es cr&iacute;ticas, afastados sem controle</span>
+                <span style="background:rgba(40,167,69,0.1); color:var(--success); padding:2px 8px; border-radius:var(--radius-sm)">Integra&ccedil;&atilde;o e workflows formais</span>
+              </div>
+            </div>
+
+            <div class="card-section" style="border-left:4px solid var(--warning, #e6a817); padding:var(--space-4)">
+              <h3 style="margin:0 0 var(--space-2) 0; font-size:0.95rem; color:var(--accent)">Compliance &amp; Auditoria</h3>
+              <p style="font-size:0.88rem; line-height:1.6; margin:0 0 var(--space-3) 0">Auditorias eletr&ocirc;nicas contratadas mas pouco utilizadas. Visibilidade limitada e processos manuais.</p>
+              <div style="display:flex; gap:var(--space-3); font-size:0.82rem">
+                <span style="background:rgba(220,53,69,0.1); color:var(--danger); padding:2px 8px; border-radius:var(--radius-sm)">N&atilde;o conformidade fiscal/trabalhista</span>
+                <span style="background:rgba(40,167,69,0.1); color:var(--success); padding:2px 8px; border-radius:var(--radius-sm)">Auditoria eletr&ocirc;nica</span>
+              </div>
+            </div>
+
+            <div class="card-section" style="border-left:4px solid var(--danger); padding:var(--space-4)">
+              <h3 style="margin:0 0 var(--space-2) 0; font-size:0.95rem; color:var(--accent)">Seguran&ccedil;a</h3>
+              <p style="font-size:0.88rem; line-height:1.6; margin:0 0 var(--space-3) 0">Riscos de fraude em cobran&ccedil;as (2&ordf; via boletos, golpes via WhatsApp). Vulnerabilidades em comunica&ccedil;&atilde;o.</p>
+              <div style="display:flex; gap:var(--space-3); font-size:0.82rem">
+                <span style="background:rgba(220,53,69,0.1); color:var(--danger); padding:2px 8px; border-radius:var(--radius-sm)">Exposi&ccedil;&atilde;o a fraudes e perdas</span>
+                <span style="background:rgba(40,167,69,0.1); color:var(--success); padding:2px 8px; border-radius:var(--radius-sm)">Controles antifraude e alertas</span>
+              </div>
+            </div>
+
+            <div class="card-section" style="border-left:4px solid var(--warning, #e6a817); padding:var(--space-4)">
+              <h3 style="margin:0 0 var(--space-2) 0; font-size:0.95rem; color:var(--accent)">Gest&atilde;o de Fornecedores</h3>
+              <p style="font-size:0.88rem; line-height:1.6; margin:0 0 var(--space-3) 0">Cadastro e habilita&ccedil;&atilde;o descentralizados e manuais, impactando controle fiscal e operacional.</p>
+              <div style="display:flex; gap:var(--space-3); font-size:0.82rem">
+                <span style="background:rgba(220,53,69,0.1); color:var(--danger); padding:2px 8px; border-radius:var(--radius-sm)">Inconsist&ecirc;ncias e erros fiscais</span>
+                <span style="background:rgba(40,167,69,0.1); color:var(--success); padding:2px 8px; border-radius:var(--radius-sm)">Centralizar e automatizar</span>
+              </div>
+            </div>
+
           </div>
         </div>
 
