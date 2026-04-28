@@ -11,10 +11,15 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import Optional
 
-import psycopg2
-import psycopg2.extras
-
 logger = logging.getLogger(__name__)
+
+try:
+    import psycopg2
+    import psycopg2.extras
+    _psycopg2_available = True
+except ImportError:
+    _psycopg2_available = False
+    logger.warning("psycopg2 not installed — using in-memory fallback")
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 _db_available = False
@@ -34,7 +39,7 @@ _mem_pipeline_status = {
 
 @contextmanager
 def _db():
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = psycopg2.connect(DATABASE_URL, connect_timeout=5)
     try:
         yield conn
         conn.commit()
@@ -47,8 +52,8 @@ def _db():
 
 def _init_db():
     global _db_available
-    if not DATABASE_URL:
-        logger.warning("DATABASE_URL not set — using in-memory fallback")
+    if not _psycopg2_available or not DATABASE_URL:
+        logger.warning("Database not available — using in-memory fallback")
         return
     try:
         with _db() as conn:
