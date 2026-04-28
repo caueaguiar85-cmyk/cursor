@@ -1,7 +1,8 @@
 """
 Stoken Advisory — Database-backed Data Store
-Persiste entrevistas, resultados de análise e insights no Supabase (PostgreSQL).
-Fallback gracioso para in-memory quando Supabase não está configurado.
+Persiste dados no Supabase via REST API (PostgREST).
+Usa httpx (leve) em vez do SDK completo do Supabase.
+Fallback in-memory quando não configurado.
 """
 
 import json
@@ -10,28 +11,72 @@ import os
 from datetime import datetime
 from typing import Optional
 
+import httpx
+
 logger = logging.getLogger(__name__)
 
-# ─── Supabase Client ─────────────────────────────────────────────────────────
+# ─── Supabase REST config ────────────────────────────────────────────────────
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
-_sb = None
+_REST_URL = f"{SUPABASE_URL}/rest/v1" if SUPABASE_URL else ""
+_HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json",
+    "Prefer": "return=representation",
+} if SUPABASE_KEY else {}
+
 _db_available = False
 
-try:
-    if SUPABASE_URL and SUPABASE_KEY:
-        from supabase import create_client
-        _sb = create_client(SUPABASE_URL, SUPABASE_KEY)
-        # Quick test — try to read from interviews
-        _sb.table("interviews").select("id").limit(1).execute()
-        _db_available = True
-        logger.info(f"Supabase connected: {SUPABASE_URL}")
-    else:
-        logger.warning("SUPABASE_URL/SUPABASE_KEY not set — using in-memory fallback")
-except Exception as e:
-    logger.error(f"Supabase init failed: {e} — using in-memory fallback")
-    _db_available = False
+if _REST_URL and _HEADERS:
+    try:
+        r = httpx.get(f"{_REST_URL}/interviews?select=id&limit=1",
+                      headers=_HEADERS, timeout=5)
+        if r.status_code in (200, 206):
+            _db_available = True
+            logger.info(f"Supabase connected: {SUPABASE_URL}")
+        else:
+            logger.error(f"Supabase test failed: {r.status_code} {r.text[:200]}")
+    except Exception as e:
+        logger.error(f"Supabase connection error: {e}")
+else:
+    logger.warning("SUPABASE_URL/SUPABASE_KEY not set — in-memory fallback")
+
+
+def _get(path: str, params: dict = None) -> list:
+    r = httpx.get(f"{_REST_URL}/{path}", headers=_HEADERS, params=params, timeout=10)
+    r.raise_for_status()
+    return r.json()
+
+
+def _post(table: str, data: dict) -> dict:
+    r = httpx.post(f"{_REST_URL}/{table}", headers=_HEADERS, json=data, timeout=10)
+    r.raise_for_status()
+    return r.json()[0] if r.json() else data
+
+
+def _patch(table: str, match: dict, data: dict) -> list:
+    params = {f"{k}": f"eq.{v}" for k, v in match.items()}
+    r = httpx.patch(f"{_REST_URL}/{table}", headers=_HEADERS, params=params,
+                    json=data, timeout=10)
+    r.raise_for_status()
+    return r.json()
+
+
+def _delete(table: str, match: dict) -> list:
+    params = {f"{k}": f"eq.{v}" for k, v in match.items()}
+    r = httpx.delete(f"{_REST_URL}/{table}", headers=_HEADERS, params=params, timeout=10)
+    r.raise_for_status()
+    return r.json()
+
+
+def _upsert(table: str, data: dict) -> dict:
+    h = {**_HEADERS, "Prefer": "return=representation,resolution=merge-duplicates"}
+    r = httpx.post(f"{_REST_URL}/{table}", headers=h, json=data, timeout=10)
+    r.raise_for_status()
+    return r.json()[0] if r.json() else data
+
 
 # ─── In-memory fallback ──────────────────────────────────────────────────────
 _mem_interviews = []
@@ -51,7 +96,6 @@ _mem_pipeline_status = {
 def save_interview(data: dict) -> dict:
     now = datetime.now().isoformat()
     date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
-
     row = {
         "interviewer": data.get("interviewer", ""),
         "interviewee": data.get("interviewee", ""),
@@ -65,20 +109,18 @@ def save_interview(data: dict) -> dict:
         "created_at": now,
         "analysis": None,
     }
-
     if _db_available:
         try:
-            result = _sb.table("interviews").insert(row).execute()
-            row["id"] = result.data[0]["id"]
+            result = _post("interviews", row)
+            row = result
         except Exception as e:
-            logger.error(f"Supabase insert interview error: {e}")
+            logger.error(f"Save interview error: {e}")
             row["id"] = len(_mem_interviews) + 1
             _mem_interviews.append(row)
     else:
         row["id"] = len(_mem_interviews) + 1
         _mem_interviews.append(row)
-
-    logger.info(f"Interview #{row['id']} saved: {row['interviewee']}")
+    logger.info(f"Interview #{row.get('id')} saved: {row['interviewee']}")
     return row
 
 
@@ -86,24 +128,20 @@ def get_interviews() -> list:
     if not _db_available:
         return _mem_interviews
     try:
-        result = _sb.table("interviews").select("*").order("id").execute()
-        return result.data
+        return _get("interviews?order=id")
     except Exception as e:
-        logger.error(f"Supabase get interviews error: {e}")
+        logger.error(f"Get interviews error: {e}")
         return _mem_interviews
 
 
 def get_interview(interview_id: int) -> Optional[dict]:
     if not _db_available:
-        for i in _mem_interviews:
-            if i["id"] == interview_id:
-                return i
-        return None
+        return next((i for i in _mem_interviews if i["id"] == interview_id), None)
     try:
-        result = _sb.table("interviews").select("*").eq("id", interview_id).execute()
-        return result.data[0] if result.data else None
+        rows = _get(f"interviews?id=eq.{interview_id}")
+        return rows[0] if rows else None
     except Exception as e:
-        logger.error(f"Supabase get interview error: {e}")
+        logger.error(f"Get interview error: {e}")
         return None
 
 
@@ -113,7 +151,6 @@ def update_interview(interview_id: int, data: dict) -> Optional[dict]:
     updates = {k: v for k, v in data.items() if k in fields}
     if not updates:
         return get_interview(interview_id)
-
     if not _db_available:
         for i in _mem_interviews:
             if i["id"] == interview_id:
@@ -121,10 +158,10 @@ def update_interview(interview_id: int, data: dict) -> Optional[dict]:
                 return i
         return None
     try:
-        _sb.table("interviews").update(updates).eq("id", interview_id).execute()
-        return get_interview(interview_id)
+        rows = _patch("interviews", {"id": interview_id}, updates)
+        return rows[0] if rows else None
     except Exception as e:
-        logger.error(f"Supabase update interview error: {e}")
+        logger.error(f"Update interview error: {e}")
         return None
 
 
@@ -136,10 +173,10 @@ def delete_interview(interview_id: int) -> bool:
                 return True
         return False
     try:
-        result = _sb.table("interviews").delete().eq("id", interview_id).execute()
-        return len(result.data) > 0
+        rows = _delete("interviews", {"id": interview_id})
+        return len(rows) > 0
     except Exception as e:
-        logger.error(f"Supabase delete interview error: {e}")
+        logger.error(f"Delete interview error: {e}")
         return False
 
 
@@ -151,9 +188,9 @@ def update_interview_analysis(interview_id: int, analysis: str):
                 break
         return
     try:
-        _sb.table("interviews").update({"analysis": analysis}).eq("id", interview_id).execute()
+        _patch("interviews", {"id": interview_id}, {"analysis": analysis})
     except Exception as e:
-        logger.error(f"Supabase update analysis error: {e}")
+        logger.error(f"Update analysis error: {e}")
 
 
 # ─── Diagnostic Scores ────────────────────────────────────────────────────────
@@ -165,22 +202,20 @@ def set_diagnostic_scores(scores: dict):
     try:
         for key, value in scores.items():
             if isinstance(value, (int, float)):
-                _sb.table("diagnostic_scores").upsert(
-                    {"key": key, "value": float(value)},
-                ).execute()
+                _upsert("diagnostic_scores", {"key": key, "value": float(value)})
         logger.info(f"Diagnostic scores updated: {scores}")
     except Exception as e:
-        logger.error(f"Supabase set scores error: {e}")
+        logger.error(f"Set scores error: {e}")
 
 
 def get_diagnostic_scores() -> dict:
     if not _db_available:
         return _mem_diagnostic_scores
     try:
-        result = _sb.table("diagnostic_scores").select("key, value").execute()
-        return {r["key"]: r["value"] for r in result.data}
+        rows = _get("diagnostic_scores?select=key,value")
+        return {r["key"]: r["value"] for r in rows}
     except Exception as e:
-        logger.error(f"Supabase get scores error: {e}")
+        logger.error(f"Get scores error: {e}")
         return _mem_diagnostic_scores
 
 
@@ -192,24 +227,19 @@ def set_analysis_result(key: str, result: str):
         _mem_analysis_results[key] = {"content": result, "generated_at": now}
         return
     try:
-        _sb.table("analysis_results").upsert(
-            {"key": key, "content": result, "generated_at": now},
-        ).execute()
+        _upsert("analysis_results", {"key": key, "content": result, "generated_at": now})
     except Exception as e:
-        logger.error(f"Supabase set analysis error: {e}")
+        logger.error(f"Set analysis error: {e}")
 
 
 def get_analysis_results() -> dict:
     if not _db_available:
         return _mem_analysis_results
     try:
-        result = _sb.table("analysis_results").select("key, content, generated_at").execute()
-        return {
-            r["key"]: {"content": r["content"], "generated_at": r["generated_at"]}
-            for r in result.data
-        }
+        rows = _get("analysis_results?select=key,content,generated_at")
+        return {r["key"]: {"content": r["content"], "generated_at": r["generated_at"]} for r in rows}
     except Exception as e:
-        logger.error(f"Supabase get analysis error: {e}")
+        logger.error(f"Get analysis error: {e}")
         return _mem_analysis_results
 
 
@@ -223,13 +253,11 @@ def add_insight(insight: dict):
         _mem_insights.append(insight)
         return
     try:
-        result = _sb.table("insights").insert(
-            {"data": json.dumps(insight, ensure_ascii=False), "generated_at": now}
-        ).execute()
-        insight["id"] = result.data[0]["id"]
+        result = _post("insights", {"data": json.dumps(insight, ensure_ascii=False), "generated_at": now})
+        insight["id"] = result["id"]
         insight["generated_at"] = now
     except Exception as e:
-        logger.error(f"Supabase add insight error: {e}")
+        logger.error(f"Add insight error: {e}")
 
 
 def set_insights(insights: list):
@@ -242,31 +270,30 @@ def set_insights(insights: list):
             ins["generated_at"] = now
         return
     try:
-        _sb.table("insights").delete().neq("id", 0).execute()
+        # Delete all then insert
+        httpx.delete(f"{_REST_URL}/insights?id=gt.0", headers=_HEADERS, timeout=10)
         for ins in insights:
-            result = _sb.table("insights").insert(
-                {"data": json.dumps(ins, ensure_ascii=False), "generated_at": now}
-            ).execute()
-            ins["id"] = result.data[0]["id"]
+            result = _post("insights", {"data": json.dumps(ins, ensure_ascii=False), "generated_at": now})
+            ins["id"] = result["id"]
             ins["generated_at"] = now
     except Exception as e:
-        logger.error(f"Supabase set insights error: {e}")
+        logger.error(f"Set insights error: {e}")
 
 
 def get_insights() -> list:
     if not _db_available:
         return _mem_insights
     try:
-        result = _sb.table("insights").select("id, data, generated_at").order("id").execute()
+        rows = _get("insights?select=id,data,generated_at&order=id")
         out = []
-        for row in result.data:
+        for row in rows:
             ins = json.loads(row["data"])
             ins["id"] = row["id"]
             ins["generated_at"] = row["generated_at"]
             out.append(ins)
         return out
     except Exception as e:
-        logger.error(f"Supabase get insights error: {e}")
+        logger.error(f"Get insights error: {e}")
         return _mem_insights
 
 
@@ -276,18 +303,20 @@ def get_pipeline_status() -> dict:
     if not _db_available:
         return _mem_pipeline_status
     try:
-        result = _sb.table("pipeline_status").select("*").eq("id", 1).execute()
-        if not result.data:
+        rows = _get("pipeline_status?id=eq.1")
+        if not rows:
             return {"running": False, "last_run": None, "steps_completed": [], "errors": []}
-        row = result.data[0]
+        row = rows[0]
+        sc = row["steps_completed"]
+        er = row["errors"]
         return {
             "running": bool(row["running"]),
             "last_run": row["last_run"],
-            "steps_completed": json.loads(row["steps_completed"]) if isinstance(row["steps_completed"], str) else row["steps_completed"],
-            "errors": json.loads(row["errors"]) if isinstance(row["errors"], str) else row["errors"],
+            "steps_completed": json.loads(sc) if isinstance(sc, str) else (sc or []),
+            "errors": json.loads(er) if isinstance(er, str) else (er or []),
         }
     except Exception as e:
-        logger.error(f"Supabase get pipeline error: {e}")
+        logger.error(f"Get pipeline error: {e}")
         return _mem_pipeline_status
 
 
@@ -308,14 +337,13 @@ def update_pipeline_status(running: bool = None, step: str = None, error: str = 
     if not _db_available:
         _mem_pipeline_status.update(status)
         return
-
     try:
-        _sb.table("pipeline_status").upsert({
+        _upsert("pipeline_status", {
             "id": 1,
             "running": status["running"],
             "last_run": status["last_run"],
             "steps_completed": json.dumps(status["steps_completed"]),
             "errors": json.dumps(status["errors"]),
-        }).execute()
+        })
     except Exception as e:
-        logger.error(f"Supabase update pipeline error: {e}")
+        logger.error(f"Update pipeline error: {e}")
