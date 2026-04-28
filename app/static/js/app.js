@@ -601,8 +601,10 @@ function initNovaEntrevista() {
 
   if (!btn || !modal) return;
 
-  // Open modal
+  // Open modal (new interview)
   btn.addEventListener('click', function() {
+    resetInterviewModal();
+    form.reset();
     modal.style.display = 'flex';
     var hoje = new Date();
     var dataInput = document.getElementById('ent-data');
@@ -616,6 +618,7 @@ function initNovaEntrevista() {
   function closeModal() {
     modal.style.display = 'none';
     form.reset();
+    resetInterviewModal();
   }
 
   closeBtn.addEventListener('click', closeModal);
@@ -670,9 +673,13 @@ function initNovaEntrevista() {
     var area = document.getElementById('ent-area').value;
     var nivel = document.getElementById('ent-nivel').value;
 
-    // Save to backend
-    fetch('/api/interviews', {
-      method: 'POST',
+    // Save to backend (POST for new, PUT for edit)
+    var isEditing = !!_editingInterviewId;
+    var url = isEditing ? '/api/interviews/' + _editingInterviewId : '/api/interviews';
+    var method = isEditing ? 'PUT' : 'POST';
+
+    fetch(url, {
+      method: method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         interviewer: entrevistador,
@@ -687,55 +694,18 @@ function initNovaEntrevista() {
       })
     }).then(function(res) { return res.json(); })
     .then(function(result) {
-      // If IA ready with transcript, trigger pipeline
-      if (iaReady && transcricao) {
+      if (result.status !== 'ok') {
+        alert('Erro: ' + (result.detail || 'erro desconhecido'));
+        return;
+      }
+      if (!isEditing && iaReady && transcricao) {
         triggerPipeline();
       }
-    }).catch(function(err) { console.warn('Save interview error:', err); });
-
-    // Generate initials
-    var parts = nome.split(' ');
-    var initials = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
-
-    // Format date
-    var dateStr = 'Hoje';
-    if (data) {
-      var d = new Date(data + 'T12:00:00');
-      var months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-      dateStr = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
-    }
-
-    var pilarInfo = PILAR_MAP[pilar];
-    var tagHtml = pilarInfo ? '<span class="interview-tag" style="color:' + pilarInfo.color + '">' + pilarInfo.label + '</span>' : '';
-    var aiTag = iaReady ? 'PROCESSANDO...' : (transcricao ? 'TRANSCRITO' : 'NOVO');
-
-    // Create card
-    var card = document.createElement('div');
-    card.className = 'interview-card';
-    card.style.animation = 'fadeIn 0.3s ease-out';
-    card.innerHTML =
-      '<div class="interview-card-top">' +
-        '<div class="interview-avatar">' + initials + '</div>' +
-        '<div class="interview-info">' +
-          '<span class="interview-name">' + escapeHtml(nome) + '</span>' +
-          '<span class="interview-role">' + escapeHtml(cargo) + '</span>' +
-        '</div>' +
-        '<span class="interview-ai-tag font-mono">' + aiTag + '</span>' +
-      '</div>' +
-      (tagHtml ? '<div class="interview-tags">' + tagHtml + '</div>' : '') +
-      '<div class="interview-footer">' +
-        '<span class="interview-date font-mono">' + dateStr + '</span>' +
-      '</div>';
-
-    var grid = document.querySelector('.interview-grid');
-    if (grid) {
-      grid.insertBefore(card, grid.firstChild);
-      var emptyState = document.getElementById('interview-empty');
-      if (emptyState) emptyState.style.display = 'none';
-      loadInterviewCount();
-    }
-
-    closeModal();
+      loadInterviews();
+      closeModal();
+    }).catch(function(err) {
+      alert('Erro: ' + err.message);
+    });
   });
 }
 
@@ -1117,6 +1087,7 @@ function loadInterviews() {
         var card = document.createElement('div');
         card.className = 'interview-card';
         card.setAttribute('data-interview-area', iv.department || '');
+        card.setAttribute('data-interview-id', iv.id);
         card.innerHTML =
           '<div class="interview-card-top">' +
             '<div class="interview-avatar">' + initials + '</div>' +
@@ -1132,6 +1103,14 @@ function loadInterviews() {
           '</div>' +
           '<div class="interview-footer">' +
             '<span class="interview-date font-mono">' + dateStr + '</span>' +
+            '<div class="interview-actions">' +
+              '<button class="btn-icon btn-icon--edit" title="Editar" onclick="editInterview(' + iv.id + ')">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+              '</button>' +
+              '<button class="btn-icon btn-icon--delete" title="Excluir" onclick="deleteInterview(' + iv.id + ', \'' + escapeHtml(iv.interviewee).replace(/'/g, "\\'") + '\')">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
+              '</button>' +
+            '</div>' +
           '</div>';
 
         grid.appendChild(card);
@@ -1214,8 +1193,62 @@ function renderCoverageMap(interviews) {
 }
 
 function loadInterviewCount() {
-  // Backward compat — just calls loadInterviews
   loadInterviews();
+}
+
+/* ── Delete Interview ──────────────────────────────────────────────── */
+function deleteInterview(id, name) {
+  if (!confirm('Excluir entrevista de "' + name + '"? Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.')) return;
+  fetch('/api/interviews/' + id, { method: 'DELETE' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === 'ok') loadInterviews();
+      else alert('Erro ao excluir: ' + (data.detail || 'erro desconhecido'));
+    })
+    .catch(function(err) { alert('Erro: ' + err.message); });
+}
+
+/* ── Edit Interview — opens modal pre-filled ──────────────────────── */
+var _editingInterviewId = null;
+
+function editInterview(id) {
+  fetch('/api/interviews')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status !== 'ok') return;
+      var iv = data.interviews.find(function(i) { return i.id === id; });
+      if (!iv) return alert('Entrevista n\u00e3o encontrada');
+
+      _editingInterviewId = id;
+
+      // Fill modal fields
+      var modal = document.getElementById('modal-entrevista');
+      document.getElementById('ent-entrevistador').value = iv.interviewer || '';
+      document.getElementById('ent-nome').value = iv.interviewee || '';
+      document.getElementById('ent-cargo').value = iv.role || '';
+      document.getElementById('ent-area').value = iv.department || '';
+      document.getElementById('ent-nivel').value = iv.level || 'gerencia';
+      document.getElementById('ent-pilar').value = iv.pillar || 'processos';
+      document.getElementById('ent-data').value = iv.date || '';
+      document.getElementById('ent-transcricao').value = iv.transcript || '';
+      document.getElementById('ent-ia-ready').checked = iv.ia_ready || false;
+
+      // Update modal title
+      document.querySelector('#modal-entrevista .modal-title').textContent = 'Editar Entrevista';
+      document.querySelector('#form-entrevista .btn--primary').textContent = 'Salvar Altera\u00e7\u00f5es';
+
+      // Trigger area questions
+      var areaSelect = document.getElementById('ent-area');
+      areaSelect.dispatchEvent(new Event('change'));
+
+      modal.style.display = 'flex';
+    });
+}
+
+function resetInterviewModal() {
+  _editingInterviewId = null;
+  document.querySelector('#modal-entrevista .modal-title').textContent = 'Nova Entrevista';
+  document.querySelector('#form-entrevista .btn--primary').textContent = 'Salvar Entrevista';
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

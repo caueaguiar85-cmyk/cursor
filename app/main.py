@@ -20,7 +20,8 @@ from app.inventory import run_inventory
 from app.pricing import run_pricing
 from app.agents import get_all_agents, get_agent, run_agent
 from app.datastore import (
-    save_interview, get_interviews, get_diagnostic_scores,
+    save_interview, get_interviews, get_interview, update_interview,
+    delete_interview, get_diagnostic_scores,
     get_analysis_results, get_insights, get_pipeline_status
 )
 from app.pipeline import run_full_pipeline
@@ -652,164 +653,8 @@ LANDING_HTML = """<!DOCTYPE html>
         </div>
         <div class="page-header-divider"></div>
 
-        <!-- Formularios: Exportar / Importar -->
-        <div class="forms-section">
-          <div class="forms-section-header">
-            <h2 class="section-heading">Formul&aacute;rios de Entrevista</h2>
-            <p class="card-subtitle">Exporte formul&aacute;rios com perguntas por &aacute;rea para aplicar offline. Importe de volta com as respostas preenchidas.</p>
-          </div>
-          <div class="forms-grid">
-            <!-- Exportar -->
-            <div class="card-section">
-              <h3 class="card-label-heading">EXPORTAR FORMUL&Aacute;RIO</h3>
-              <p class="forms-desc">Selecione a &aacute;rea e gere um formul&aacute;rio Word (.docx) com perguntas prontas para aplicar na entrevista.</p>
-              <div class="form-group" style="margin-top: var(--space-4)">
-                <label class="form-label">&Aacute;rea / Departamento</label>
-                <select class="form-input form-select" id="export-area">
-                  <option value="">Selecione a &aacute;rea...</option>
-                  <option value="supply-chain">Supply Chain</option>
-                  <option value="producao">Produ&ccedil;&atilde;o / PCP</option>
-                  <option value="comercial">Comercial / Vendas</option>
-                  <option value="logistica">Log&iacute;stica</option>
-                  <option value="ti">Tecnologia / TI</option>
-                  <option value="financeiro">Financeiro / Controladoria</option>
-                  <option value="qualidade">Qualidade</option>
-                  <option value="compras">Compras / Procurement</option>
-                  <option value="rh">RH / Pessoas</option>
-                  <option value="diretoria">Diretoria Geral</option>
-                </select>
-              </div>
-              <div class="form-row" style="margin-top: var(--space-4)">
-                <div class="form-group">
-                  <label class="form-label">Entrevistado</label>
-                  <input class="form-input" type="text" id="export-nome" placeholder="Nome do entrevistado" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Cargo</label>
-                  <input class="form-input" type="text" id="export-cargo" placeholder="Cargo" />
-                </div>
-              </div>
-              <button class="btn btn--primary" id="btn-export-form" style="margin-top: var(--space-4)">Exportar Formul&aacute;rio (.docx)</button>
-            </div>
-
-            <!-- Importar -->
-            <div class="card-section">
-              <h3 class="card-label-heading">IMPORTAR FORMUL&Aacute;RIO PREENCHIDO</h3>
-              <p class="forms-desc">Importe o formul&aacute;rio Word (.docx) j&aacute; preenchido para criar a entrevista automaticamente com transcri&ccedil;&atilde;o.</p>
-              <div class="import-dropzone" id="import-dropzone">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                <p>Arraste o arquivo aqui ou clique para selecionar</p>
-                <span class="form-hint">Aceita .docx exportados pela plataforma</span>
-                <input type="file" id="import-file" accept=".docx" style="display:none" />
-              </div>
-              <div class="import-preview" id="import-preview" style="display:none">
-                <span class="card-label-heading">PR&Eacute;-VISUALIZA&Ccedil;&Atilde;O</span>
-                <div class="import-preview-content" id="import-preview-content"></div>
-                <div class="import-preview-actions">
-                  <button class="btn btn--glass" id="btn-import-cancel">Cancelar</button>
-                  <button class="btn btn--primary" id="btn-import-confirm">Importar e Criar Entrevista</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="page-header-divider" style="margin-top: var(--space-8)"></div>
-
-        <!-- Formulario Interativo Online -->
-        <div class="forms-section">
-          <div class="forms-section-header">
-            <h2 class="section-heading">Preencher Formul&aacute;rio Online</h2>
-            <p class="card-subtitle">Conduza a entrevista diretamente na plataforma. As respostas s&atilde;o salvas e organizadas por &aacute;rea.</p>
-          </div>
-
-          <div class="card-section" id="online-form-card">
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Entrevistador*</label>
-                <input class="form-input" type="text" id="of-entrevistador" placeholder="Seu nome" required />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Nome do Entrevistado*</label>
-                <input class="form-input" type="text" id="of-nome" placeholder="Nome completo" required />
-              </div>
-            </div>
-            <div class="form-row" style="margin-top: var(--space-4)">
-              <div class="form-group">
-                <label class="form-label">Cargo*</label>
-                <input class="form-input" type="text" id="of-cargo" placeholder="Ex: Gerente de Operacoes" required />
-              </div>
-              <div class="form-group">
-                <label class="form-label">&Aacute;rea / Departamento*</label>
-                <select class="form-input form-select" id="of-area" required>
-                  <option value="">Selecione a &aacute;rea...</option>
-                  <option value="supply-chain">Supply Chain</option>
-                  <option value="producao">Produ&ccedil;&atilde;o / PCP</option>
-                  <option value="comercial">Comercial / Vendas</option>
-                  <option value="logistica">Log&iacute;stica</option>
-                  <option value="ti">Tecnologia / TI</option>
-                  <option value="financeiro">Financeiro / Controladoria</option>
-                  <option value="qualidade">Qualidade</option>
-                  <option value="compras">Compras / Procurement</option>
-                  <option value="rh">RH / Pessoas</option>
-                  <option value="diretoria">Diretoria Geral</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-row" style="margin-top: var(--space-4)">
-              <div class="form-group">
-                <label class="form-label">Data da Entrevista</label>
-                <input class="form-input" type="date" id="of-data" style="max-width:200px" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">N&iacute;vel Hier&aacute;rquico</label>
-                <select class="form-input form-select" id="of-nivel">
-                  <option value="gerencia">Ger&ecirc;ncia</option>
-                  <option value="diretoria">Diretoria</option>
-                  <option value="coordenacao">Coordena&ccedil;&atilde;o</option>
-                  <option value="supervisao">Supervis&atilde;o</option>
-                  <option value="analista">Analista / Especialista</option>
-                  <option value="c-level">C-Level</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Perguntas dinamicas -->
-            <div id="of-questions-area" style="margin-top: var(--space-6); display:none">
-              <div class="page-header-divider"></div>
-              <h3 class="section-heading" style="margin-top: var(--space-5)" id="of-questions-title">Perguntas</h3>
-              <p class="card-subtitle" style="margin-bottom: var(--space-5)">Responda cada pergunta com o m&aacute;ximo de detalhe poss&iacute;vel. Campos em branco ser&atilde;o ignorados.</p>
-              <div id="of-questions-list" class="of-questions-list"></div>
-            </div>
-
-            <!-- Observacoes -->
-            <div class="form-group" style="margin-top: var(--space-6)">
-              <label class="form-label">Observa&ccedil;&otilde;es adicionais</label>
-              <textarea class="form-textarea" id="of-observacoes" rows="3" placeholder="Anota&ccedil;&otilde;es gerais, impress&otilde;es, pontos que n&atilde;o foram cobertos pelas perguntas..."></textarea>
-            </div>
-
-            <!-- IA checkbox -->
-            <div class="form-ia-check" style="margin-top: var(--space-4)">
-              <label class="form-checkbox">
-                <input type="checkbox" id="of-ia-ready" checked />
-                <div>
-                  <strong>Enviar para an&aacute;lise de IA automaticamente</strong>
-                  <span class="form-hint">Os agentes PRISM e ARIA processar&atilde;o as respostas e alimentar&atilde;o o diagn&oacute;stico.</span>
-                </div>
-              </label>
-            </div>
-
-            <div style="margin-top: var(--space-6); display:flex; gap: var(--space-3); justify-content: flex-end">
-              <button class="btn btn--glass" id="of-btn-clear">Limpar</button>
-              <button class="btn btn--primary" id="of-btn-save">Salvar Entrevista</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="page-header-divider" style="margin-top: var(--space-8)"></div>
-
-        <!-- Formularios salvos por area -->
-        <h2 class="section-heading" style="margin-bottom: var(--space-5);">Formul&aacute;rios por &Aacute;rea</h2>
+        <!-- Filtro por area -->
+        <h2 class="section-heading" style="margin-bottom: var(--space-5);">Entrevistas por &Aacute;rea</h2>
         <div class="area-tabs" id="area-tabs">
           <button class="area-tab active" data-area-filter="all">Todas</button>
           <button class="area-tab" data-area-filter="supply-chain">Supply Chain</button>
@@ -831,7 +676,7 @@ LANDING_HTML = """<!DOCTYPE html>
 
         <div class="empty-state" id="interview-empty">
           <svg class="empty-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-          <p class="empty-text">Nenhuma entrevista cadastrada. Use o formul&aacute;rio acima ou clique em "Nova Entrevista".</p>
+          <p class="empty-text">Nenhuma entrevista cadastrada. Clique em "Nova Entrevista" para come&ccedil;ar.</p>
         </div>
 
         <!-- Mapa de Cobertura -->
@@ -2775,7 +2620,7 @@ LANDING_HTML = """<!DOCTYPE html>
   </div>
 </div>
 
-<script src="/static/js/app.js?v=20260427"></script>
+<script src="/static/js/app.js?v=20260428"></script>
 </body>
 </html>
 """
@@ -2952,6 +2797,21 @@ def create_interview(data: InterviewData):
 @app.get("/api/interviews")
 def list_interviews():
     return {"status": "ok", "interviews": get_interviews()}
+
+@app.put("/api/interviews/{interview_id}")
+def edit_interview(interview_id: int, data: InterviewData):
+    """Atualiza uma entrevista existente."""
+    updated = update_interview(interview_id, data.model_dump())
+    if not updated:
+        raise HTTPException(status_code=404, detail="Entrevista não encontrada")
+    return {"status": "ok", "interview": updated}
+
+@app.delete("/api/interviews/{interview_id}")
+def remove_interview(interview_id: int):
+    """Remove uma entrevista."""
+    if not delete_interview(interview_id):
+        raise HTTPException(status_code=404, detail="Entrevista não encontrada")
+    return {"status": "ok"}
 
 @app.post("/api/pipeline/run")
 async def trigger_pipeline():

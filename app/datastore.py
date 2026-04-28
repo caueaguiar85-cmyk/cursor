@@ -219,6 +219,44 @@ def get_interview(interview_id: int) -> Optional[dict]:
     return _row_to_interview(row) if row else None
 
 
+def update_interview(interview_id: int, data: dict) -> Optional[dict]:
+    """Atualiza campos de uma entrevista existente."""
+    fields = ["interviewer", "interviewee", "role", "department", "level",
+              "pillar", "date", "transcript", "ia_ready"]
+    updates = {k: v for k, v in data.items() if k in fields}
+    if not updates:
+        return get_interview(interview_id)
+
+    if not _db_available:
+        for i in _mem_interviews:
+            if i["id"] == interview_id:
+                i.update(updates)
+                return i
+        return None
+
+    set_clauses = ", ".join(f"{k} = %s" for k in updates)
+    values = list(updates.values())
+    values.append(interview_id)
+    with _db() as conn:
+        cur = conn.cursor()
+        cur.execute(f"UPDATE interviews SET {set_clauses} WHERE id = %s", values)
+    return get_interview(interview_id)
+
+
+def delete_interview(interview_id: int) -> bool:
+    """Remove uma entrevista. Retorna True se encontrou e removeu."""
+    if not _db_available:
+        for i, iv in enumerate(_mem_interviews):
+            if iv["id"] == interview_id:
+                _mem_interviews.pop(i)
+                return True
+        return False
+    with _db() as conn:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM interviews WHERE id = %s RETURNING id", (interview_id,))
+        return cur.fetchone() is not None
+
+
 def update_interview_analysis(interview_id: int, analysis: str):
     if not _db_available:
         for i in _mem_interviews:
