@@ -658,16 +658,16 @@ LANDING_HTML = """<!DOCTYPE html>
         <h2 class="section-heading" style="margin-bottom: var(--space-5);">Entrevistas por &Aacute;rea</h2>
         <div class="area-tabs" id="area-tabs">
           <button class="area-tab active" data-area-filter="all">Todas</button>
-          <button class="area-tab" data-area-filter="supply-chain">Supply Chain</button>
-          <button class="area-tab" data-area-filter="producao">Produ&ccedil;&atilde;o</button>
-          <button class="area-tab" data-area-filter="comercial">Comercial</button>
-          <button class="area-tab" data-area-filter="logistica">Log&iacute;stica</button>
-          <button class="area-tab" data-area-filter="ti">TI</button>
-          <button class="area-tab" data-area-filter="financeiro">Financeiro</button>
+          <button class="area-tab" data-area-filter="supply-chain">Cadeia de Suprimentos</button>
+          <button class="area-tab" data-area-filter="producao">Op. Industriais</button>
+          <button class="area-tab" data-area-filter="comercial">Receita &amp; Growth</button>
+          <button class="area-tab" data-area-filter="logistica">Op. Log&iacute;sticas</button>
+          <button class="area-tab" data-area-filter="ti">Tecnologia</button>
+          <button class="area-tab" data-area-filter="financeiro">Finan&ccedil;as</button>
           <button class="area-tab" data-area-filter="qualidade">Qualidade</button>
-          <button class="area-tab" data-area-filter="compras">Compras</button>
-          <button class="area-tab" data-area-filter="rh">RH</button>
-          <button class="area-tab" data-area-filter="diretoria">Diretoria</button>
+          <button class="area-tab" data-area-filter="compras">Suprimentos</button>
+          <button class="area-tab" data-area-filter="rh">Pessoas</button>
+          <button class="area-tab" data-area-filter="diretoria">Governan&ccedil;a</button>
         </div>
 
         <!-- Entrevistados -->
@@ -2181,16 +2181,16 @@ LANDING_HTML = """<!DOCTYPE html>
           <label class="form-label">&Aacute;rea / Departamento*</label>
           <select class="form-input form-select" id="ent-area" required>
             <option value="">Selecione a area...</option>
-            <option value="supply-chain">Supply Chain</option>
-            <option value="producao">Produ&ccedil;&atilde;o / PCP</option>
-            <option value="comercial">Comercial / Vendas</option>
-            <option value="logistica">Log&iacute;stica</option>
-            <option value="ti">Tecnologia / TI</option>
-            <option value="financeiro">Financeiro / Controladoria</option>
-            <option value="qualidade">Qualidade</option>
-            <option value="compras">Compras / Procurement</option>
-            <option value="rh">RH / Pessoas</option>
-            <option value="diretoria">Diretoria Geral</option>
+            <option value="supply-chain">Cadeia de Suprimentos</option>
+            <option value="producao">Opera&ccedil;&otilde;es Industriais</option>
+            <option value="comercial">Receita &amp; Growth</option>
+            <option value="logistica">Opera&ccedil;&otilde;es Log&iacute;sticas</option>
+            <option value="ti">Tecnologia &amp; Sistemas</option>
+            <option value="financeiro">Finan&ccedil;as &amp; Performance</option>
+            <option value="qualidade">Qualidade &amp; Compliance</option>
+            <option value="compras">Suprimentos &amp; Aquisi&ccedil;&otilde;es</option>
+            <option value="rh">Pessoas &amp; Cultura</option>
+            <option value="diretoria">Estrat&eacute;gia &amp; Governan&ccedil;a</option>
           </select>
         </div>
       </div>
