@@ -16,6 +16,7 @@ load_dotenv()
 import psycopg2
 import psycopg2.extras
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ─── Postgres connection ────────────────────────────────────────────────────
@@ -25,6 +26,8 @@ if DATABASE_URL and "sslmode" not in DATABASE_URL:
     DATABASE_URL += "?sslmode=require" if "?" not in DATABASE_URL else "&sslmode=require"
 _conn = None
 _db_available = False
+
+print(f"[DATASTORE] DATABASE_URL set: {bool(DATABASE_URL)} | len={len(DATABASE_URL)}", flush=True)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS interviews (
@@ -110,19 +113,19 @@ def _query(sql, params=None, fetch=True):
 
 
 if DATABASE_URL:
-    logger.info(f"DATABASE_URL found, connecting to: {DATABASE_URL[:40]}...")
+    print(f"[DATASTORE] Connecting to: {DATABASE_URL[:50]}...", flush=True)
     try:
         _conn = psycopg2.connect(DATABASE_URL, connect_timeout=10)
         _conn.autocommit = True
         with _conn.cursor() as cur:
             cur.execute(_SCHEMA)
         _db_available = True
-        logger.info("PostgreSQL connected and tables ready")
+        print("[DATASTORE] PostgreSQL connected and tables ready", flush=True)
     except Exception as e:
-        logger.error(f"Postgres init error: {e}")
+        print(f"[DATASTORE] Postgres init error: {e}", flush=True)
         _conn = None
 else:
-    logger.warning("DATABASE_URL not set — in-memory fallback")
+    print("[DATASTORE] DATABASE_URL not set — in-memory fallback", flush=True)
 
 
 # ─── In-memory fallback ──────────────────────────────────────────────────────
