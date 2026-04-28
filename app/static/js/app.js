@@ -893,7 +893,7 @@ function pollPipelineStatus() {
           loadInsightsData();
           // Update interview cards to show AI ANALYZED
           document.querySelectorAll('.interview-ai-tag').forEach(function(tag) {
-            if (tag.textContent === 'PROCESSANDO...') tag.textContent = 'AI ANALYZED';
+            if (tag.textContent === 'PRONTO P/ IA') tag.textContent = 'ANALISADO';
           });
         }
       })
@@ -1076,7 +1076,7 @@ function loadInterviews() {
           dateStr = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
         }
 
-        var aiTag = iv.analysis ? 'ANALISADO' : (iv.ia_ready ? 'PROCESSANDO...' : (iv.transcript ? 'TRANSCRITO' : 'NOVO'));
+        var aiTag = iv.analysis ? 'ANALISADO' : (iv.ia_ready ? 'PRONTO P/ IA' : (iv.transcript ? 'TRANSCRITO' : 'NOVO'));
         var areaTag = areaLabels[iv.department] || (iv.department || '').toUpperCase();
         var pilarInfo = PILAR_MAP[iv.pillar];
         var pilarTag = pilarInfo ? '<span class="interview-tag" style="color:' + pilarInfo.color + '">' + pilarInfo.label + '</span>' : '';
@@ -1380,7 +1380,7 @@ function initOnlineForm() {
             '<span class="interview-name">' + escapeHtml(nome) + '</span>' +
             '<span class="interview-role">' + escapeHtml(cargo) + '</span>' +
           '</div>' +
-          '<span class="interview-ai-tag font-mono">' + (iaReady && answered > 0 ? 'PROCESSANDO...' : answered + '/' + total + ' resp.') + '</span>' +
+          '<span class="interview-ai-tag font-mono">' + (iaReady && answered > 0 ? 'PRONTO P/ IA' : answered + '/' + total + ' resp.') + '</span>' +
         '</div>' +
         '<div class="interview-tags">' +
           '<span class="interview-tag" style="color: var(--text-muted)">' + (areaLabels[area] || area.toUpperCase()) + '</span>' +
@@ -1543,7 +1543,7 @@ function initFormExportImport() {
       // Create card visually
       var parts = importedData.interviewee.split(' ');
       var initials = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
-      var aiTag = importedData.answeredCount > 0 ? 'PROCESSANDO...' : 'IMPORTADO';
+      var aiTag = importedData.answeredCount > 0 ? 'PRONTO P/ IA' : 'IMPORTADO';
 
       var card = document.createElement('div');
       card.className = 'interview-card';
