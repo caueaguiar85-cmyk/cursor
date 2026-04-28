@@ -2769,7 +2769,33 @@ def agent_detail(agent_id: str):
 async def agent_run(agent_id: str, req: AgentRequest):
     """Executa um agente com uma mensagem do usuário."""
     logger.info(f"/api/agents/{agent_id}/run")
-    result = await run_agent(agent_id, req.message, req.context)
+
+    # Injeta entrevistas e análises do banco como contexto automático
+    ctx_parts = []
+    if req.context:
+        ctx_parts.append(req.context)
+
+    interviews = get_interviews()
+    ia_interviews = [i for i in interviews if i.get("ia_ready") and i.get("transcript")]
+    if ia_interviews:
+        summaries = []
+        for iv in ia_interviews:
+            s = (f"- {iv['interviewee']} ({iv['role']}, {iv['department']}): "
+                 f"{iv['transcript'][:500]}{'...' if len(iv.get('transcript','')) > 500 else ''}")
+            if iv.get("analysis"):
+                s += f"\n  ANÁLISE PRISM: {iv['analysis'][:500]}{'...' if len(iv.get('analysis','')) > 500 else ''}"
+            summaries.append(s)
+        ctx_parts.append(f"ENTREVISTAS SALVAS ({len(ia_interviews)}):\n" + "\n\n".join(summaries))
+
+    analysis = get_analysis_results()
+    if analysis:
+        for key, val in analysis.items():
+            content = val if isinstance(val, str) else (val.get("content", "") if isinstance(val, dict) else str(val))
+            if content:
+                ctx_parts.append(f"RESULTADO {key.upper()}:\n{content[:1000]}{'...' if len(content) > 1000 else ''}")
+
+    full_context = "\n\n---\n\n".join(ctx_parts) if ctx_parts else ""
+    result = await run_agent(agent_id, req.message, full_context)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result)
     return {"status": "ok", **result}
