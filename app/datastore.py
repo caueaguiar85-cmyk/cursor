@@ -7,6 +7,7 @@ Fallback gracioso quando DATABASE_URL não está configurado.
 import json
 import logging
 import os
+import threading
 from contextlib import contextmanager
 from datetime import datetime
 from typing import Optional
@@ -128,7 +129,15 @@ def _init_db():
         _db_available = False
 
 
-_init_db()
+# Init DB with timeout to avoid blocking app startup
+def _safe_init():
+    t = threading.Thread(target=_init_db, daemon=True)
+    t.start()
+    t.join(timeout=10)
+    if t.is_alive():
+        logger.warning("DB init timed out — using in-memory fallback")
+
+_safe_init()
 
 
 # ─── Interviews ───────────────────────────────────────────────────────────────
