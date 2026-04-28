@@ -326,6 +326,7 @@ REGRAS:
     update_pipeline_status(step="SYNAPSE: Consolidando análise holística")
 
     all_outputs = (
+        f"ANÁLISE QUALITATIVA PRISM (temas, sentimentos, gaps das entrevistas):\n{interview_context or 'N/A'}\n\n"
         f"DIAGNÓSTICO ARIA (scores e evidências):\n{diag_result or 'N/A'}\n\n"
         f"RISCOS SENTINEL:\n{sentinel_result or 'N/A'}\n\n"
         f"BENCHMARK NEXUS:\n{nexus_result or 'N/A'}\n\n"
