@@ -296,6 +296,69 @@ def get_analysis_results() -> dict:
         return _mem_analysis_results
 
 
+# ─── Per-Area Storage ─────────────────────────────────────────────────────────
+
+def set_analysis_result_for_area(area: str, key: str, result: str):
+    set_analysis_result(f"{key}:{area}", result)
+
+
+def get_analysis_results_for_area(area: str) -> dict:
+    suffix = f":{area}"
+    if not _db_available:
+        return {k.rsplit(":", 1)[0]: v for k, v in _mem_analysis_results.items() if k.endswith(suffix)}
+    try:
+        rows = _query("SELECT key, content, generated_at FROM analysis_results WHERE key LIKE %s",
+                       (f"%{suffix}",))
+        return {r["key"].rsplit(":", 1)[0]: {"content": r["content"], "generated_at": r["generated_at"]} for r in rows}
+    except Exception as e:
+        logger.error(f"Get area analysis error: {e}")
+        return {}
+
+
+def set_diagnostic_scores_for_area(area: str, scores: dict):
+    if not _db_available:
+        for key, value in scores.items():
+            if isinstance(value, (int, float)):
+                _mem_diagnostic_scores[f"{key}:{area}"] = value
+        return
+    try:
+        for key, value in scores.items():
+            if isinstance(value, (int, float)):
+                _query(
+                    """INSERT INTO diagnostic_scores (key, value) VALUES (%s, %s)
+                       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value""",
+                    (f"{key}:{area}", float(value)), fetch=False)
+    except Exception as e:
+        logger.error(f"Set area scores error: {e}")
+
+
+def get_diagnostic_scores_for_area(area: str) -> dict:
+    suffix = f":{area}"
+    if not _db_available:
+        return {k.rsplit(":", 1)[0]: v for k, v in _mem_diagnostic_scores.items() if k.endswith(suffix)}
+    try:
+        rows = _query("SELECT key, value FROM diagnostic_scores WHERE key LIKE %s", (f"%{suffix}",))
+        return {r["key"].rsplit(":", 1)[0]: r["value"] for r in rows}
+    except Exception as e:
+        logger.error(f"Get area scores error: {e}")
+        return {}
+
+
+def get_available_diagnostic_areas() -> list:
+    if not _db_available:
+        areas = set()
+        for k in _mem_analysis_results:
+            if ":" in k:
+                areas.add(k.rsplit(":", 1)[1])
+        return sorted(areas)
+    try:
+        rows = _query("SELECT DISTINCT split_part(key, ':', 2) AS area FROM analysis_results WHERE key LIKE '%:%'")
+        return sorted(r["area"] for r in rows if r["area"])
+    except Exception as e:
+        logger.error(f"Get areas error: {e}")
+        return []
+
+
 # ─── Insights ─────────────────────────────────────────────────────────────────
 
 def add_insight(insight: dict):

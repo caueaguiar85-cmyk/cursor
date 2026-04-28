@@ -2,22 +2,33 @@
 Stoken Advisory — AI Analysis Pipeline
 Orquestra a cadeia completa de 8 agentes para análise automática.
 
-Pipeline:
-1. PRISM → analisa cada entrevista (temas por pilar, sentimentos, insights)
-2. ARIA → gera scores de maturidade por pilar (CMMI 1-5) com evidências
-3. SENTINEL + NEXUS + CATALYST → riscos, benchmark, business cases (paralelo)
-4. STRATEGOS + ATLAS → gap analysis e roadmap (paralelo)
-5. SYNAPSE → consolidação holística de todos os 7 agentes
-6. Gera insights consolidados para o feed
+Pipeline por área:
+1. Agrupa entrevistas por departamento/área
+2. Para cada área, roda a cadeia de 8 agentes
+3. Consolidação global com SYNAPSE + geração de insights
 """
 
 import asyncio
 import json
 import logging
 import os
+from collections import defaultdict
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+AREA_LABELS = {
+    "supply-chain": "Supply Chain",
+    "producao": "Produção / PCP",
+    "comercial": "Comercial / Vendas",
+    "logistica": "Logística",
+    "ti": "Tecnologia / TI",
+    "financeiro": "Financeiro / Controladoria",
+    "qualidade": "Qualidade",
+    "compras": "Compras / Procurement",
+    "rh": "RH / Pessoas",
+    "diretoria": "Diretoria Geral",
+}
 
 
 async def _call_agent(agent_id: str, message: str, context: str = "") -> Optional[str]:
@@ -68,49 +79,39 @@ def _load_vexia_context() -> str:
     return ""
 
 
-async def run_full_pipeline():
-    """Executa o pipeline completo de análise com todos os 8 agentes."""
+def _parse_json_result(text: str):
+    """Tenta parsear JSON de uma resposta que pode conter markdown."""
+    json_str = text
+    if "```" in json_str:
+        json_str = json_str.split("```")[1]
+        if json_str.startswith("json"):
+            json_str = json_str[4:]
+        json_str = json_str.strip()
+    return json.loads(json_str)
+
+
+# ─── Pipeline por área individual ────────────────────────────────────────────
+
+async def _run_area_pipeline(area: str, interviews: list) -> dict:
+    """Roda a cadeia de 8 agentes para uma única área."""
     from app.datastore import (
-        get_interviews, update_interview_analysis,
-        set_diagnostic_scores, set_analysis_result,
-        set_insights, update_pipeline_status
+        update_interview_analysis, update_pipeline_status,
+        set_analysis_result_for_area, set_diagnostic_scores_for_area,
     )
 
-    try:
-        await _run_pipeline_inner()
-    except Exception as e:
-        logger.error(f"Pipeline crashed: {e}")
-        try:
-            update_pipeline_status(running=False, error=f"Pipeline error: {str(e)[:200]}")
-        except Exception:
-            pass
+    area_label = AREA_LABELS.get(area, area.upper())
+    vexia_context = _load_vexia_context()
+    results = {}
 
-
-async def _run_pipeline_inner():
-    from app.datastore import (
-        get_interviews, update_interview_analysis,
-        set_diagnostic_scores, set_analysis_result,
-        set_insights, update_pipeline_status
-    )
-
-    interviews = get_interviews()
-    ia_interviews = [i for i in interviews if i.get("ia_ready") and i.get("transcript")]
-
-    if not ia_interviews:
-        logger.warning("No IA-ready interviews to analyze")
-        update_pipeline_status(running=False, error="Nenhuma entrevista com transcrição marcada para IA")
-        return
-
-    update_pipeline_status(running=True)
-
-    # ─── Step 1: PRISM — Analyze each interview with pillar classification ──
-    logger.info("Pipeline Step 1: PRISM — Interview Analysis")
-    update_pipeline_status(step="PRISM: Analisando entrevistas")
+    # ─── Step 1: PRISM — Analisa cada entrevista ─────────────────────────
+    logger.info(f"[{area}] Step 1: PRISM — Interview Analysis")
+    update_pipeline_status(step=f"PRISM [{area_label}]: Analisando {len(interviews)} entrevistas")
 
     all_themes = []
-    for interview in ia_interviews:
-        prompt = f"""Analise esta entrevista do diagnóstico de supply chain da Santista S.A.
+    for interview in interviews:
+        prompt = f"""Analise esta entrevista da área {area_label}.
 
+ÁREA ANALISADA: {area_label}
 ENTREVISTADO: {interview['interviewee']}
 CARGO: {interview['role']}
 DEPARTAMENTO: {interview['department']}
@@ -119,6 +120,12 @@ DATA: {interview['date']}
 
 TRANSCRIÇÃO:
 {interview['transcript']}
+
+REGRAS:
+- Considere APENAS a área {area_label} — não misture com outras áreas
+- Identifique dores recorrentes, gargalos operacionais, processos manuais/ineficientes
+- Identifique riscos: erro humano, retrabalho, falta de governança, baixa escalabilidade
+- Não invente informações que não estejam na transcrição
 
 Extraia e retorne EXATAMENTE este JSON (sem markdown, sem explicação):
 {{
@@ -154,26 +161,39 @@ Extraia e retorne EXATAMENTE este JSON (sem markdown, sem explicação):
 
 IMPORTANTE:
 - Classifique CADA tema por pilar — isso alimenta o diagnóstico de maturidade
-- O campo "coverage" indica quanta informação útil esta entrevista trouxe para cada pilar
 - Extraia no mínimo 5 e no máximo 10 temas
 - Seja específico nas evidências — cite trechos reais da transcrição"""
 
         result = await _call_agent("prism", prompt)
         if result:
             update_interview_analysis(interview["id"], result)
-            all_themes.append(f"[{interview['interviewee']} — {interview['role']} — {interview['department']}]:\n{result}")
-
-    update_pipeline_status(step="PRISM: Concluído")
-
-    # ─── Step 2: ARIA — Diagnostic scoring with evidence ────────────────────
-    logger.info("Pipeline Step 2: ARIA — Diagnostic Scoring")
-    update_pipeline_status(step="ARIA: Gerando scores por pilar")
+            all_themes.append(f"[{interview['interviewee']} — {interview['role']}]:\n{result}")
 
     interview_context = "\n\n---\n\n".join(all_themes)
-    diag_prompt = f"""Com base nas {len(ia_interviews)} entrevistas analisadas pelo PRISM abaixo, gere o diagnóstico de maturidade CMMI da Santista S.A.
+    results["interview_context"] = interview_context
 
-ANÁLISES DO PRISM (temas já classificados por pilar):
+    # ─── Step 2: ARIA — Diagnóstico de maturidade da área ────────────────
+    logger.info(f"[{area}] Step 2: ARIA — Diagnostic Scoring")
+    update_pipeline_status(step=f"ARIA [{area_label}]: Gerando scores")
+
+    diag_prompt = f"""Com base nas {len(interviews)} entrevistas da área {area_label} analisadas pelo PRISM, gere o diagnóstico de maturidade.
+
+ÁREA ANALISADA: {area_label}
+Considere APENAS os dados desta área. Não generalize.
+
+CONSOLIDAÇÃO DAS ENTREVISTAS (PRISM):
 {interview_context}
+
+ETAPA 1 — Consolidação: Antes de pontuar, identifique:
+- Dores recorrentes entre os entrevistados
+- Gargalos operacionais
+- Processos manuais ou ineficientes
+- Divergências de percepção entre entrevistados
+
+ETAPA 2 — Classificação de prioridade:
+- Alta (críticos): impactam diretamente operação ou resultado
+- Média (relevantes): afetam eficiência e qualidade
+- Baixa (secundários): impacto limitado ou pontual
 
 Retorne EXATAMENTE este JSON (sem markdown, sem explicação, apenas o JSON):
 {{
@@ -183,9 +203,14 @@ Retorne EXATAMENTE este JSON (sem markdown, sem explicação, apenas o JSON):
   "operacoes": <float>,
   "organizacao": <float>,
   "roadmap": <float>,
-  "resumo": "<parágrafo de 2-3 frases com diagnóstico executivo>",
+  "resumo": "<parágrafo com diagnóstico executivo da área {area_label}>",
+  "problemas_priorizados": {{
+    "alta": ["<problema crítico 1>", "<problema crítico 2>"],
+    "media": ["<problema relevante 1>"],
+    "baixa": ["<problema secundário 1>"]
+  }},
   "evidencias": {{
-    "processos": "<principal evidência das entrevistas que justifica o score>",
+    "processos": "<principal evidência das entrevistas>",
     "sistemas": "<principal evidência>",
     "operacoes": "<principal evidência>",
     "organizacao": "<principal evidência>",
@@ -198,82 +223,71 @@ Retorne EXATAMENTE este JSON (sem markdown, sem explicação, apenas o JSON):
     "organizacao": "alta|media|baixa",
     "roadmap": "alta|media|baixa"
   }}
-}}
-
-REGRAS:
-- "confianca" reflete a quantidade e qualidade de dados das entrevistas para aquele pilar
-- Se poucas entrevistas cobrem um pilar, a confiança deve ser "baixa"
-- Justifique cada score com evidência concreta das entrevistas
-- Use o campo "coverage" do PRISM para calibrar a confiança"""
+}}"""
 
     diag_result = await _call_agent("aria", diag_prompt)
+    results["diag_result"] = diag_result
     if diag_result:
         try:
-            json_str = diag_result
-            if "```" in json_str:
-                json_str = json_str.split("```")[1]
-                if json_str.startswith("json"):
-                    json_str = json_str[4:]
-                json_str = json_str.strip()
-            scores = json.loads(json_str)
-            set_diagnostic_scores(scores)
-            set_analysis_result("diagnostic", diag_result)
+            scores = _parse_json_result(diag_result)
+            set_diagnostic_scores_for_area(area, scores)
+            set_analysis_result_for_area(area, "diagnostic", diag_result)
         except json.JSONDecodeError:
-            logger.warning("Could not parse ARIA JSON, saving raw")
-            set_analysis_result("diagnostic", diag_result)
+            logger.warning(f"[{area}] Could not parse ARIA JSON, saving raw")
+            set_analysis_result_for_area(area, "diagnostic", diag_result)
 
-    update_pipeline_status(step="ARIA: Concluído")
+    # ─── Step 3: SENTINEL + NEXUS + CATALYST (paralelo) ──────────────────
+    logger.info(f"[{area}] Step 3: SENTINEL + NEXUS + CATALYST")
+    update_pipeline_status(step=f"[{area_label}]: SENTINEL, NEXUS, CATALYST em paralelo")
 
-    # ─── Step 3: SENTINEL + NEXUS + CATALYST (parallel) ────────────────────
-    logger.info("Pipeline Step 3: SENTINEL + NEXUS + CATALYST (parallel)")
-    update_pipeline_status(step="Executando SENTINEL, NEXUS, CATALYST em paralelo")
-
-    vexia_context = _load_vexia_context()
-    context_for_agents = f"Dados das entrevistas:\n{interview_context}\n\nScores ARIA:\n{diag_result or 'não disponível'}"
+    context_for_agents = f"ÁREA ANALISADA: {area_label}\n\nDados das entrevistas da área:\n{interview_context}\n\nScores ARIA:\n{diag_result or 'não disponível'}"
     if vexia_context:
-        context_for_agents += f"\n\nDIAGNÓSTICO BPO VEXIA (consultoria que opera Fiscal, Financeiro, RH/Folha, Contabilidade, Suprimentos, Compliance e TI da Santista):\n{vexia_context}"
+        context_for_agents += f"\n\nDIAGNÓSTICO BPO VEXIA:\n{vexia_context}"
 
     sentinel_task = _call_agent("sentinel",
-        "Com base nos dados do diagnóstico e das entrevistas, identifique os TOP 5 riscos da Santista S.A. "
+        f"Para a área {area_label}, com base nas entrevistas e diagnóstico, identifique os TOP 5 riscos. "
         "Para cada risco: título, categoria, probabilidade (1-5), impacto (1-5), "
         "valor financeiro estimado em R$, causa raiz, plano de mitigação com owner e prazo. "
-        "Identifique riscos correlacionados (efeito cascata). Formato JSON array.",
+        "Identifique riscos correlacionados (efeito cascata). "
+        "IMPORTANTE: Baseie-se EXCLUSIVAMENTE nos dados das entrevistas desta área. Formato JSON array.",
         context_for_agents)
 
     nexus_task = _call_agent("nexus",
-        "Compare a Santista S.A. com o benchmark do setor têxtil brasileiro (ABIT/IEMI). "
-        "Para cada pilar (processos, sistemas, operações, organização, roadmap): "
-        "score Santista, média setor, top quartil, gap em pontos e %. "
-        "Identifique 5 best practices que a Santista deveria adotar com ROI estimado. "
+        f"Para a área {area_label}, compare com benchmark do setor. "
+        "Para cada pilar: score atual, média setor, top quartil, gap em pontos e %. "
+        "Identifique 5 best practices com ROI estimado. "
         "Diferencie table stakes vs differentiators. Formato JSON.",
         context_for_agents)
 
     catalyst_task = _call_agent("catalyst",
-        "Para as TOP 5 iniciativas de melhoria identificadas no diagnóstico, crie business case detalhado. "
+        f"Para a área {area_label}, crie business case para as TOP 5 iniciativas de melhoria. "
         "Para cada: investimento inicial, custos recorrentes, benefício anual, payback, NPV 5 anos (WACC 14%), IRR. "
-        "Apresente 3 cenários (pessimista -30%, base, otimista +30%). "
-        "Inclua custos ocultos (change management, treinamento). Formato JSON array ordenado por NPV.",
+        "3 cenários (pessimista -30%, base, otimista +30%). "
+        "Classifique cada solução como: automação, integração de sistemas, uso de IA, ou melhoria de processo. "
+        "Formato JSON array ordenado por NPV.",
         context_for_agents)
 
     sentinel_result, nexus_result, catalyst_result = await asyncio.gather(
         sentinel_task, nexus_task, catalyst_task
     )
 
-    if sentinel_result:
-        set_analysis_result("risks", sentinel_result)
-        update_pipeline_status(step="SENTINEL: Concluído")
-    if nexus_result:
-        set_analysis_result("benchmark", nexus_result)
-        update_pipeline_status(step="NEXUS: Concluído")
-    if catalyst_result:
-        set_analysis_result("business_cases", catalyst_result)
-        update_pipeline_status(step="CATALYST: Concluído")
+    results["sentinel_result"] = sentinel_result
+    results["nexus_result"] = nexus_result
+    results["catalyst_result"] = catalyst_result
 
-    # ─── Step 4: STRATEGOS + ATLAS (parallel) ──────────────────────────────
-    logger.info("Pipeline Step 4: STRATEGOS + ATLAS (parallel)")
-    update_pipeline_status(step="Executando STRATEGOS e ATLAS em paralelo")
+    if sentinel_result:
+        set_analysis_result_for_area(area, "risks", sentinel_result)
+    if nexus_result:
+        set_analysis_result_for_area(area, "benchmark", nexus_result)
+    if catalyst_result:
+        set_analysis_result_for_area(area, "business_cases", catalyst_result)
+
+    # ─── Step 4: STRATEGOS + ATLAS (paralelo) ────────────────────────────
+    logger.info(f"[{area}] Step 4: STRATEGOS + ATLAS")
+    update_pipeline_status(step=f"[{area_label}]: STRATEGOS e ATLAS em paralelo")
 
     context_step4 = (
+        f"ÁREA ANALISADA: {area_label}\n\n"
         f"Dados das entrevistas (PRISM):\n{interview_context}\n\n"
         f"Scores ARIA:\n{diag_result or 'N/A'}\n\n"
         f"Riscos SENTINEL:\n{sentinel_result or 'N/A'}\n\n"
@@ -284,137 +298,178 @@ REGRAS:
         context_step4 += f"\n\nDIAGNÓSTICO BPO VEXIA:\n{vexia_context}"
 
     strategos_task = _call_agent("strategos",
-        "Com base em todos os dados do diagnóstico (scores ARIA, riscos SENTINEL, benchmark NEXUS, "
-        "temas do PRISM), mapeie os gaps estratégicos da Santista S.A.\n\n"
+        f"Para a área {area_label}, mapeie os gaps estratégicos.\n\n"
         "Para cada gap:\n"
-        "- Pilar afetado\n"
         "- Estado atual (com evidência das entrevistas)\n"
-        "- Estado alvo (target 3.5/5.0)\n"
+        "- Estado alvo\n"
         "- Impacto financeiro estimado em R$\n"
         "- Urgência (1-3): 1=imediato, 2=curto prazo, 3=médio prazo\n"
         "- Owner sugerido\n"
         "- Dependências com outros gaps\n"
         "- Quick fix (<30 dias) vs solução estrutural\n\n"
-        "Estruture em árvore MECE. Formato markdown estruturado.",
+        "Conecte problemas → causas → soluções. "
+        "IMPORTANTE: Use APENAS dados das entrevistas desta área. "
+        "Formato markdown estruturado.",
         context_step4)
 
     atlas_task = _call_agent("atlas",
-        "Com base nos gaps identificados, business cases e scores de maturidade, "
-        "gere o roadmap de transformação da Santista S.A.\n\n"
-        "Organize em 3 ondas:\n"
-        "- Onda 1 — Quick Wins (0-3 meses): iniciativas de alto impacto e baixo esforço\n"
-        "- Onda 2 — Estruturante (3-12 meses): fundações sistêmicas e processuais\n"
-        "- Onda 3 — Transformacional (12-18+ meses): mudança cultural e digital\n\n"
-        "Para cada iniciativa: scope, owner, budget, timeline, dependências, KPIs de sucesso, risco.\n"
-        "Inclua OKRs trimestrais e plano de change management.\n"
-        "Sinalize dependências críticas entre ondas. Formato markdown estruturado.",
+        f"Para a área {area_label}, gere o roadmap de transformação.\n\n"
+        "Organize em 3 horizontes:\n"
+        "- CURTO PRAZO (Quick Wins, 0-3 meses): baixo esforço, alto impacto, implementação rápida\n"
+        "- MÉDIO PRAZO (3-12 meses): estruturação de processos, automações, melhoria de fluxos\n"
+        "- LONGO PRAZO (12-18+ meses): mudanças estruturais, soluções escaláveis, evolução de maturidade\n\n"
+        "Para cada item:\n"
+        "- Descrição clara da solução\n"
+        "- Classificação: automação | integração de sistemas | uso de IA | melhoria de processo\n"
+        "- Impacto esperado no negócio\n"
+        "- Owner, budget, timeline, KPIs de sucesso\n\n"
+        "IMPORTANTE: Baseie-se EXCLUSIVAMENTE nos dados das entrevistas desta área. "
+        "Formato markdown estruturado.",
         context_step4)
 
     strategos_result, atlas_result = await asyncio.gather(
         strategos_task, atlas_task
     )
 
-    if strategos_result:
-        set_analysis_result("gaps", strategos_result)
-        update_pipeline_status(step="STRATEGOS: Concluído")
-    if atlas_result:
-        set_analysis_result("roadmap_atlas", atlas_result)
-        update_pipeline_status(step="ATLAS: Concluído")
+    results["strategos_result"] = strategos_result
+    results["atlas_result"] = atlas_result
 
-    # ─── Step 5: SYNAPSE — Holistic consolidation ──────────────────────────
-    logger.info("Pipeline Step 5: SYNAPSE — Holistic Consolidation")
-    update_pipeline_status(step="SYNAPSE: Consolidando análise holística")
+    if strategos_result:
+        set_analysis_result_for_area(area, "gaps", strategos_result)
+    if atlas_result:
+        set_analysis_result_for_area(area, "roadmap_atlas", atlas_result)
+
+    # ─── Step 5: SYNAPSE — Consolidação da área ──────────────────────────
+    logger.info(f"[{area}] Step 5: SYNAPSE — Area Consolidation")
+    update_pipeline_status(step=f"SYNAPSE [{area_label}]: Consolidando")
 
     all_outputs = (
-        f"ANÁLISE QUALITATIVA PRISM (temas, sentimentos, gaps das entrevistas):\n{interview_context or 'N/A'}\n\n"
-        f"DIAGNÓSTICO ARIA (scores e evidências):\n{diag_result or 'N/A'}\n\n"
+        f"ÁREA ANALISADA: {area_label}\n\n"
+        f"ANÁLISE QUALITATIVA PRISM:\n{interview_context or 'N/A'}\n\n"
+        f"DIAGNÓSTICO ARIA:\n{diag_result or 'N/A'}\n\n"
         f"RISCOS SENTINEL:\n{sentinel_result or 'N/A'}\n\n"
         f"BENCHMARK NEXUS:\n{nexus_result or 'N/A'}\n\n"
         f"BUSINESS CASES CATALYST:\n{catalyst_result or 'N/A'}\n\n"
         f"GAPS STRATEGOS:\n{strategos_result or 'N/A'}\n\n"
         f"ROADMAP ATLAS:\n{atlas_result or 'N/A'}"
     )
-    if vexia_context:
-        all_outputs += f"\n\nDIAGNÓSTICO BPO VEXIA:\n{vexia_context}"
 
     synapse_result = await _call_agent("synapse",
-        "Consolide TODOS os outputs dos 7 agentes especialistas num relatório executivo integrado.\n\n"
+        f"Consolide TODOS os outputs dos 7 agentes para a área {area_label} num relatório executivo.\n\n"
         "O relatório deve conter:\n"
-        "1. Executive Summary (máx 5 parágrafos) — situação geral da Santista\n"
-        "2. Mapa de Interdependências — onde problemas de um pilar impactam outros\n"
-        "3. Análise de Coerência — o roadmap proposto endereça os gaps mais críticos?\n"
-        "4. Temas Transversais — padrões que aparecem em múltiplos pilares/entrevistas\n"
-        "5. Matriz de Valor Estratégico — urgência × impacto × viabilidade para cada iniciativa\n"
-        "6. Top 5 Recomendações priorizadas para a diretoria\n"
-        "7. Riscos de Execução que podem comprometer o plano\n\n"
-        "Tom: consultor sênior apresentando para board de diretores.\n"
-        "Formato: markdown estruturado com tabelas.",
+        "1. Executive Summary — situação da área\n"
+        "2. Problemas priorizados (alta/média/baixa prioridade)\n"
+        "3. Padrões e recorrências identificados entre entrevistados\n"
+        "4. Divergências de percepção entre entrevistados\n"
+        "5. Roadmap por horizonte (curto/médio/longo prazo)\n"
+        "6. Top 5 Recomendações priorizadas\n"
+        "7. Riscos de Execução\n\n"
+        "REGRAS:\n"
+        "- Considere APENAS a área analisada\n"
+        "- Não invente informações que não estejam nas entrevistas\n"
+        "- Conecte problemas → causas → soluções\n"
+        "- Formato: markdown estruturado com tabelas.",
         all_outputs)
 
-    if synapse_result:
-        set_analysis_result("synapse", synapse_result)
-        update_pipeline_status(step="SYNAPSE: Concluído")
+    results["synapse_result"] = synapse_result
 
-    # ─── Step 6: Generate consolidated insights ────────────────────────────
-    logger.info("Pipeline Step 6: Generating consolidated insights")
+    if synapse_result:
+        set_analysis_result_for_area(area, "synapse", synapse_result)
+
+    update_pipeline_status(step=f"[{area_label}]: Concluído")
+    logger.info(f"[{area}] Area pipeline complete.")
+    return results
+
+
+# ─── Consolidação global ─────────────────────────────────────────────────────
+
+async def _run_global_consolidation(area_results: dict):
+    """Consolida resultados de todas as áreas num diagnóstico global."""
+    from app.datastore import (
+        set_diagnostic_scores, set_analysis_result,
+        set_insights, update_pipeline_status,
+    )
+
+    update_pipeline_status(step="SYNAPSE GLOBAL: Consolidando todas as áreas")
+
+    # Monta contexto com os resultados de SYNAPSE de cada área
+    area_summaries = []
+    for area, res in area_results.items():
+        area_label = AREA_LABELS.get(area, area.upper())
+        synapse = res.get("synapse_result", "N/A")
+        diag = res.get("diag_result", "N/A")
+        area_summaries.append(f"═══ ÁREA: {area_label} ═══\nDIAGNÓSTICO:\n{diag}\n\nCONSOLIDAÇÃO:\n{synapse}")
+
+    global_context = "\n\n".join(area_summaries)
+
+    # SYNAPSE global
+    synapse_global = await _call_agent("synapse",
+        f"Consolide os diagnósticos de {len(area_results)} áreas num relatório executivo global.\n\n"
+        "O relatório deve conter:\n"
+        "1. Executive Summary — visão geral da organização\n"
+        "2. Mapa de Interdependências — onde problemas de uma área impactam outras\n"
+        "3. Temas Transversais — padrões que aparecem em múltiplas áreas\n"
+        "4. Matriz de Valor Estratégico — urgência × impacto × viabilidade\n"
+        "5. Top 5 Recomendações priorizadas para a diretoria\n"
+        "6. Riscos de Execução cross-área\n\n"
+        "Tom: consultor sênior apresentando para board de diretores.\n"
+        "Formato: markdown estruturado com tabelas.",
+        global_context)
+
+    if synapse_global:
+        set_analysis_result("synapse", synapse_global)
+
+    # Scores globais (média das áreas)
+    all_scores = {}
+    pilars = ["geral", "processos", "sistemas", "operacoes", "organizacao", "roadmap"]
+    for area, res in area_results.items():
+        diag = res.get("diag_result", "")
+        if not diag:
+            continue
+        try:
+            parsed = _parse_json_result(diag)
+            for p in pilars:
+                if isinstance(parsed.get(p), (int, float)):
+                    all_scores.setdefault(p, []).append(float(parsed[p]))
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+    if all_scores:
+        avg_scores = {p: round(sum(vals) / len(vals), 1) for p, vals in all_scores.items()}
+        set_diagnostic_scores(avg_scores)
+        set_analysis_result("diagnostic", json.dumps(avg_scores, ensure_ascii=False))
+
+    # Insights globais
     update_pipeline_status(step="Gerando insights consolidados")
 
-    all_analysis = f"""DIAGNÓSTICO ARIA:
-{diag_result or 'N/A'}
+    insights_prompt = f"""Com base nos diagnósticos de {len(area_results)} áreas, gere 8 insights para o feed.
 
-RISCOS SENTINEL:
-{sentinel_result or 'N/A'}
+{global_context}
 
-BENCHMARK NEXUS:
-{nexus_result or 'N/A'}
-
-BUSINESS CASES CATALYST:
-{catalyst_result or 'N/A'}
-
-GAPS STRATEGOS:
-{strategos_result or 'N/A'}
-
-ROADMAP ATLAS:
-{atlas_result or 'N/A'}
-
-CONSOLIDAÇÃO SYNAPSE:
-{synapse_result or 'N/A'}"""
-
-    insights_prompt = f"""Com base em TODA a análise dos 8 agentes abaixo, gere 8 insights para o feed da plataforma Stoken Advisory.
-
-{all_analysis}
-
-Para cada insight, retorne EXATAMENTE este JSON array (sem markdown):
+Retorne EXATAMENTE este JSON array (sem markdown):
 [
   {{
     "category": "risco|oportunidade|quickwin|estrategico",
     "impact": "alto|medio|baixo",
     "pillar": "processos|sistemas|operacoes|organizacao|roadmap",
     "title": "<título editorial, máx 100 chars>",
-    "body": "<corpo de 2-3 frases descrevendo o insight com evidência concreta>",
+    "body": "<2-3 frases com evidência concreta>",
     "estimated_value": "<ex: -R$ 850k/ano ou +R$ 420k/ano>",
     "value_type": "positive|negative",
-    "origin": "<ex: Entrevista — Dir. TI + SENTINEL>",
-    "benchmark": "<referência de benchmark relevante do NEXUS>",
-    "suggested_action": "<ação concreta sugerida pelo ATLAS/STRATEGOS>",
+    "origin": "<área + agente de origem>",
+    "benchmark": "<referência de benchmark>",
+    "suggested_action": "<ação concreta sugerida>",
     "validated": true
   }}
 ]
 
 Gere exatamente 8 insights: 2 riscos, 2 oportunidades, 2 quick wins, 2 estratégicos.
-Ordene por impacto (alto primeiro). Use dados reais das entrevistas e cruze com os achados dos agentes.
-Os insights devem refletir a visão integrada do SYNAPSE, não apenas dados isolados."""
+Ordene por impacto. Use dados reais das entrevistas — não invente."""
 
     insights_result = await _call_agent("aria", insights_prompt)
     if insights_result:
         try:
-            json_str = insights_result
-            if "```" in json_str:
-                json_str = json_str.split("```")[1]
-                if json_str.startswith("json"):
-                    json_str = json_str[4:]
-                json_str = json_str.strip()
-            insights_list = json.loads(json_str)
+            insights_list = _parse_json_result(insights_result)
             if isinstance(insights_list, list):
                 set_insights(insights_list)
                 set_analysis_result("insights", insights_result)
@@ -422,6 +477,82 @@ Os insights devem refletir a visão integrada do SYNAPSE, não apenas dados isol
             logger.warning("Could not parse insights JSON, saving raw")
             set_analysis_result("insights_raw", insights_result)
 
-    update_pipeline_status(step="Insights: Concluído")
-    update_pipeline_status(running=False)
-    logger.info("Pipeline complete! All 8 agents executed.")
+    update_pipeline_status(step="Consolidação global: Concluída")
+
+
+# ─── Entry points ────────────────────────────────────────────────────────────
+
+async def run_full_pipeline():
+    """Executa o pipeline completo: todas as áreas + consolidação global."""
+    from app.datastore import (
+        get_interviews, update_pipeline_status
+    )
+
+    try:
+        update_pipeline_status(running=True)
+
+        interviews = get_interviews()
+        ia_interviews = [i for i in interviews if i.get("ia_ready") and i.get("transcript")]
+
+        if not ia_interviews:
+            logger.warning("No IA-ready interviews to analyze")
+            update_pipeline_status(running=False, error="Nenhuma entrevista com transcrição marcada para IA")
+            return
+
+        # Agrupa por área
+        area_interviews = defaultdict(list)
+        for iv in ia_interviews:
+            dept = iv.get("department", "geral")
+            area_interviews[dept].append(iv)
+
+        logger.info(f"Pipeline: {len(ia_interviews)} entrevistas em {len(area_interviews)} áreas: {list(area_interviews.keys())}")
+
+        # Processa cada área
+        area_results = {}
+        for area, interviews in area_interviews.items():
+            area_label = AREA_LABELS.get(area, area.upper())
+            logger.info(f"Processing area: {area_label} ({len(interviews)} entrevistas)")
+            update_pipeline_status(step=f"Processando área: {area_label}")
+            area_results[area] = await _run_area_pipeline(area, interviews)
+
+        # Consolidação global
+        if len(area_results) > 0:
+            await _run_global_consolidation(area_results)
+
+        update_pipeline_status(running=False)
+        logger.info(f"Pipeline complete! {len(area_results)} áreas processadas.")
+
+    except Exception as e:
+        logger.error(f"Pipeline crashed: {e}")
+        try:
+            update_pipeline_status(running=False, error=f"Pipeline error: {str(e)[:200]}")
+        except Exception:
+            pass
+
+
+async def run_area_pipeline(area: str):
+    """Executa o pipeline para uma única área."""
+    from app.datastore import get_interviews, update_pipeline_status
+
+    try:
+        update_pipeline_status(running=True)
+
+        interviews = get_interviews()
+        area_interviews = [i for i in interviews
+                           if i.get("ia_ready") and i.get("transcript")
+                           and i.get("department") == area]
+
+        if not area_interviews:
+            area_label = AREA_LABELS.get(area, area)
+            update_pipeline_status(running=False, error=f"Nenhuma entrevista para a área {area_label}")
+            return
+
+        await _run_area_pipeline(area, area_interviews)
+        update_pipeline_status(running=False)
+
+    except Exception as e:
+        logger.error(f"Area pipeline crashed [{area}]: {e}")
+        try:
+            update_pipeline_status(running=False, error=f"Pipeline error [{area}]: {str(e)[:200]}")
+        except Exception:
+            pass

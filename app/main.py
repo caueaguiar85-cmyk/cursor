@@ -21,10 +21,11 @@ from app.pricing import run_pricing
 from app.agents import get_all_agents, get_agent, run_agent
 from app.datastore import (
     save_interview, get_interviews, get_interview, update_interview,
-    delete_interview, get_diagnostic_scores,
-    get_analysis_results, get_insights, get_pipeline_status
+    delete_interview, get_diagnostic_scores, get_diagnostic_scores_for_area,
+    get_analysis_results, get_analysis_results_for_area,
+    get_available_diagnostic_areas, get_insights, get_pipeline_status
 )
-from app.pipeline import run_full_pipeline
+from app.pipeline import run_full_pipeline, run_area_pipeline
 from app.docgen import generate_form_docx, parse_form_docx
 from app.auth import (
     authenticate, create_session, get_session_user, destroy_session,
@@ -728,6 +729,11 @@ LANDING_HTML = """<!DOCTYPE html>
           </div>
         </div>
         <div class="page-header-divider"></div>
+
+        <!-- Area tabs -->
+        <div class="area-tabs" id="diag-area-tabs" style="margin-bottom: var(--space-4)">
+          <button class="area-tab active" data-diag-area="all">Geral</button>
+        </div>
 
         <!-- Tabs -->
         <div class="tabs">
@@ -2840,26 +2846,42 @@ def remove_interview(interview_id: int):
     return {"status": "ok"}
 
 @app.post("/api/pipeline/run")
-async def trigger_pipeline():
-    """Dispara o pipeline completo de análise automática."""
+async def trigger_pipeline(area: str = None):
+    """Dispara o pipeline de análise. Se area for passada, roda só aquela área."""
     import asyncio
     status = get_pipeline_status()
     if status["running"]:
         return {"status": "already_running", "pipeline": status}
+    if area:
+        asyncio.create_task(run_area_pipeline(area))
+        return {"status": "ok", "message": f"Pipeline iniciado para área: {area}"}
     asyncio.create_task(run_full_pipeline())
-    return {"status": "ok", "message": "Pipeline iniciado"}
+    return {"status": "ok", "message": "Pipeline iniciado para todas as áreas"}
 
 @app.get("/api/pipeline/status")
 def pipeline_status():
     return {"status": "ok", "pipeline": get_pipeline_status()}
 
+@app.get("/api/diagnostic/areas")
+def get_diag_areas():
+    """Retorna áreas que possuem resultados de diagnóstico."""
+    return {"status": "ok", "areas": get_available_diagnostic_areas()}
+
 @app.get("/api/diagnostic")
-def get_diagnostic():
-    """Retorna scores e resultados do diagnóstico."""
+def get_diagnostic(area: str = None):
+    """Retorna scores e resultados do diagnóstico. Se area for passada, retorna só daquela área."""
+    if area:
+        return {
+            "status": "ok",
+            "area": area,
+            "scores": get_diagnostic_scores_for_area(area),
+            "analysis": get_analysis_results_for_area(area),
+        }
     return {
         "status": "ok",
         "scores": get_diagnostic_scores(),
-        "analysis": get_analysis_results()
+        "analysis": get_analysis_results(),
+        "areas": get_available_diagnostic_areas(),
     }
 
 @app.get("/api/insights")
