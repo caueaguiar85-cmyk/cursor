@@ -7,19 +7,14 @@ document.addEventListener('DOMContentLoaded', function() {
   initThemeToggle();
   initSidebar();
   initRouter();
-  initDiagTabs();
-  initInsightFilters();
-  initInsightReadmore();
   initTimeline();
   initNovaEntrevista();
-  initDiagActions();
   initLogout();
   initUserManagement();
   initCurrentUser();
   initFormExportImport();
   initOnlineForm();
   initAreaFilter();
-  initDiagAreaTabs();
   initStrategy();
   initRoadmap();
   try { initAgents(); } catch(e) { console.warn('Agents init:', e); }
@@ -101,7 +96,7 @@ function initRouter() {
   if (hash && document.getElementById('page-' + hash)) {
     navigateTo(hash);
   } else {
-    navigateTo('diagnostico');
+    navigateTo('projeto');
   }
 
   // Handle browser back/forward
@@ -114,13 +109,12 @@ function initRouter() {
 var PAGE_NAMES = {
   'projeto': 'Projeto',
   'entrevistas': 'Entrevistas',
-  'diagnostico': 'Diagn\u00f3stico',
-  'insights': 'Insights',
   'roadmap': 'Roadmap',
   'agentes': 'Agentes IA',
   'vexia': 'Vexia',
   'usuarios': 'Usu\u00e1rios',
-  'configuracoes': 'Configura\u00e7\u00f5es'
+  'configuracoes': 'Configura\u00e7\u00f5es',
+  'estrategia': 'Estrat\u00e9gia'
 };
 
 function navigateTo(page, fromPopstate) {
@@ -158,75 +152,6 @@ function navigateTo(page, fromPopstate) {
   if (page === 'usuarios') loadUsersTable();
 }
 
-/* ── Diagnostico Tabs ──────────────────────────────────────────────────── */
-function initDiagTabs() {
-  var tabs = document.querySelectorAll('[data-dtab]');
-  if (!tabs.length) return;
-
-  tabs.forEach(function(tab) {
-    tab.addEventListener('click', function() {
-      var target = tab.getAttribute('data-dtab');
-
-      // Update tab active state
-      tabs.forEach(function(t) { t.classList.toggle('active', t === tab); });
-
-      // Show/hide tab content
-      var contents = document.querySelectorAll('.dtab-content');
-      contents.forEach(function(c) {
-        c.style.display = c.id === 'dtab-' + target ? 'block' : 'none';
-      });
-    });
-  });
-}
-
-/* ── Insight Filters (functional) ──────────────────────────────────────── */
-function initInsightFilters() {
-  var filters = document.querySelectorAll('.insight-filter');
-  if (!filters.length) return;
-
-  filters.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var category = btn.getAttribute('data-filter');
-      filters.forEach(function(f) { f.classList.toggle('active', f === btn); });
-
-      var items = document.querySelectorAll('.insight-item');
-      var dividers = document.querySelectorAll('.insight-divider');
-
-      items.forEach(function(item) {
-        if (category === 'all' || item.getAttribute('data-category') === category) {
-          item.classList.remove('hidden');
-        } else {
-          item.classList.add('hidden');
-        }
-      });
-
-      // Show/hide dividers based on visible adjacent items
-      dividers.forEach(function(d) {
-        var prev = d.previousElementSibling;
-        var next = d.nextElementSibling;
-        var prevVisible = prev && !prev.classList.contains('hidden') && prev.classList.contains('insight-item');
-        var nextVisible = next && !next.classList.contains('hidden') && next.classList.contains('insight-item');
-        d.classList.toggle('hidden', !prevVisible || !nextVisible);
-      });
-    });
-  });
-}
-
-/* ── Insight "ler mais" — expand truncated text ───────────────────────── */
-function initInsightReadmore() {
-  // Bind directly to each link instead of delegation
-  var links = document.querySelectorAll('.insight-readmore');
-  links.forEach(function(link) {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var body = link.closest('.insight-body');
-      if (body) {
-        var isExpanded = body.classList.toggle('expanded');
-        link.textContent = isExpanded ? 'recolher' : 'ler mais';
-      }
-    });
-  });
 }
 
 /* ── Timeline — interactive expand, checkboxes, status, notes ──────────── */
@@ -369,54 +294,6 @@ function initTimeline() {
   updateGlobalProgress();
 }
 
-/* ── Diagnostico Actions — Rodar diag + Agente dropdown + Pilar links ── */
-function initDiagActions() {
-  // "Rodar diagnóstico completo" → navigate to ARIA agent with full diagnostic prompt
-  var btnRodar = document.getElementById('btn-rodar-diag');
-  if (btnRodar) {
-    btnRodar.addEventListener('click', function() {
-      navigateTo('agentes');
-      setTimeout(function() {
-        // Open ARIA agent chat
-        currentAgent = 'aria';
-        openAgentChat('aria');
-        // Pre-fill the input
-        var input = document.getElementById('agent-input');
-        if (input) {
-          input.value = 'Execute o diagn\u00f3stico completo de maturidade da Santista S.A. nos 5 pilares (Processos, Sistemas & Dados, Opera\u00e7\u00f5es, Organiza\u00e7\u00e3o, Roadmap). Para cada pilar, forne\u00e7a: score de 1 a 5, justificativa, gap vs benchmark do setor t\u00eaxtil, e top 3 a\u00e7\u00f5es recomendadas.';
-        }
-      }, 100);
-    });
-  }
-
-  // "Agente individual ▾" dropdown
-  var btnDropdown = document.getElementById('btn-agente-dropdown');
-  var dropdown = document.getElementById('dropdown-agentes');
-  if (btnDropdown && dropdown) {
-    btnDropdown.addEventListener('click', function(e) {
-      e.stopPropagation();
-      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-    });
-
-    // Close dropdown on outside click
-    document.addEventListener('click', function() {
-      dropdown.style.display = 'none';
-    });
-
-    // Dropdown items → navigate to agent
-    dropdown.querySelectorAll('[data-goto-agent]').forEach(function(item) {
-      item.addEventListener('click', function(e) {
-        e.preventDefault();
-        var agentId = item.getAttribute('data-goto-agent');
-        dropdown.style.display = 'none';
-        navigateTo('agentes');
-        setTimeout(function() {
-          currentAgent = agentId;
-          openAgentChat(agentId);
-        }, 100);
-      });
-    });
-  }
 
   // "Gerar agora →" on pilar cards → navigate to ARIA with pilar-specific prompt
   document.addEventListener('click', function(e) {
@@ -878,11 +755,9 @@ function escapeHtml(text) {
    PIPELINE — Auto-analysis trigger + result loading
    ══════════════════════════════════════════════════════════════════════════ */
 
-var _activeDiagArea = null; // null = global
-
-function triggerPipeline() {
+function triggerPipeline(area) {
   var url = '/api/pipeline/run';
-  if (_activeDiagArea) url += '?area=' + encodeURIComponent(_activeDiagArea);
+  if (area) url += '?area=' + encodeURIComponent(area);
   fetch(url, { method: 'POST' })
     .then(function(res) { return res.json(); })
     .then(function(data) {
@@ -891,21 +766,6 @@ function triggerPipeline() {
       }
     })
     .catch(function(err) { console.warn('Pipeline trigger error:', err); });
-}
-
-function initDiagAreaTabs() {
-  var container = document.getElementById('diag-area-tabs');
-  if (!container) return;
-  container.addEventListener('click', function(e) {
-    var tab = e.target.closest('.area-tab');
-    if (!tab) return;
-    var area = tab.getAttribute('data-diag-area');
-    container.querySelectorAll('.area-tab').forEach(function(t) {
-      t.classList.toggle('active', t === tab);
-    });
-    _activeDiagArea = (area === 'all') ? null : area;
-    loadDiagnosticData(_activeDiagArea);
-  });
 }
 
 function pollPipelineStatus() {
@@ -917,8 +777,6 @@ function pollPipelineStatus() {
         if (!pipeline.running) {
           clearInterval(interval);
           // Pipeline done — reload data
-          loadDiagnosticData(_activeDiagArea);
-          loadInsightsData();
           if (_activeStrategyArea) loadStrategyData(_activeStrategyArea);
           // Update interview cards to show AI ANALYZED
           document.querySelectorAll('.interview-ai-tag').forEach(function(tag) {
@@ -930,221 +788,8 @@ function pollPipelineStatus() {
   }, 3000);
 }
 
-function loadDiagnosticData(area) {
-  var url = '/api/diagnostic';
-  if (area) url += '?area=' + encodeURIComponent(area);
-  fetch(url)
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      if (data.status !== 'ok') return;
-      var scores = data.scores || {};
-
-      // Populate area tabs (only on global load)
-      if (!area && data.areas && data.areas.length) {
-        var diagAreaLabels = {
-          'supply-chain': 'Supply Chain', 'producao': 'Produção', 'comercial': 'Comercial',
-          'logistica': 'Logística', 'ti': 'TI', 'financeiro': 'Financeiro',
-          'qualidade': 'Qualidade', 'compras': 'Compras', 'rh': 'RH', 'diretoria': 'Diretoria'
-        };
-        var tabsContainer = document.getElementById('diag-area-tabs');
-        if (tabsContainer) {
-          var tabsHtml = '<button class="area-tab active" data-diag-area="all">Geral</button>';
-          data.areas.forEach(function(a) {
-            tabsHtml += '<button class="area-tab" data-diag-area="' + a + '">' + (diagAreaLabels[a] || a) + '</button>';
-          });
-          tabsContainer.innerHTML = tabsHtml;
-        }
-      }
-
-      // Update score display
-      var geralScore = scores.geral;
-      if (geralScore) {
-        var scoreBig = document.querySelector('.score-big');
-        if (scoreBig) scoreBig.textContent = parseFloat(geralScore).toFixed(1);
-
-        var maturityNum = document.querySelector('.maturity-number');
-        if (maturityNum) maturityNum.textContent = parseFloat(geralScore).toFixed(1);
-
-        var cmmiMarker = document.querySelector('.cmmi-marker');
-        if (cmmiMarker) cmmiMarker.style.left = ((parseFloat(geralScore) - 1) / 4 * 100) + '%';
-
-        var benchRows = document.querySelectorAll('.benchmark-value');
-        if (benchRows.length >= 1) benchRows[0].textContent = parseFloat(geralScore).toFixed(1);
-
-        // Score color
-        if (scoreBig) {
-          var val = parseFloat(geralScore);
-          if (val >= 3.5) scoreBig.style.color = 'var(--success)';
-          else if (val >= 2.5) scoreBig.style.color = 'var(--warning)';
-          else scoreBig.style.color = 'var(--accent)';
-        }
-      }
-
-      // Update pilar strip scores
-      var pilarKeys = ['processos', 'sistemas', 'operacoes', 'organizacao', 'roadmap'];
-      var pilarScores = document.querySelectorAll('.pilar-score');
-      pilarKeys.forEach(function(key, i) {
-        if (scores[key] && pilarScores[i]) {
-          pilarScores[i].textContent = parseFloat(scores[key]).toFixed(1);
-        }
-      });
-
-      // Update pilar cards with evidence from diagnostic
-      var analysis = data.analysis || {};
-      var diagContent = analysis.diagnostic ? (analysis.diagnostic.content || analysis.diagnostic) : '';
-      if (diagContent) {
-        try {
-          var diagJson = typeof diagContent === 'string' ? JSON.parse(diagContent.replace(/```json?\n?/g, '').replace(/```/g, '').trim()) : diagContent;
-          var evidencias = diagJson.evidencias || {};
-          var pilarCards = document.querySelectorAll('.pilar-card');
-          pilarKeys.forEach(function(key, i) {
-            if (pilarCards[i] && evidencias[key]) {
-              var pending = pilarCards[i].querySelector('.pilar-card-pending');
-              if (pending) {
-                pending.innerHTML = '<p style="font-size:0.85rem;color:var(--text-secondary);margin:0">' + escapeHtml(evidencias[key]) + '</p>';
-              }
-            }
-          });
-        } catch(e) { console.warn('Parse diagnostic evidence:', e); }
-      }
-
-      // Render agent outputs in "Relatórios dos Agentes" tab
-      var pilaresTab = document.getElementById('dtab-pilares');
-      if (pilaresTab) {
-        var agentSections = [
-          { key: 'risks', title: 'SENTINEL — Riscos', icon: '&#9888;' },
-          { key: 'benchmark', title: 'NEXUS — Benchmark', icon: '&#9733;' },
-          { key: 'business_cases', title: 'CATALYST — Business Cases', icon: '&#9830;' },
-          { key: 'gaps', title: 'STRATEGOS — Gap Analysis', icon: '&#9654;' },
-          { key: 'roadmap_atlas', title: 'ATLAS — Roadmap', icon: '&#9776;' }
-        ];
-        var hasContent = false;
-        var pilaresHtml = '';
-        agentSections.forEach(function(sec) {
-          var content = analysis[sec.key] ? (analysis[sec.key].content || analysis[sec.key]) : '';
-          if (content && content !== 'N/A') {
-            hasContent = true;
-            pilaresHtml += '<div class="card-section" style="margin-bottom:var(--space-6)">' +
-              '<h3 class="card-label-heading">' + sec.icon + ' ' + sec.title + '</h3>' +
-              '<div class="agent-output-content" style="font-size:0.85rem;line-height:1.6;white-space:pre-wrap;max-height:500px;overflow-y:auto;padding:var(--space-4);background:var(--bg-secondary);border-radius:var(--radius-md)">' +
-              renderMarkdown(content) +
-              '</div></div>';
-          }
-        });
-        if (hasContent) {
-          pilaresTab.innerHTML = pilaresHtml;
-        } else {
-          pilaresTab.innerHTML = '<div class="empty-state"><p class="empty-text">Nenhum relat&oacute;rio dispon&iacute;vel' + (area ? ' para esta &aacute;rea' : '') + '. Execute o diagn&oacute;stico primeiro.</p></div>';
-        }
-      }
-
-      // Render SYNAPSE in "Visão Integrada" tab
-      var controlesTab = document.getElementById('dtab-controles');
-      if (controlesTab) {
-        var synapseContent = analysis.synapse ? (analysis.synapse.content || analysis.synapse) : '';
-        if (synapseContent && synapseContent !== 'N/A') {
-          var titleLabel = area ? ('SYNAPSE — ' + (area || 'Área')) : 'SYNAPSE — Relatório Executivo Global';
-          controlesTab.innerHTML = '<div class="card-section">' +
-            '<h3 class="card-label-heading">&#10038; ' + escapeHtml(titleLabel) + '</h3>' +
-            '<div class="agent-output-content" style="font-size:0.85rem;line-height:1.6;white-space:pre-wrap;max-height:700px;overflow-y:auto;padding:var(--space-4);background:var(--bg-secondary);border-radius:var(--radius-md)">' +
-            renderMarkdown(synapseContent) +
-            '</div></div>';
-        } else {
-          controlesTab.innerHTML = '<div class="empty-state"><p class="empty-text">Relat&oacute;rio SYNAPSE n&atilde;o dispon&iacute;vel. Execute o diagn&oacute;stico primeiro.</p></div>';
-        }
-      }
-    })
-    .catch(function(err) { console.warn('Load diagnostic error:', err); });
-}
-
-function loadInsightsData() {
-  fetch('/api/insights')
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      if (data.status !== 'ok' || !data.insights || !data.insights.length) return;
-
-      var feed = document.querySelector('.insights-feed');
-      if (!feed) return;
-
-      // Clear existing static insights
-      feed.innerHTML = '';
-
-      data.insights.forEach(function(insight, i) {
-        if (i > 0) {
-          var divider = document.createElement('div');
-          divider.className = 'insight-divider';
-          feed.appendChild(divider);
-        }
-
-        var impactClass = insight.impact === 'alto' ? ' insight-tag--critical' : '';
-        var categoryLabel = {
-          'risco': 'RISCO', 'oportunidade': 'OPORTUNIDADE',
-          'quickwin': 'QUICK WIN', 'estrategico': 'ESTRAT\u00c9GICO'
-        }[insight.category] || insight.category.toUpperCase();
-
-        var pilarLabel = {
-          'processos': 'PROCESSOS', 'sistemas': 'SISTEMAS & DADOS',
-          'operacoes': 'OPERA\u00c7\u00d5ES', 'organizacao': 'ORGANIZA\u00c7\u00c3O',
-          'roadmap': 'ROADMAP'
-        }[insight.pillar] || (insight.pillar || '').toUpperCase();
-
-        var valueColor = insight.value_type === 'negative' ? 'var(--danger)' : 'var(--success)';
-
-        var article = document.createElement('article');
-        article.className = 'insight-item';
-        article.setAttribute('data-category', insight.category);
-        article.innerHTML =
-          '<div class="insight-tags">' +
-            '<span class="insight-tag' + impactClass + '">' + (insight.impact || '').toUpperCase() + ' IMPACTO</span>' +
-            '<span class="insight-tag-sep">\u00b7</span>' +
-            '<span class="insight-tag">' + categoryLabel + '</span>' +
-            '<span class="insight-tag-sep">\u00b7</span>' +
-            '<span class="insight-tag">' + pilarLabel + '</span>' +
-          '</div>' +
-          '<h3 class="insight-title">' + escapeHtml(insight.title) + '</h3>' +
-          '<p class="insight-body">' + escapeHtml(insight.body) + '</p>' +
-          '<div class="insight-meta">' +
-            '<div class="insight-meta-item">' +
-              '<span class="insight-meta-label">VALOR ESTIMADO</span>' +
-              '<span class="insight-meta-value font-mono" style="color:' + valueColor + '">' + escapeHtml(insight.estimated_value || '') + '</span>' +
-            '</div>' +
-            '<div class="insight-meta-item">' +
-              '<span class="insight-meta-label">ORIGEM</span>' +
-              '<span class="insight-meta-value">' + escapeHtml(insight.origin || '') + '</span>' +
-            '</div>' +
-            '<div class="insight-meta-item">' +
-              '<span class="insight-meta-label">BENCHMARK</span>' +
-              '<span class="insight-meta-value insight-meta-italic">' + escapeHtml(insight.benchmark || '') + '</span>' +
-            '</div>' +
-          '</div>' +
-          '<div class="insight-action-block">' +
-            '<span class="insight-action-label">A\u00c7\u00c3O SUGERIDA</span>' +
-            '<span class="insight-action-text">' + escapeHtml(insight.suggested_action || '') + '</span>' +
-          '</div>' +
-          '<div class="insight-footer">' +
-            '<span class="insight-validated font-mono">\u2713 Validado</span>' +
-          '</div>';
-
-        feed.appendChild(article);
-      });
-
-      // Update counter
-      var counter = document.querySelector('#page-insights .page-counter');
-      if (counter) {
-        var alto = data.insights.filter(function(i) { return i.impact === 'alto'; }).length;
-        counter.textContent = data.insights.length + ' insights \u00b7 ' + alto + ' alto impacto';
-      }
-
-      // Re-init filters for new dynamic content
-      initInsightFilters();
-    })
-    .catch(function(err) { console.warn('Load insights error:', err); });
-}
-
 // Load data on page init if available
 setTimeout(function() {
-  loadDiagnosticData();
-  loadInsightsData();
   loadInterviews();
 }, 500);
 
@@ -2028,7 +1673,7 @@ function initRoadmap() {
 
 function loadRoadmapData(area) {
   if (!area) return;
-  fetch('/api/diagnostic?area=' + encodeURIComponent(area))
+  fetch('/api/analysis?area=' + encodeURIComponent(area))
     .then(function(res) { return res.json(); })
     .then(function(data) {
       if (data.status !== 'ok') return;

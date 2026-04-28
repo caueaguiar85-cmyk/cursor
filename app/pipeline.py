@@ -96,7 +96,7 @@ async def _run_area_pipeline(area: str, interviews: list) -> dict:
     """Roda a cadeia de 8 agentes para uma única área."""
     from app.datastore import (
         update_interview_analysis, update_pipeline_status,
-        set_analysis_result_for_area, set_diagnostic_scores_for_area,
+        set_analysis_result_for_area,
     )
 
     area_label = AREA_LABELS.get(area, area.upper())
@@ -228,13 +228,7 @@ Retorne EXATAMENTE este JSON (sem markdown, sem explicação, apenas o JSON):
     diag_result = await _call_agent("aria", diag_prompt)
     results["diag_result"] = diag_result
     if diag_result:
-        try:
-            scores = _parse_json_result(diag_result)
-            set_diagnostic_scores_for_area(area, scores)
-            set_analysis_result_for_area(area, "diagnostic", diag_result)
-        except json.JSONDecodeError:
-            logger.warning(f"[{area}] Could not parse ARIA JSON, saving raw")
-            set_analysis_result_for_area(area, "diagnostic", diag_result)
+        set_analysis_result_for_area(area, "aria_analysis", diag_result)
 
     # ─── Step 3: SENTINEL + NEXUS + CATALYST (paralelo) ──────────────────
     logger.info(f"[{area}] Step 3: SENTINEL + NEXUS + CATALYST")
@@ -386,8 +380,7 @@ Retorne EXATAMENTE este JSON (sem markdown, sem explicação, apenas o JSON):
 async def _run_global_consolidation(area_results: dict):
     """Consolida resultados de todas as áreas num diagnóstico global."""
     from app.datastore import (
-        set_diagnostic_scores, set_analysis_result,
-        set_insights, update_pipeline_status,
+        set_analysis_result, update_pipeline_status,
     )
 
     update_pipeline_status(step="SYNAPSE GLOBAL: Consolidando todas as áreas")
@@ -418,64 +411,6 @@ async def _run_global_consolidation(area_results: dict):
 
     if synapse_global:
         set_analysis_result("synapse", synapse_global)
-
-    # Scores globais (média das áreas)
-    all_scores = {}
-    pilars = ["geral", "processos", "sistemas", "operacoes", "organizacao", "roadmap"]
-    for area, res in area_results.items():
-        diag = res.get("diag_result", "")
-        if not diag:
-            continue
-        try:
-            parsed = _parse_json_result(diag)
-            for p in pilars:
-                if isinstance(parsed.get(p), (int, float)):
-                    all_scores.setdefault(p, []).append(float(parsed[p]))
-        except (json.JSONDecodeError, KeyError):
-            pass
-
-    if all_scores:
-        avg_scores = {p: round(sum(vals) / len(vals), 1) for p, vals in all_scores.items()}
-        set_diagnostic_scores(avg_scores)
-        set_analysis_result("diagnostic", json.dumps(avg_scores, ensure_ascii=False))
-
-    # Insights globais
-    update_pipeline_status(step="Gerando insights consolidados")
-
-    insights_prompt = f"""Com base nos diagnósticos de {len(area_results)} áreas, gere 8 insights para o feed.
-
-{global_context}
-
-Retorne EXATAMENTE este JSON array (sem markdown):
-[
-  {{
-    "category": "risco|oportunidade|quickwin|estrategico",
-    "impact": "alto|medio|baixo",
-    "pillar": "processos|sistemas|operacoes|organizacao|roadmap",
-    "title": "<título editorial, máx 100 chars>",
-    "body": "<2-3 frases com evidência concreta>",
-    "estimated_value": "<ex: -R$ 850k/ano ou +R$ 420k/ano>",
-    "value_type": "positive|negative",
-    "origin": "<área + agente de origem>",
-    "benchmark": "<referência de benchmark>",
-    "suggested_action": "<ação concreta sugerida>",
-    "validated": true
-  }}
-]
-
-Gere exatamente 8 insights: 2 riscos, 2 oportunidades, 2 quick wins, 2 estratégicos.
-Ordene por impacto. Use dados reais das entrevistas — não invente."""
-
-    insights_result = await _call_agent("aria", insights_prompt)
-    if insights_result:
-        try:
-            insights_list = _parse_json_result(insights_result)
-            if isinstance(insights_list, list):
-                set_insights(insights_list)
-                set_analysis_result("insights", insights_result)
-        except json.JSONDecodeError:
-            logger.warning("Could not parse insights JSON, saving raw")
-            set_analysis_result("insights_raw", insights_result)
 
     update_pipeline_status(step="Consolidação global: Concluída")
 
@@ -595,8 +530,8 @@ async def run_strategy_pipeline(area: str):
         # Carrega diagnóstico existente da área (se houver)
         existing = get_analysis_results_for_area(area)
         diag_context = ""
-        if existing.get("diagnostic"):
-            diag_context += f"\nDIAGNÓSTICO ARIA:\n{existing['diagnostic'].get('content', '')}"
+        if existing.get("aria_analysis"):
+            diag_context += f"\nANÁLISE ARIA:\n{existing['aria_analysis'].get('content', '')}"
         if existing.get("gaps"):
             diag_context += f"\nGAPS STRATEGOS:\n{existing['gaps'].get('content', '')}"
         if existing.get("risks"):

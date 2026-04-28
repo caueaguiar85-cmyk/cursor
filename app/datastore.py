@@ -45,20 +45,9 @@ CREATE TABLE IF NOT EXISTS interviews (
     analysis TEXT
 );
 
-CREATE TABLE IF NOT EXISTS diagnostic_scores (
-    key TEXT PRIMARY KEY,
-    value DOUBLE PRECISION
-);
-
 CREATE TABLE IF NOT EXISTS analysis_results (
     key TEXT PRIMARY KEY,
     content TEXT,
-    generated_at TEXT
-);
-
-CREATE TABLE IF NOT EXISTS insights (
-    id SERIAL PRIMARY KEY,
-    data TEXT,
     generated_at TEXT
 );
 
@@ -131,11 +120,6 @@ else:
 # ─── In-memory fallback ──────────────────────────────────────────────────────
 _mem_interviews = []
 _mem_analysis_results = {}
-_mem_insights = []
-_mem_diagnostic_scores = {
-    "geral": None, "processos": None, "sistemas": None,
-    "operacoes": None, "organizacao": None, "roadmap": None,
-}
 _mem_pipeline_status = {
     "running": False, "last_run": None, "steps_completed": [], "errors": [],
 }
@@ -249,35 +233,6 @@ def update_interview_analysis(interview_id: int, analysis: str):
         logger.error(f"Update analysis error: {e}")
 
 
-# ─── Diagnostic Scores ────────────────────────────────────────────────────────
-
-def set_diagnostic_scores(scores: dict):
-    if not _db_available:
-        _mem_diagnostic_scores.update(scores)
-        return
-    try:
-        for key, value in scores.items():
-            if isinstance(value, (int, float)):
-                _query(
-                    """INSERT INTO diagnostic_scores (key, value) VALUES (%s, %s)
-                       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value""",
-                    (key, float(value)), fetch=False)
-        logger.info(f"Diagnostic scores updated: {scores}")
-    except Exception as e:
-        logger.error(f"Set scores error: {e}")
-
-
-def get_diagnostic_scores() -> dict:
-    if not _db_available:
-        return _mem_diagnostic_scores
-    try:
-        rows = _query("SELECT key, value FROM diagnostic_scores")
-        return {r["key"]: r["value"] for r in rows}
-    except Exception as e:
-        logger.error(f"Get scores error: {e}")
-        return _mem_diagnostic_scores
-
-
 # ─── Analysis Results ─────────────────────────────────────────────────────────
 
 def set_analysis_result(key: str, result: str):
@@ -324,36 +279,7 @@ def get_analysis_results_for_area(area: str) -> dict:
         return {}
 
 
-def set_diagnostic_scores_for_area(area: str, scores: dict):
-    if not _db_available:
-        for key, value in scores.items():
-            if isinstance(value, (int, float)):
-                _mem_diagnostic_scores[f"{key}:{area}"] = value
-        return
-    try:
-        for key, value in scores.items():
-            if isinstance(value, (int, float)):
-                _query(
-                    """INSERT INTO diagnostic_scores (key, value) VALUES (%s, %s)
-                       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value""",
-                    (f"{key}:{area}", float(value)), fetch=False)
-    except Exception as e:
-        logger.error(f"Set area scores error: {e}")
-
-
-def get_diagnostic_scores_for_area(area: str) -> dict:
-    suffix = f":{area}"
-    if not _db_available:
-        return {k.rsplit(":", 1)[0]: v for k, v in _mem_diagnostic_scores.items() if k.endswith(suffix)}
-    try:
-        rows = _query("SELECT key, value FROM diagnostic_scores WHERE key LIKE %s", (f"%{suffix}",))
-        return {r["key"].rsplit(":", 1)[0]: r["value"] for r in rows}
-    except Exception as e:
-        logger.error(f"Get area scores error: {e}")
-        return {}
-
-
-def get_available_diagnostic_areas() -> list:
+def get_available_areas() -> list:
     if not _db_available:
         areas = set()
         for k in _mem_analysis_results:
@@ -366,65 +292,6 @@ def get_available_diagnostic_areas() -> list:
     except Exception as e:
         logger.error(f"Get areas error: {e}")
         return []
-
-
-# ─── Insights ─────────────────────────────────────────────────────────────────
-
-def add_insight(insight: dict):
-    now = datetime.now().isoformat()
-    if not _db_available:
-        insight["id"] = len(_mem_insights) + 1
-        insight["generated_at"] = now
-        _mem_insights.append(insight)
-        return
-    try:
-        rows = _query(
-            "INSERT INTO insights (data, generated_at) VALUES (%s, %s) RETURNING id",
-            (json.dumps(insight, ensure_ascii=False), now))
-        if rows:
-            insight["id"] = rows[0]["id"]
-            insight["generated_at"] = now
-    except Exception as e:
-        logger.error(f"Add insight error: {e}")
-
-
-def set_insights(insights: list):
-    now = datetime.now().isoformat()
-    if not _db_available:
-        global _mem_insights
-        _mem_insights = insights
-        for i, ins in enumerate(_mem_insights):
-            ins["id"] = i + 1
-            ins["generated_at"] = now
-        return
-    try:
-        _query("DELETE FROM insights", fetch=False)
-        for ins in insights:
-            rows = _query(
-                "INSERT INTO insights (data, generated_at) VALUES (%s, %s) RETURNING id",
-                (json.dumps(ins, ensure_ascii=False), now))
-            if rows:
-                ins["id"] = rows[0]["id"]
-                ins["generated_at"] = now
-    except Exception as e:
-        logger.error(f"Set insights error: {e}")
-
-
-def get_insights() -> list:
-    if not _db_available:
-        return _mem_insights
-    try:
-        rows = _query("SELECT id, data, generated_at FROM insights ORDER BY id")
-        out = []
-        for row in rows:
-            ins = json.loads(row["data"])
-            ins["id"] = row["id"]
-            ins["generated_at"] = row["generated_at"]
-            out.append(ins)
-        return out
-    except Exception as e:
-        logger.error(f"Get insights error: {e}")
-        return _mem_insights
 
 
 # ─── Pipeline Status ──────────────────────────────────────────────────────────
