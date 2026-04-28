@@ -724,7 +724,7 @@ LANDING_HTML = """<!DOCTYPE html>
 
         <!-- Roadmap content (dynamic) -->
         <div id="roadmap-content">
-          <div class="empty-state"><p class="empty-text">Execute o diagn&oacute;stico de uma &aacute;rea para gerar o roadmap (agente ATLAS)</p></div>
+          <div class="empty-state"><p class="empty-text">Execute o pipeline de uma &aacute;rea para gerar o roadmap (agente ATLAS)</p></div>
         </div>
 
       </div>

@@ -1666,7 +1666,7 @@ function loadRoadmapData(area) {
       var gapsContent = analysis.gaps ? (analysis.gaps.content || analysis.gaps) : '';
 
       if (!roadmapContent && !gapsContent) {
-        container.innerHTML = '<div class="empty-state"><p class="empty-text">Nenhum roadmap gerado para <strong>' + escapeHtml(areaLabel) + '</strong>. Execute o diagn&oacute;stico desta &aacute;rea primeiro.</p></div>';
+        container.innerHTML = '<div class="empty-state"><p class="empty-text">Nenhum roadmap gerado para <strong>' + escapeHtml(areaLabel) + '</strong>. Execute o pipeline desta &aacute;rea primeiro.</p></div>';
         return;
       }
 
