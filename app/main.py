@@ -732,8 +732,8 @@ LANDING_HTML = """<!DOCTYPE html>
         <!-- Tabs -->
         <div class="tabs">
           <button class="tab active" data-dtab="dashboard">Dashboard</button>
-          <button class="tab" data-dtab="pilares">An&aacute;lise por Pilar</button>
-          <button class="tab" data-dtab="controles">Controles</button>
+          <button class="tab" data-dtab="pilares">Relat&oacute;rios dos Agentes</button>
+          <button class="tab" data-dtab="controles">SYNAPSE &mdash; Vis&atilde;o Integrada</button>
         </div>
 
         <!-- Tab: Dashboard -->

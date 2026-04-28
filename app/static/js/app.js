@@ -940,6 +940,67 @@ function loadDiagnosticData() {
         else if (val >= 2.5) scoreBig.style.color = 'var(--warning)';
         else scoreBig.style.color = 'var(--accent)';
       }
+
+      // Update pilar cards with evidence from diagnostic
+      var analysis = data.analysis || {};
+      var diagContent = analysis.diagnostic ? (analysis.diagnostic.content || analysis.diagnostic) : '';
+      if (diagContent) {
+        try {
+          var diagJson = typeof diagContent === 'string' ? JSON.parse(diagContent.replace(/```json?\n?/g, '').replace(/```/g, '').trim()) : diagContent;
+          var evidencias = diagJson.evidencias || {};
+          var pilarKeys2 = ['processos', 'sistemas', 'operacoes', 'organizacao', 'roadmap'];
+          var pilarCards = document.querySelectorAll('.pilar-card');
+          pilarKeys2.forEach(function(key, i) {
+            if (pilarCards[i] && evidencias[key]) {
+              var pending = pilarCards[i].querySelector('.pilar-card-pending');
+              if (pending) {
+                pending.innerHTML = '<p style="font-size:0.85rem;color:var(--text-secondary);margin:0">' + escapeHtml(evidencias[key]) + '</p>';
+              }
+            }
+          });
+        } catch(e) { console.warn('Parse diagnostic evidence:', e); }
+      }
+
+      // Render agent outputs in "Análise por Pilar" tab
+      var pilaresTab = document.getElementById('dtab-pilares');
+      if (pilaresTab) {
+        var agentSections = [
+          { key: 'risks', title: 'SENTINEL — Riscos', icon: '&#9888;' },
+          { key: 'benchmark', title: 'NEXUS — Benchmark', icon: '&#9733;' },
+          { key: 'business_cases', title: 'CATALYST — Business Cases', icon: '&#9830;' },
+          { key: 'gaps', title: 'STRATEGOS — Gap Analysis', icon: '&#9654;' },
+          { key: 'roadmap_atlas', title: 'ATLAS — Roadmap', icon: '&#9776;' }
+        ];
+        var hasContent = false;
+        var pilaresHtml = '';
+        agentSections.forEach(function(sec) {
+          var content = analysis[sec.key] ? (analysis[sec.key].content || analysis[sec.key]) : '';
+          if (content && content !== 'N/A') {
+            hasContent = true;
+            pilaresHtml += '<div class="card-section" style="margin-bottom:var(--space-6)">' +
+              '<h3 class="card-label-heading">' + sec.icon + ' ' + sec.title + '</h3>' +
+              '<div class="agent-output-content" style="font-size:0.85rem;line-height:1.6;white-space:pre-wrap;max-height:500px;overflow-y:auto;padding:var(--space-4);background:var(--bg-secondary);border-radius:var(--radius-md)">' +
+              renderMarkdown(content) +
+              '</div></div>';
+          }
+        });
+        if (hasContent) {
+          pilaresTab.innerHTML = pilaresHtml;
+        }
+      }
+
+      // Render SYNAPSE in "Controles" tab
+      var controlesTab = document.getElementById('dtab-controles');
+      if (controlesTab) {
+        var synapseContent = analysis.synapse ? (analysis.synapse.content || analysis.synapse) : '';
+        if (synapseContent && synapseContent !== 'N/A') {
+          controlesTab.innerHTML = '<div class="card-section">' +
+            '<h3 class="card-label-heading">&#10038; SYNAPSE — Relat&oacute;rio Executivo Integrado</h3>' +
+            '<div class="agent-output-content" style="font-size:0.85rem;line-height:1.6;white-space:pre-wrap;max-height:700px;overflow-y:auto;padding:var(--space-4);background:var(--bg-secondary);border-radius:var(--radius-md)">' +
+            renderMarkdown(synapseContent) +
+            '</div></div>';
+        }
+      }
     })
     .catch(function(err) { console.warn('Load diagnostic error:', err); });
 }
