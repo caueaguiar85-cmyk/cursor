@@ -442,13 +442,18 @@ async def run_full_pipeline():
 
         logger.info(f"Pipeline: {len(ia_interviews)} entrevistas em {len(area_interviews)} áreas: {list(area_interviews.keys())}")
 
-        # Processa cada área
+        # Processa cada área (pipeline + estratégia automática)
         area_results = {}
         for area, interviews in area_interviews.items():
             area_label = AREA_LABELS.get(area, area.upper())
             logger.info(f"Processing area: {area_label} ({len(interviews)} entrevistas)")
             update_pipeline_status(step=f"Processando área: {area_label}")
             area_results[area] = await _run_area_pipeline(area, interviews)
+
+            # Auto-gera estratégia após pipeline da área
+            logger.info(f"[{area}] Auto-generating strategy...")
+            update_pipeline_status(step=f"Gerando estratégia para {area_label}...")
+            await _run_strategy_steps(area)
 
         # Consolidação global
         if len(area_results) > 0:
@@ -483,6 +488,12 @@ async def run_area_pipeline(area: str):
             return
 
         await _run_area_pipeline(area, area_interviews)
+
+        # Auto-gera estratégia após pipeline da área
+        logger.info(f"[{area}] Auto-generating strategy after pipeline...")
+        update_pipeline_status(step=f"Gerando estratégia para {area_label}...")
+        await _run_strategy_steps(area)
+
         update_pipeline_status(running=False)
 
     except Exception as e:
@@ -495,169 +506,179 @@ async def run_area_pipeline(area: str):
 
 # ─── Pipeline de Estratégia por Área ─────────────────────────────────────────
 
-async def run_strategy_pipeline(area: str):
-    """Gera estratégia completa para uma área: macro, tático e automação."""
+async def _run_strategy_steps(area: str):
+    """Executa os 3 steps de estratégia para uma área (sem controlar running status)."""
     from app.datastore import (
         get_interviews, update_pipeline_status,
         set_analysis_result_for_area, get_analysis_results_for_area,
     )
 
+    area_label = AREA_LABELS.get(area, area.upper())
+
+    # Carrega entrevistas da área
+    interviews = get_interviews()
+    area_interviews = [i for i in interviews
+                       if i.get("ia_ready") and i.get("transcript")
+                       and i.get("department") == area]
+
+    if not area_interviews:
+        return
+
+    # Consolida todas as entrevistas da área como contexto
+    interview_parts = []
+    for iv in area_interviews:
+        part = (f"ENTREVISTADO: {iv['interviewee']} | CARGO: {iv['role']}\n"
+                f"TRANSCRIÇÃO:\n{iv['transcript']}")
+        if iv.get("analysis"):
+            part += f"\nANÁLISE PRISM:\n{iv['analysis']}"
+        interview_parts.append(part)
+
+    interview_context = "\n\n═══════════════════════\n\n".join(interview_parts)
+
+    # Carrega diagnóstico existente da área (se houver)
+    existing = get_analysis_results_for_area(area)
+    diag_context = ""
+    if existing.get("aria_analysis"):
+        diag_context += f"\nANÁLISE ARIA:\n{existing['aria_analysis'].get('content', '')}"
+    if existing.get("gaps"):
+        diag_context += f"\nGAPS STRATEGOS:\n{existing['gaps'].get('content', '')}"
+    if existing.get("risks"):
+        diag_context += f"\nRISCOS SENTINEL:\n{existing['risks'].get('content', '')}"
+
+    full_context = (
+        f"ÁREA ANALISADA: {area_label}\n"
+        f"TOTAL DE ENTREVISTAS: {len(area_interviews)}\n\n"
+        f"ENTREVISTAS CONSOLIDADAS:\n{interview_context}"
+    )
+    if diag_context:
+        full_context += f"\n\nDIAGNÓSTICO EXISTENTE:{diag_context}"
+
+    # ─── 1. Roadmap Estratégico Macro ─────────────────────────────────
+    logger.info(f"[{area}] Strategy: Roadmap Macro")
+    update_pipeline_status(step=f"Estratégia [{area_label}]: Roadmap Macro")
+
+    macro_result = await _call_agent("atlas",
+        f"Para a área {area_label}, construa o ROADMAP ESTRATÉGICO MACRO baseado EXCLUSIVAMENTE "
+        f"nas {len(area_interviews)} entrevistas realizadas.\n\n"
+        "REGRAS OBRIGATÓRIAS:\n"
+        "- NÃO use frameworks prontos, exemplos externos ou referências que não venham das entrevistas\n"
+        "- Consolide TODOS os insights das entrevistas antes de propor qualquer coisa\n"
+        "- Identifique padrões, recorrências e divergências entre entrevistados\n\n"
+        "ESTRUTURA DO ROADMAP MACRO:\n"
+        "1. Visão geral da evolução da área\n"
+        "2. Principais frentes de transformação (derivadas dos problemas reais)\n"
+        "3. Priorização estratégica:\n"
+        "   - CURTO PRAZO: ações imediatas de alto impacto\n"
+        "   - MÉDIO PRAZO: estruturação e automações\n"
+        "   - LONGO PRAZO: mudanças estruturais e escalabilidade\n\n"
+        "Para cada frente:\n"
+        "- Problema raiz (com evidência da entrevista)\n"
+        "- Objetivo estratégico\n"
+        "- Impacto esperado no negócio\n"
+        "- Dependências\n\n"
+        "IMPORTANTE: Conecte problemas → causas → soluções. "
+        "Evite respostas superficiais ou genéricas. "
+        "Formato: markdown estruturado.",
+        full_context)
+
+    if macro_result:
+        set_analysis_result_for_area(area, "strategy_macro", macro_result)
+
+    # ─── 2. Roadmap Tático (Micro Entregáveis) ───────────────────────
+    logger.info(f"[{area}] Strategy: Roadmap Tático")
+    update_pipeline_status(step=f"Estratégia [{area_label}]: Roadmap Tático")
+
+    tatico_context = full_context
+    if macro_result:
+        tatico_context += f"\n\nROADMAP MACRO APROVADO:\n{macro_result}"
+
+    tatico_result = await _call_agent("atlas",
+        f"Para a área {area_label}, detalhe o roadmap macro em ENTREGAS OPERACIONAIS CONCRETAS.\n\n"
+        "REGRAS OBRIGATÓRIAS:\n"
+        "- Baseie-se EXCLUSIVAMENTE nas entrevistas e no roadmap macro\n"
+        "- NÃO invente informações que não estejam nas entrevistas\n"
+        "- Para TODAS as entregas: adicione +1 dia no prazo estimado para documentação, testes e validação\n\n"
+        "ESTRUTURA DO ROADMAP TÁTICO:\n\n"
+        "## Entregas Semanais (Semanas 1-4)\n"
+        "Para cada entrega:\n"
+        "| Campo | Detalhe |\n"
+        "|-------|--------|\n"
+        "| Objetivo | O que se quer alcançar |\n"
+        "| Descrição | O que será feito concretamente |\n"
+        "| Área/Processo impactado | Qual processo melhora |\n"
+        "| Resultado esperado | Métrica ou estado final |\n"
+        "| Prazo | X dias + 1 dia (documentação/testes) |\n\n"
+        "## Entregas Quinzenais (Meses 2-3)\n"
+        "(mesma estrutura)\n\n"
+        "## Entregas Mensais (Meses 4-6+)\n"
+        "(mesma estrutura)\n\n"
+        "Garanta que todas as entregas estejam conectadas com os problemas reais.\n"
+        "A estratégia deve ser aplicável, executável e orientada a resultado.\n"
+        "Formato: markdown estruturado com tabelas.",
+        tatico_context)
+
+    if tatico_result:
+        set_analysis_result_for_area(area, "strategy_tatico", tatico_result)
+
+    # ─── 3. Estratégia de Automação ──────────────────────────────────
+    logger.info(f"[{area}] Strategy: Automação")
+    update_pipeline_status(step=f"Estratégia [{area_label}]: Automação")
+
+    automacao_context = full_context
+    if macro_result:
+        automacao_context += f"\n\nROADMAP MACRO:\n{macro_result}"
+
+    automacao_result = await _call_agent("catalyst",
+        f"Para a área {area_label}, construa a ESTRATÉGIA DE AUTOMAÇÃO baseada EXCLUSIVAMENTE "
+        f"nas {len(area_interviews)} entrevistas realizadas.\n\n"
+        "REGRAS OBRIGATÓRIAS:\n"
+        "- NÃO utilize ou replique estratégias genéricas (ex: base Vexia ou qualquer outra)\n"
+        "- Identifique oportunidades REAIS de automação a partir das dores relatadas\n"
+        "- Não invente processos que não foram mencionados nas entrevistas\n\n"
+        "ESTRUTURA:\n\n"
+        "## 1. Mapeamento de Processos Manuais e Repetitivos\n"
+        "Para cada processo identificado nas entrevistas:\n"
+        "- Descrição do processo atual\n"
+        "- Quem relatou (entrevistado)\n"
+        "- Frequência e volume\n"
+        "- Impacto do estado atual (retrabalho, erro, tempo perdido)\n\n"
+        "## 2. Gargalos Operacionais\n"
+        "- Pontos de estrangulamento citados nas entrevistas\n"
+        "- Causa raiz identificada\n"
+        "- Impacto na operação\n\n"
+        "## 3. Oportunidades de Automação\n"
+        "Para cada oportunidade:\n"
+        "| Campo | Detalhe |\n"
+        "|-------|--------|\n"
+        "| Processo | Qual processo automatizar |\n"
+        "| Tipo | RPA, integração de sistemas, IA, workflow |\n"
+        "| Problema que resolve | Dor específica das entrevistas |\n"
+        "| Solução proposta | Descrição prática e viável |\n"
+        "| Impacto esperado | Redução de tempo, erros, custo |\n"
+        "| Complexidade | Baixa/Média/Alta |\n"
+        "| Prioridade | 1-5 |\n\n"
+        "## 4. Sequenciamento de Implementação\n"
+        "- Ordem de implementação baseada em impacto × complexidade\n"
+        "- Dependências entre automações\n"
+        "- Quick wins vs projetos estruturais\n\n"
+        "Seja objetivo e específico. Formato: markdown estruturado com tabelas.",
+        automacao_context)
+
+    if automacao_result:
+        set_analysis_result_for_area(area, "strategy_automacao", automacao_result)
+
+    logger.info(f"[{area}] Strategy steps complete.")
+
+
+async def run_strategy_pipeline(area: str):
+    """Gera estratégia completa para uma área: macro, tático e automação."""
+    from app.datastore import update_pipeline_status
+
     try:
         update_pipeline_status(running=True)
         area_label = AREA_LABELS.get(area, area.upper())
 
-        # Carrega entrevistas da área
-        interviews = get_interviews()
-        area_interviews = [i for i in interviews
-                           if i.get("ia_ready") and i.get("transcript")
-                           and i.get("department") == area]
-
-        if not area_interviews:
-            update_pipeline_status(running=False, error=f"Nenhuma entrevista para a área {area_label}")
-            return
-
-        # Consolida todas as entrevistas da área como contexto
-        interview_parts = []
-        for iv in area_interviews:
-            part = (f"ENTREVISTADO: {iv['interviewee']} | CARGO: {iv['role']}\n"
-                    f"TRANSCRIÇÃO:\n{iv['transcript']}")
-            if iv.get("analysis"):
-                part += f"\nANÁLISE PRISM:\n{iv['analysis']}"
-            interview_parts.append(part)
-
-        interview_context = "\n\n═══════════════════════\n\n".join(interview_parts)
-
-        # Carrega diagnóstico existente da área (se houver)
-        existing = get_analysis_results_for_area(area)
-        diag_context = ""
-        if existing.get("aria_analysis"):
-            diag_context += f"\nANÁLISE ARIA:\n{existing['aria_analysis'].get('content', '')}"
-        if existing.get("gaps"):
-            diag_context += f"\nGAPS STRATEGOS:\n{existing['gaps'].get('content', '')}"
-        if existing.get("risks"):
-            diag_context += f"\nRISCOS SENTINEL:\n{existing['risks'].get('content', '')}"
-
-        full_context = (
-            f"ÁREA ANALISADA: {area_label}\n"
-            f"TOTAL DE ENTREVISTAS: {len(area_interviews)}\n\n"
-            f"ENTREVISTAS CONSOLIDADAS:\n{interview_context}"
-        )
-        if diag_context:
-            full_context += f"\n\nDIAGNÓSTICO EXISTENTE:{diag_context}"
-
-        # ─── 1. Roadmap Estratégico Macro ─────────────────────────────────
-        logger.info(f"[{area}] Strategy: Roadmap Macro")
-        update_pipeline_status(step=f"Estratégia [{area_label}]: Roadmap Macro")
-
-        macro_result = await _call_agent("atlas",
-            f"Para a área {area_label}, construa o ROADMAP ESTRATÉGICO MACRO baseado EXCLUSIVAMENTE "
-            f"nas {len(area_interviews)} entrevistas realizadas.\n\n"
-            "REGRAS OBRIGATÓRIAS:\n"
-            "- NÃO use frameworks prontos, exemplos externos ou referências que não venham das entrevistas\n"
-            "- Consolide TODOS os insights das entrevistas antes de propor qualquer coisa\n"
-            "- Identifique padrões, recorrências e divergências entre entrevistados\n\n"
-            "ESTRUTURA DO ROADMAP MACRO:\n"
-            "1. Visão geral da evolução da área\n"
-            "2. Principais frentes de transformação (derivadas dos problemas reais)\n"
-            "3. Priorização estratégica:\n"
-            "   - CURTO PRAZO: ações imediatas de alto impacto\n"
-            "   - MÉDIO PRAZO: estruturação e automações\n"
-            "   - LONGO PRAZO: mudanças estruturais e escalabilidade\n\n"
-            "Para cada frente:\n"
-            "- Problema raiz (com evidência da entrevista)\n"
-            "- Objetivo estratégico\n"
-            "- Impacto esperado no negócio\n"
-            "- Dependências\n\n"
-            "IMPORTANTE: Conecte problemas → causas → soluções. "
-            "Evite respostas superficiais ou genéricas. "
-            "Formato: markdown estruturado.",
-            full_context)
-
-        if macro_result:
-            set_analysis_result_for_area(area, "strategy_macro", macro_result)
-
-        # ─── 2. Roadmap Tático (Micro Entregáveis) ───────────────────────
-        logger.info(f"[{area}] Strategy: Roadmap Tático")
-        update_pipeline_status(step=f"Estratégia [{area_label}]: Roadmap Tático")
-
-        tatico_context = full_context
-        if macro_result:
-            tatico_context += f"\n\nROADMAP MACRO APROVADO:\n{macro_result}"
-
-        tatico_result = await _call_agent("atlas",
-            f"Para a área {area_label}, detalhe o roadmap macro em ENTREGAS OPERACIONAIS CONCRETAS.\n\n"
-            "REGRAS OBRIGATÓRIAS:\n"
-            "- Baseie-se EXCLUSIVAMENTE nas entrevistas e no roadmap macro\n"
-            "- NÃO invente informações que não estejam nas entrevistas\n"
-            "- Para TODAS as entregas: adicione +1 dia no prazo estimado para documentação, testes e validação\n\n"
-            "ESTRUTURA DO ROADMAP TÁTICO:\n\n"
-            "## Entregas Semanais (Semanas 1-4)\n"
-            "Para cada entrega:\n"
-            "| Campo | Detalhe |\n"
-            "|-------|--------|\n"
-            "| Objetivo | O que se quer alcançar |\n"
-            "| Descrição | O que será feito concretamente |\n"
-            "| Área/Processo impactado | Qual processo melhora |\n"
-            "| Resultado esperado | Métrica ou estado final |\n"
-            "| Prazo | X dias + 1 dia (documentação/testes) |\n\n"
-            "## Entregas Quinzenais (Meses 2-3)\n"
-            "(mesma estrutura)\n\n"
-            "## Entregas Mensais (Meses 4-6+)\n"
-            "(mesma estrutura)\n\n"
-            "Garanta que todas as entregas estejam conectadas com os problemas reais.\n"
-            "A estratégia deve ser aplicável, executável e orientada a resultado.\n"
-            "Formato: markdown estruturado com tabelas.",
-            tatico_context)
-
-        if tatico_result:
-            set_analysis_result_for_area(area, "strategy_tatico", tatico_result)
-
-        # ─── 3. Estratégia de Automação ──────────────────────────────────
-        logger.info(f"[{area}] Strategy: Automação")
-        update_pipeline_status(step=f"Estratégia [{area_label}]: Automação")
-
-        automacao_context = full_context
-        if macro_result:
-            automacao_context += f"\n\nROADMAP MACRO:\n{macro_result}"
-
-        automacao_result = await _call_agent("catalyst",
-            f"Para a área {area_label}, construa a ESTRATÉGIA DE AUTOMAÇÃO baseada EXCLUSIVAMENTE "
-            f"nas {len(area_interviews)} entrevistas realizadas.\n\n"
-            "REGRAS OBRIGATÓRIAS:\n"
-            "- NÃO utilize ou replique estratégias genéricas (ex: base Vexia ou qualquer outra)\n"
-            "- Identifique oportunidades REAIS de automação a partir das dores relatadas\n"
-            "- Não invente processos que não foram mencionados nas entrevistas\n\n"
-            "ESTRUTURA:\n\n"
-            "## 1. Mapeamento de Processos Manuais e Repetitivos\n"
-            "Para cada processo identificado nas entrevistas:\n"
-            "- Descrição do processo atual\n"
-            "- Quem relatou (entrevistado)\n"
-            "- Frequência e volume\n"
-            "- Impacto do estado atual (retrabalho, erro, tempo perdido)\n\n"
-            "## 2. Gargalos Operacionais\n"
-            "- Pontos de estrangulamento citados nas entrevistas\n"
-            "- Causa raiz identificada\n"
-            "- Impacto na operação\n\n"
-            "## 3. Oportunidades de Automação\n"
-            "Para cada oportunidade:\n"
-            "| Campo | Detalhe |\n"
-            "|-------|--------|\n"
-            "| Processo | Qual processo automatizar |\n"
-            "| Tipo | RPA, integração de sistemas, IA, workflow |\n"
-            "| Problema que resolve | Dor específica das entrevistas |\n"
-            "| Solução proposta | Descrição prática e viável |\n"
-            "| Impacto esperado | Redução de tempo, erros, custo |\n"
-            "| Complexidade | Baixa/Média/Alta |\n"
-            "| Prioridade | 1-5 |\n\n"
-            "## 4. Sequenciamento de Implementação\n"
-            "- Ordem de implementação baseada em impacto × complexidade\n"
-            "- Dependências entre automações\n"
-            "- Quick wins vs projetos estruturais\n\n"
-            "Seja objetivo e específico. Formato: markdown estruturado com tabelas.",
-            automacao_context)
-
-        if automacao_result:
-            set_analysis_result_for_area(area, "strategy_automacao", automacao_result)
+        await _run_strategy_steps(area)
 
         update_pipeline_status(step=f"Estratégia [{area_label}]: Concluída")
         update_pipeline_status(running=False)
