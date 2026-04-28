@@ -1936,16 +1936,17 @@ function _loadAreaTabs(containerId, dataAttr, callback) {
 }
 
 function initStrategy() {
-  _loadAreaTabs('strategy-area-tabs', 'data-strategy-area');
-
-  // Area tab click
-  document.getElementById('strategy-area-tabs').addEventListener('click', function(e) {
-    var tab = e.target.closest('.area-tab');
-    if (!tab) return;
-    _activeStrategyArea = tab.getAttribute('data-strategy-area');
-    this.querySelectorAll('.area-tab').forEach(function(t) { t.classList.toggle('active', t === tab); });
-    document.getElementById('strategy-tabs').style.display = '';
-    loadStrategyData(_activeStrategyArea);
+  // Area select change
+  var stratSelect = document.getElementById('strategy-area-select');
+  if (!stratSelect) return;
+  stratSelect.addEventListener('change', function() {
+    _activeStrategyArea = this.value || null;
+    if (_activeStrategyArea) {
+      document.getElementById('strategy-tabs').style.display = '';
+      loadStrategyData(_activeStrategyArea);
+    } else {
+      document.getElementById('strategy-tabs').style.display = 'none';
+    }
   });
 
   // Strategy sub-tabs
@@ -2014,14 +2015,13 @@ function loadStrategyData(area) {
 var _activeRoadmapArea = null;
 
 function initRoadmap() {
-  _loadAreaTabs('roadmap-area-tabs', 'data-roadmap-area');
-
-  document.getElementById('roadmap-area-tabs').addEventListener('click', function(e) {
-    var tab = e.target.closest('.area-tab');
-    if (!tab) return;
-    _activeRoadmapArea = tab.getAttribute('data-roadmap-area');
-    this.querySelectorAll('.area-tab').forEach(function(t) { t.classList.toggle('active', t === tab); });
-    loadRoadmapData(_activeRoadmapArea);
+  var roadmapSelect = document.getElementById('roadmap-area-select');
+  if (!roadmapSelect) return;
+  roadmapSelect.addEventListener('change', function() {
+    _activeRoadmapArea = this.value || null;
+    if (_activeRoadmapArea) {
+      loadRoadmapData(_activeRoadmapArea);
+    }
   });
 }
 

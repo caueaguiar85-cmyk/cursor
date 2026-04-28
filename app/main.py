@@ -1298,8 +1298,21 @@ LANDING_HTML = """<!DOCTYPE html>
         <div class="page-header-divider"></div>
 
         <!-- Area selector -->
-        <div class="area-tabs" id="roadmap-area-tabs" style="margin-bottom: var(--space-4)">
-          <span class="empty-text" style="font-size:0.85rem">Selecione uma &aacute;rea para visualizar o roadmap</span>
+        <div style="margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-3)">
+          <label class="form-label" style="margin:0; white-space:nowrap">&Aacute;rea:</label>
+          <select class="form-input form-select" id="roadmap-area-select" style="max-width: 320px">
+            <option value="">Selecione a &aacute;rea...</option>
+            <option value="supply-chain">Supply Chain</option>
+            <option value="producao">Produ&ccedil;&atilde;o / PCP</option>
+            <option value="comercial">Comercial / Vendas</option>
+            <option value="logistica">Log&iacute;stica</option>
+            <option value="ti">Tecnologia / TI</option>
+            <option value="financeiro">Financeiro / Controladoria</option>
+            <option value="qualidade">Qualidade</option>
+            <option value="compras">Compras / Procurement</option>
+            <option value="rh">RH / Pessoas</option>
+            <option value="diretoria">Diretoria Geral</option>
+          </select>
         </div>
 
         <!-- Roadmap content (dynamic) -->
@@ -1323,8 +1336,21 @@ LANDING_HTML = """<!DOCTYPE html>
         <div class="page-header-divider"></div>
 
         <!-- Area selector -->
-        <div class="area-tabs" id="strategy-area-tabs" style="margin-bottom: var(--space-4)">
-          <span class="empty-text" style="font-size:0.85rem">Selecione uma &aacute;rea para gerar ou visualizar a estrat&eacute;gia</span>
+        <div style="margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-3)">
+          <label class="form-label" style="margin:0; white-space:nowrap">&Aacute;rea:</label>
+          <select class="form-input form-select" id="strategy-area-select" style="max-width: 320px">
+            <option value="">Selecione a &aacute;rea...</option>
+            <option value="supply-chain">Supply Chain</option>
+            <option value="producao">Produ&ccedil;&atilde;o / PCP</option>
+            <option value="comercial">Comercial / Vendas</option>
+            <option value="logistica">Log&iacute;stica</option>
+            <option value="ti">Tecnologia / TI</option>
+            <option value="financeiro">Financeiro / Controladoria</option>
+            <option value="qualidade">Qualidade</option>
+            <option value="compras">Compras / Procurement</option>
+            <option value="rh">RH / Pessoas</option>
+            <option value="diretoria">Diretoria Geral</option>
+          </select>
         </div>
 
         <!-- Strategy tabs -->
