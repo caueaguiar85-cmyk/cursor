@@ -54,7 +54,7 @@ async def _call_agent(agent_id: str, message: str, context: str = "") -> Optiona
             system += f"\n\nCONTEXTO ADICIONAL:\n{context}"
 
         message_resp = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-6",
             max_tokens=agent.get("max_tokens", 4096),
             system=system,
             messages=[{"role": "user", "content": message}]
