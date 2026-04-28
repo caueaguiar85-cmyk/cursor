@@ -1,31 +1,39 @@
 """
 Stoken Advisory — Database-backed Data Store
-Persiste entrevistas, resultados de análise e insights em PostgreSQL (Railway).
-Fallback gracioso quando DATABASE_URL não está configurado.
+Persiste entrevistas, resultados de análise e insights no Supabase (PostgreSQL).
+Fallback gracioso para in-memory quando Supabase não está configurado.
 """
 
 import json
 import logging
 import os
-import threading
-from contextlib import contextmanager
 from datetime import datetime
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-try:
-    import psycopg2
-    import psycopg2.extras
-    _psycopg2_available = True
-except ImportError:
-    _psycopg2_available = False
-    logger.warning("psycopg2 not installed — using in-memory fallback")
+# ─── Supabase Client ─────────────────────────────────────────────────────────
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+_sb = None
 _db_available = False
 
-# ─── In-memory fallback (usado quando PostgreSQL não está disponível) ─────────
+try:
+    if SUPABASE_URL and SUPABASE_KEY:
+        from supabase import create_client
+        _sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+        # Quick test — try to read from interviews
+        _sb.table("interviews").select("id").limit(1).execute()
+        _db_available = True
+        logger.info(f"Supabase connected: {SUPABASE_URL}")
+    else:
+        logger.warning("SUPABASE_URL/SUPABASE_KEY not set — using in-memory fallback")
+except Exception as e:
+    logger.error(f"Supabase init failed: {e} — using in-memory fallback")
+    _db_available = False
+
+# ─── In-memory fallback ──────────────────────────────────────────────────────
 _mem_interviews = []
 _mem_analysis_results = {}
 _mem_insights = []
@@ -38,186 +46,51 @@ _mem_pipeline_status = {
 }
 
 
-@contextmanager
-def _db():
-    conn = psycopg2.connect(DATABASE_URL, connect_timeout=5)
-    try:
-        yield conn
-        conn.commit()
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
-
-
-def _init_db():
-    global _db_available
-    if not _psycopg2_available or not DATABASE_URL:
-        logger.warning("Database not available — using in-memory fallback")
-        return
-    try:
-        with _db() as conn:
-            cur = conn.cursor()
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS interviews (
-                    id          SERIAL PRIMARY KEY,
-                    interviewer TEXT    NOT NULL DEFAULT '',
-                    interviewee TEXT    NOT NULL DEFAULT '',
-                    role        TEXT    DEFAULT '',
-                    department  TEXT    DEFAULT '',
-                    level       TEXT    DEFAULT '',
-                    pillar      TEXT    DEFAULT '',
-                    date        TEXT    DEFAULT '',
-                    transcript  TEXT    DEFAULT '',
-                    ia_ready    BOOLEAN DEFAULT FALSE,
-                    created_at  TEXT    NOT NULL,
-                    analysis    TEXT
-                );
-
-                CREATE TABLE IF NOT EXISTS analysis_results (
-                    key          TEXT PRIMARY KEY,
-                    content      TEXT NOT NULL,
-                    generated_at TEXT NOT NULL
-                );
-
-                CREATE TABLE IF NOT EXISTS insights (
-                    id           SERIAL PRIMARY KEY,
-                    data         TEXT    NOT NULL,
-                    generated_at TEXT    NOT NULL
-                );
-
-                CREATE TABLE IF NOT EXISTS diagnostic_scores (
-                    key   TEXT PRIMARY KEY,
-                    value DOUBLE PRECISION
-                );
-
-                CREATE TABLE IF NOT EXISTS pipeline_status (
-                    id              INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-                    running         BOOLEAN DEFAULT FALSE,
-                    last_run        TEXT,
-                    steps_completed TEXT    DEFAULT '[]',
-                    errors          TEXT    DEFAULT '[]'
-                );
-            """)
-
-            # Seed default scores if empty
-            cur.execute("SELECT COUNT(*) FROM diagnostic_scores")
-            if cur.fetchone()[0] == 0:
-                cur.execute("""
-                    INSERT INTO diagnostic_scores (key, value) VALUES
-                        ('geral',       NULL),
-                        ('processos',   NULL),
-                        ('sistemas',    NULL),
-                        ('operacoes',   NULL),
-                        ('organizacao', NULL),
-                        ('roadmap',     NULL)
-                """)
-
-            # Seed pipeline_status if empty
-            cur.execute("SELECT COUNT(*) FROM pipeline_status")
-            if cur.fetchone()[0] == 0:
-                cur.execute("""
-                    INSERT INTO pipeline_status (id, running, steps_completed, errors)
-                    VALUES (1, FALSE, '[]', '[]')
-                """)
-
-        _db_available = True
-        logger.info("PostgreSQL database initialized successfully")
-    except Exception as e:
-        logger.error(f"Failed to connect to PostgreSQL: {e} — using in-memory fallback")
-        _db_available = False
-
-
-# Init DB with timeout to avoid blocking app startup
-def _safe_init():
-    t = threading.Thread(target=_init_db, daemon=True)
-    t.start()
-    t.join(timeout=10)
-    if t.is_alive():
-        logger.warning("DB init timed out — using in-memory fallback")
-
-_safe_init()
-
-
 # ─── Interviews ───────────────────────────────────────────────────────────────
-
-def _row_to_interview(row) -> dict:
-    return {
-        "id":          row["id"],
-        "interviewer": row["interviewer"],
-        "interviewee": row["interviewee"],
-        "role":        row["role"],
-        "department":  row["department"],
-        "level":       row["level"],
-        "pillar":      row["pillar"],
-        "date":        row["date"],
-        "transcript":  row["transcript"],
-        "ia_ready":    bool(row["ia_ready"]),
-        "created_at":  row["created_at"],
-        "analysis":    row["analysis"],
-    }
-
 
 def save_interview(data: dict) -> dict:
     now = datetime.now().isoformat()
     date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
 
-    if _db_available:
-        with _db() as conn:
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            cur.execute(
-                """INSERT INTO interviews
-                   (interviewer, interviewee, role, department, level, pillar,
-                    date, transcript, ia_ready, created_at, analysis)
-                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                   RETURNING id""",
-                (
-                    data.get("interviewer", ""),
-                    data.get("interviewee", ""),
-                    data.get("role", ""),
-                    data.get("department", ""),
-                    data.get("level", ""),
-                    data.get("pillar", ""),
-                    date,
-                    data.get("transcript", ""),
-                    bool(data.get("ia_ready")),
-                    now,
-                    None,
-                ),
-            )
-            interview_id = cur.fetchone()["id"]
-    else:
-        interview_id = len(_mem_interviews) + 1
-
-    interview = {
-        "id":          interview_id,
+    row = {
         "interviewer": data.get("interviewer", ""),
         "interviewee": data.get("interviewee", ""),
-        "role":        data.get("role", ""),
-        "department":  data.get("department", ""),
-        "level":       data.get("level", ""),
-        "pillar":      data.get("pillar", ""),
-        "date":        date,
-        "transcript":  data.get("transcript", ""),
-        "ia_ready":    bool(data.get("ia_ready")),
-        "created_at":  now,
-        "analysis":    None,
+        "role": data.get("role", ""),
+        "department": data.get("department", ""),
+        "level": data.get("level", ""),
+        "pillar": data.get("pillar", ""),
+        "date": date,
+        "transcript": data.get("transcript", ""),
+        "ia_ready": bool(data.get("ia_ready")),
+        "created_at": now,
+        "analysis": None,
     }
-    if not _db_available:
-        _mem_interviews.append(interview)
-    logger.info(f"Interview #{interview_id} saved: {interview['interviewee']}")
-    return interview
+
+    if _db_available:
+        try:
+            result = _sb.table("interviews").insert(row).execute()
+            row["id"] = result.data[0]["id"]
+        except Exception as e:
+            logger.error(f"Supabase insert interview error: {e}")
+            row["id"] = len(_mem_interviews) + 1
+            _mem_interviews.append(row)
+    else:
+        row["id"] = len(_mem_interviews) + 1
+        _mem_interviews.append(row)
+
+    logger.info(f"Interview #{row['id']} saved: {row['interviewee']}")
+    return row
 
 
 def get_interviews() -> list:
     if not _db_available:
         return _mem_interviews
-    with _db() as conn:
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("SELECT * FROM interviews ORDER BY id")
-        rows = cur.fetchall()
-    return [_row_to_interview(r) for r in rows]
+    try:
+        result = _sb.table("interviews").select("*").order("id").execute()
+        return result.data
+    except Exception as e:
+        logger.error(f"Supabase get interviews error: {e}")
+        return _mem_interviews
 
 
 def get_interview(interview_id: int) -> Optional[dict]:
@@ -226,15 +99,15 @@ def get_interview(interview_id: int) -> Optional[dict]:
             if i["id"] == interview_id:
                 return i
         return None
-    with _db() as conn:
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("SELECT * FROM interviews WHERE id = %s", (interview_id,))
-        row = cur.fetchone()
-    return _row_to_interview(row) if row else None
+    try:
+        result = _sb.table("interviews").select("*").eq("id", interview_id).execute()
+        return result.data[0] if result.data else None
+    except Exception as e:
+        logger.error(f"Supabase get interview error: {e}")
+        return None
 
 
 def update_interview(interview_id: int, data: dict) -> Optional[dict]:
-    """Atualiza campos de uma entrevista existente."""
     fields = ["interviewer", "interviewee", "role", "department", "level",
               "pillar", "date", "transcript", "ia_ready"]
     updates = {k: v for k, v in data.items() if k in fields}
@@ -247,28 +120,27 @@ def update_interview(interview_id: int, data: dict) -> Optional[dict]:
                 i.update(updates)
                 return i
         return None
-
-    set_clauses = ", ".join(f"{k} = %s" for k in updates)
-    values = list(updates.values())
-    values.append(interview_id)
-    with _db() as conn:
-        cur = conn.cursor()
-        cur.execute(f"UPDATE interviews SET {set_clauses} WHERE id = %s", values)
-    return get_interview(interview_id)
+    try:
+        _sb.table("interviews").update(updates).eq("id", interview_id).execute()
+        return get_interview(interview_id)
+    except Exception as e:
+        logger.error(f"Supabase update interview error: {e}")
+        return None
 
 
 def delete_interview(interview_id: int) -> bool:
-    """Remove uma entrevista. Retorna True se encontrou e removeu."""
     if not _db_available:
         for i, iv in enumerate(_mem_interviews):
             if iv["id"] == interview_id:
                 _mem_interviews.pop(i)
                 return True
         return False
-    with _db() as conn:
-        cur = conn.cursor()
-        cur.execute("DELETE FROM interviews WHERE id = %s RETURNING id", (interview_id,))
-        return cur.fetchone() is not None
+    try:
+        result = _sb.table("interviews").delete().eq("id", interview_id).execute()
+        return len(result.data) > 0
+    except Exception as e:
+        logger.error(f"Supabase delete interview error: {e}")
+        return False
 
 
 def update_interview_analysis(interview_id: int, analysis: str):
@@ -278,12 +150,10 @@ def update_interview_analysis(interview_id: int, analysis: str):
                 i["analysis"] = analysis
                 break
         return
-    with _db() as conn:
-        cur = conn.cursor()
-        cur.execute(
-            "UPDATE interviews SET analysis = %s WHERE id = %s",
-            (analysis, interview_id),
-        )
+    try:
+        _sb.table("interviews").update({"analysis": analysis}).eq("id", interview_id).execute()
+    except Exception as e:
+        logger.error(f"Supabase update analysis error: {e}")
 
 
 # ─── Diagnostic Scores ────────────────────────────────────────────────────────
@@ -292,26 +162,26 @@ def set_diagnostic_scores(scores: dict):
     if not _db_available:
         _mem_diagnostic_scores.update(scores)
         return
-    with _db() as conn:
-        cur = conn.cursor()
+    try:
         for key, value in scores.items():
             if isinstance(value, (int, float)):
-                cur.execute(
-                    """INSERT INTO diagnostic_scores (key, value) VALUES (%s, %s)
-                       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value""",
-                    (key, float(value)),
-                )
-    logger.info(f"Diagnostic scores updated: {scores}")
+                _sb.table("diagnostic_scores").upsert(
+                    {"key": key, "value": float(value)},
+                ).execute()
+        logger.info(f"Diagnostic scores updated: {scores}")
+    except Exception as e:
+        logger.error(f"Supabase set scores error: {e}")
 
 
 def get_diagnostic_scores() -> dict:
     if not _db_available:
         return _mem_diagnostic_scores
-    with _db() as conn:
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("SELECT key, value FROM diagnostic_scores")
-        rows = cur.fetchall()
-    return {r["key"]: r["value"] for r in rows}
+    try:
+        result = _sb.table("diagnostic_scores").select("key, value").execute()
+        return {r["key"]: r["value"] for r in result.data}
+    except Exception as e:
+        logger.error(f"Supabase get scores error: {e}")
+        return _mem_diagnostic_scores
 
 
 # ─── Analysis Results ─────────────────────────────────────────────────────────
@@ -321,26 +191,26 @@ def set_analysis_result(key: str, result: str):
     if not _db_available:
         _mem_analysis_results[key] = {"content": result, "generated_at": now}
         return
-    with _db() as conn:
-        cur = conn.cursor()
-        cur.execute(
-            """INSERT INTO analysis_results (key, content, generated_at) VALUES (%s, %s, %s)
-               ON CONFLICT (key) DO UPDATE SET content = EXCLUDED.content, generated_at = EXCLUDED.generated_at""",
-            (key, result, now),
-        )
+    try:
+        _sb.table("analysis_results").upsert(
+            {"key": key, "content": result, "generated_at": now},
+        ).execute()
+    except Exception as e:
+        logger.error(f"Supabase set analysis error: {e}")
 
 
 def get_analysis_results() -> dict:
     if not _db_available:
         return _mem_analysis_results
-    with _db() as conn:
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("SELECT key, content, generated_at FROM analysis_results")
-        rows = cur.fetchall()
-    return {
-        r["key"]: {"content": r["content"], "generated_at": r["generated_at"]}
-        for r in rows
-    }
+    try:
+        result = _sb.table("analysis_results").select("key, content, generated_at").execute()
+        return {
+            r["key"]: {"content": r["content"], "generated_at": r["generated_at"]}
+            for r in result.data
+        }
+    except Exception as e:
+        logger.error(f"Supabase get analysis error: {e}")
+        return _mem_analysis_results
 
 
 # ─── Insights ─────────────────────────────────────────────────────────────────
@@ -352,14 +222,14 @@ def add_insight(insight: dict):
         insight["generated_at"] = now
         _mem_insights.append(insight)
         return
-    with _db() as conn:
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute(
-            "INSERT INTO insights (data, generated_at) VALUES (%s, %s) RETURNING id",
-            (json.dumps(insight, ensure_ascii=False), now),
-        )
-        insight["id"] = cur.fetchone()["id"]
-    insight["generated_at"] = now
+    try:
+        result = _sb.table("insights").insert(
+            {"data": json.dumps(insight, ensure_ascii=False), "generated_at": now}
+        ).execute()
+        insight["id"] = result.data[0]["id"]
+        insight["generated_at"] = now
+    except Exception as e:
+        logger.error(f"Supabase add insight error: {e}")
 
 
 def set_insights(insights: list):
@@ -371,32 +241,33 @@ def set_insights(insights: list):
             ins["id"] = i + 1
             ins["generated_at"] = now
         return
-    with _db() as conn:
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("DELETE FROM insights")
+    try:
+        _sb.table("insights").delete().neq("id", 0).execute()
         for ins in insights:
-            cur.execute(
-                "INSERT INTO insights (data, generated_at) VALUES (%s, %s) RETURNING id",
-                (json.dumps(ins, ensure_ascii=False), now),
-            )
-            ins["id"] = cur.fetchone()["id"]
+            result = _sb.table("insights").insert(
+                {"data": json.dumps(ins, ensure_ascii=False), "generated_at": now}
+            ).execute()
+            ins["id"] = result.data[0]["id"]
             ins["generated_at"] = now
+    except Exception as e:
+        logger.error(f"Supabase set insights error: {e}")
 
 
 def get_insights() -> list:
     if not _db_available:
         return _mem_insights
-    with _db() as conn:
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("SELECT id, data, generated_at FROM insights ORDER BY id")
-        rows = cur.fetchall()
-    result = []
-    for row in rows:
-        ins = json.loads(row["data"])
-        ins["id"] = row["id"]
-        ins["generated_at"] = row["generated_at"]
-        result.append(ins)
-    return result
+    try:
+        result = _sb.table("insights").select("id, data, generated_at").order("id").execute()
+        out = []
+        for row in result.data:
+            ins = json.loads(row["data"])
+            ins["id"] = row["id"]
+            ins["generated_at"] = row["generated_at"]
+            out.append(ins)
+        return out
+    except Exception as e:
+        logger.error(f"Supabase get insights error: {e}")
+        return _mem_insights
 
 
 # ─── Pipeline Status ──────────────────────────────────────────────────────────
@@ -404,18 +275,20 @@ def get_insights() -> list:
 def get_pipeline_status() -> dict:
     if not _db_available:
         return _mem_pipeline_status
-    with _db() as conn:
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("SELECT * FROM pipeline_status WHERE id = 1")
-        row = cur.fetchone()
-    if not row:
-        return {"running": False, "last_run": None, "steps_completed": [], "errors": []}
-    return {
-        "running":         bool(row["running"]),
-        "last_run":        row["last_run"],
-        "steps_completed": json.loads(row["steps_completed"]),
-        "errors":          json.loads(row["errors"]),
-    }
+    try:
+        result = _sb.table("pipeline_status").select("*").eq("id", 1).execute()
+        if not result.data:
+            return {"running": False, "last_run": None, "steps_completed": [], "errors": []}
+        row = result.data[0]
+        return {
+            "running": bool(row["running"]),
+            "last_run": row["last_run"],
+            "steps_completed": json.loads(row["steps_completed"]) if isinstance(row["steps_completed"], str) else row["steps_completed"],
+            "errors": json.loads(row["errors"]) if isinstance(row["errors"], str) else row["errors"],
+        }
+    except Exception as e:
+        logger.error(f"Supabase get pipeline error: {e}")
+        return _mem_pipeline_status
 
 
 def update_pipeline_status(running: bool = None, step: str = None, error: str = None):
@@ -436,20 +309,13 @@ def update_pipeline_status(running: bool = None, step: str = None, error: str = 
         _mem_pipeline_status.update(status)
         return
 
-    with _db() as conn:
-        cur = conn.cursor()
-        cur.execute(
-            """INSERT INTO pipeline_status (id, running, last_run, steps_completed, errors)
-               VALUES (1, %s, %s, %s, %s)
-               ON CONFLICT (id) DO UPDATE SET
-                   running = EXCLUDED.running,
-                   last_run = EXCLUDED.last_run,
-                   steps_completed = EXCLUDED.steps_completed,
-                   errors = EXCLUDED.errors""",
-            (
-                status["running"],
-                status["last_run"],
-                json.dumps(status["steps_completed"]),
-                json.dumps(status["errors"]),
-            ),
-        )
+    try:
+        _sb.table("pipeline_status").upsert({
+            "id": 1,
+            "running": status["running"],
+            "last_run": status["last_run"],
+            "steps_completed": json.dumps(status["steps_completed"]),
+            "errors": json.dumps(status["errors"]),
+        }).execute()
+    except Exception as e:
+        logger.error(f"Supabase update pipeline error: {e}")
