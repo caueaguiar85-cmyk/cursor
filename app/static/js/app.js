@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initAreaFilter();
   initDiagAreaTabs();
   initStrategy();
+  initRoadmap();
   try { initAgents(); } catch(e) { console.warn('Agents init:', e); }
   initVexia();
 });
@@ -1904,33 +1905,38 @@ function renderMarkdown(text) {
 
 var _activeStrategyArea = null;
 
-function initStrategy() {
-  var areaLabelsS = {
-    'supply-chain': 'Supply Chain', 'producao': 'Produção', 'comercial': 'Comercial',
-    'logistica': 'Logística', 'ti': 'TI', 'financeiro': 'Financeiro',
-    'qualidade': 'Qualidade', 'compras': 'Compras', 'rh': 'RH', 'diretoria': 'Diretoria'
-  };
+var _AREA_LABELS = {
+  'supply-chain': 'Supply Chain', 'producao': 'Produção / PCP', 'comercial': 'Comercial / Vendas',
+  'logistica': 'Logística', 'ti': 'Tecnologia / TI', 'financeiro': 'Financeiro / Controladoria',
+  'qualidade': 'Qualidade', 'compras': 'Compras / Procurement', 'rh': 'RH / Pessoas', 'diretoria': 'Diretoria Geral'
+};
 
-  // Load area tabs from interviews
+function _loadAreaTabs(containerId, dataAttr, callback) {
   fetch('/api/interviews')
     .then(function(res) { return res.json(); })
     .then(function(data) {
-      if (!data || !Array.isArray(data)) return;
+      var interviews = data.interviews || data || [];
+      if (!Array.isArray(interviews)) return;
       var areas = {};
-      data.forEach(function(iv) {
+      interviews.forEach(function(iv) {
         if (iv.ia_ready && iv.transcript && iv.department) {
           areas[iv.department] = (areas[iv.department] || 0) + 1;
         }
       });
-      var container = document.getElementById('strategy-area-tabs');
+      var container = document.getElementById(containerId);
       if (!container || !Object.keys(areas).length) return;
       var html = '';
       Object.keys(areas).sort().forEach(function(a) {
-        html += '<button class="area-tab" data-strategy-area="' + a + '">' +
-          (areaLabelsS[a] || a) + ' <span class="font-mono" style="opacity:0.5">(' + areas[a] + ')</span></button>';
+        html += '<button class="area-tab" ' + dataAttr + '="' + a + '">' +
+          (_AREA_LABELS[a] || a) + ' <span class="font-mono" style="opacity:0.5">(' + areas[a] + ')</span></button>';
       });
       container.innerHTML = html;
+      if (callback) callback();
     });
+}
+
+function initStrategy() {
+  _loadAreaTabs('strategy-area-tabs', 'data-strategy-area');
 
   // Area tab click
   document.getElementById('strategy-area-tabs').addEventListener('click', function(e) {
@@ -1998,6 +2004,64 @@ function loadStrategyData(area) {
           el.innerHTML = '<div class="empty-state"><p class="empty-text">' + tab.empty + '</p></div>';
         }
       });
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ROADMAP — Per-area roadmap display (from ATLAS agent)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+var _activeRoadmapArea = null;
+
+function initRoadmap() {
+  _loadAreaTabs('roadmap-area-tabs', 'data-roadmap-area');
+
+  document.getElementById('roadmap-area-tabs').addEventListener('click', function(e) {
+    var tab = e.target.closest('.area-tab');
+    if (!tab) return;
+    _activeRoadmapArea = tab.getAttribute('data-roadmap-area');
+    this.querySelectorAll('.area-tab').forEach(function(t) { t.classList.toggle('active', t === tab); });
+    loadRoadmapData(_activeRoadmapArea);
+  });
+}
+
+function loadRoadmapData(area) {
+  if (!area) return;
+  fetch('/api/diagnostic?area=' + encodeURIComponent(area))
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.status !== 'ok') return;
+      var container = document.getElementById('roadmap-content');
+      if (!container) return;
+      var analysis = data.analysis || {};
+      var areaLabel = _AREA_LABELS[area] || area;
+
+      // Roadmap ATLAS
+      var roadmapContent = analysis.roadmap_atlas ? (analysis.roadmap_atlas.content || analysis.roadmap_atlas) : '';
+      // Gaps STRATEGOS
+      var gapsContent = analysis.gaps ? (analysis.gaps.content || analysis.gaps) : '';
+
+      if (!roadmapContent && !gapsContent) {
+        container.innerHTML = '<div class="empty-state"><p class="empty-text">Nenhum roadmap gerado para <strong>' + escapeHtml(areaLabel) + '</strong>. Execute o diagn&oacute;stico desta &aacute;rea primeiro.</p></div>';
+        return;
+      }
+
+      var html = '';
+      if (roadmapContent) {
+        html += '<div class="card-section" style="margin-bottom:var(--space-6)">' +
+          '<h3 class="card-label-heading">&#9776; ATLAS &mdash; Roadmap de ' + escapeHtml(areaLabel) + '</h3>' +
+          '<div class="agent-output-content" style="font-size:0.85rem;line-height:1.6;white-space:pre-wrap;max-height:600px;overflow-y:auto;padding:var(--space-4);background:var(--bg-secondary);border-radius:var(--radius-md)">' +
+          renderMarkdown(roadmapContent) +
+          '</div></div>';
+      }
+      if (gapsContent) {
+        html += '<div class="card-section">' +
+          '<h3 class="card-label-heading">&#9654; STRATEGOS &mdash; Gaps de ' + escapeHtml(areaLabel) + '</h3>' +
+          '<div class="agent-output-content" style="font-size:0.85rem;line-height:1.6;white-space:pre-wrap;max-height:600px;overflow-y:auto;padding:var(--space-4);background:var(--bg-secondary);border-radius:var(--radius-md)">' +
+          renderMarkdown(gapsContent) +
+          '</div></div>';
+      }
+      container.innerHTML = html;
     });
 }
 

@@ -1292,142 +1292,21 @@ LANDING_HTML = """<!DOCTYPE html>
         <div class="page-header">
           <div class="page-header-text">
             <h1 class="page-title">Roadmap</h1>
-            <p class="page-subtitle">Plano de transforma&ccedil;&atilde;o estrat&eacute;gica</p>
-          </div>
-          <div class="page-header-actions">
-            <span class="page-counter font-mono">12 iniciativas &middot; 3 fases</span>
+            <p class="page-subtitle">Plano de transforma&ccedil;&atilde;o estrat&eacute;gica por &aacute;rea</p>
           </div>
         </div>
         <div class="page-header-divider"></div>
 
-        <!-- Fase 1 — Quick Wins -->
-        <div class="roadmap-phase">
-          <div class="roadmap-phase-header">
-            <span class="roadmap-phase-tag font-mono">FASE 1</span>
-            <span class="roadmap-phase-name">Quick Wins</span>
-            <span class="roadmap-phase-period font-mono">Q2 2026</span>
-          </div>
-          <div class="roadmap-items">
-            <div class="roadmap-item">
-              <div class="roadmap-marker roadmap-marker--accent"></div>
-              <div class="roadmap-item-content">
-                <span class="roadmap-item-title">Implementar dashboard de KPIs operacionais</span>
-                <span class="roadmap-item-meta font-mono">Sistemas &middot; 4 semanas &middot; +R$ 240k</span>
-                <p class="roadmap-item-desc">Construir painel BI com os 12 KPIs cr&iacute;ticos de supply chain (OTIF, lead time, giro, ruptura). Conectar diretamente ao ERP atual via API. Revis&atilde;o semanal obrigat&oacute;ria com ger&ecirc;ncia.</p>
-              </div>
-            </div>
-            <div class="roadmap-item">
-              <div class="roadmap-marker roadmap-marker--accent"></div>
-              <div class="roadmap-item-content">
-                <span class="roadmap-item-title">Criar ciclo de S&amp;OP mensal</span>
-                <span class="roadmap-item-meta font-mono">Processos &middot; 2 semanas &middot; +R$ 150k</span>
-                <p class="roadmap-item-desc">Estruturar reuni&atilde;o mensal formal entre Comercial, PCP, Log&iacute;stica e Financeiro. Definir template de consenso de demanda e ata padronizada. Piloto no primeiro m&ecirc;s, escala no segundo.</p>
-              </div>
-            </div>
-            <div class="roadmap-item">
-              <div class="roadmap-marker roadmap-marker--accent"></div>
-              <div class="roadmap-item-content">
-                <span class="roadmap-item-title">Digitalizar checklists de qualidade</span>
-                <span class="roadmap-item-meta font-mono">Opera&ccedil;&otilde;es &middot; 3 semanas &middot; +R$ 95k</span>
-                <p class="roadmap-item-desc">Substituir inspe&ccedil;&otilde;es em papel por app mobile na linha de fios. Dados alimentam indicadores de retrabalho em tempo real. Redu&ccedil;&atilde;o estimada de 60% no retrabalho.</p>
-              </div>
-            </div>
-            <div class="roadmap-item">
-              <div class="roadmap-marker roadmap-marker--accent"></div>
-              <div class="roadmap-item-content">
-                <span class="roadmap-item-title">Automatizar compras recorrentes</span>
-                <span class="roadmap-item-meta font-mono">Processos &middot; 6 semanas &middot; +R$ 180k</span>
-                <p class="roadmap-item-desc">Configurar recompra autom&aacute;tica para os 50 SKUs de maior giro com base em ponto de reposi&ccedil;&atilde;o. Integrar com fornecedores-chave via EDI. Libera equipe de compras para negocia&ccedil;&otilde;es estrat&eacute;gicas.</p>
-              </div>
-            </div>
-          </div>
+        <!-- Area selector -->
+        <div class="area-tabs" id="roadmap-area-tabs" style="margin-bottom: var(--space-4)">
+          <span class="empty-text" style="font-size:0.85rem">Selecione uma &aacute;rea para visualizar o roadmap</span>
         </div>
 
-        <!-- Fase 2 — Estruturante -->
-        <div class="roadmap-phase">
-          <div class="roadmap-phase-header">
-            <span class="roadmap-phase-tag font-mono">FASE 2</span>
-            <span class="roadmap-phase-name">Estruturante</span>
-            <span class="roadmap-phase-period font-mono">Q3&ndash;Q4 2026</span>
-          </div>
-          <div class="roadmap-items">
-            <div class="roadmap-item">
-              <div class="roadmap-marker"></div>
-              <div class="roadmap-item-content">
-                <span class="roadmap-item-title">Migra&ccedil;&atilde;o de ERP para plataforma cloud</span>
-                <span class="roadmap-item-meta font-mono">Sistemas &middot; 24 semanas &middot; Cr&iacute;tico</span>
-                <p class="roadmap-item-desc">RFP com 3 fornecedores cloud (SAP S/4, Oracle, TOTVS Protheus). Foco nos m&oacute;dulos fiscal e supply chain. Migra&ccedil;&atilde;o faseada: fiscal primeiro, depois PCP e estoque. Rollback plan obrigat&oacute;rio.</p>
-              </div>
-            </div>
-            <div class="roadmap-item">
-              <div class="roadmap-marker"></div>
-              <div class="roadmap-item-content">
-                <span class="roadmap-item-title">Programa de letramento em dados</span>
-                <span class="roadmap-item-meta font-mono">Organiza&ccedil;&atilde;o &middot; 12 semanas &middot; +R$ 600k</span>
-                <p class="roadmap-item-desc">Treinamento de 40h para 25 gestores em an&aacute;lise de dados e tomada de decis&atilde;o baseada em evid&ecirc;ncias. Workshop pr&aacute;tico com dados reais da Santista. Certifica&ccedil;&atilde;o interna obrigat&oacute;ria.</p>
-              </div>
-            </div>
-            <div class="roadmap-item">
-              <div class="roadmap-marker"></div>
-              <div class="roadmap-item-content">
-                <span class="roadmap-item-title">Integrar ERP com planejamento de produ&ccedil;&atilde;o</span>
-                <span class="roadmap-item-meta font-mono">Sistemas &middot; 16 semanas &middot; +R$ 320k</span>
-                <p class="roadmap-item-desc">Eliminar planilhas manuais de PCP conectando sequenciamento de produ&ccedil;&atilde;o ao ERP. Vis&atilde;o unificada de capacidade, demanda e estoque. Redu&ccedil;&atilde;o de 23% nos pedidos atrasados.</p>
-              </div>
-            </div>
-            <div class="roadmap-item">
-              <div class="roadmap-marker"></div>
-              <div class="roadmap-item-content">
-                <span class="roadmap-item-title">Redesenho do fluxo de PCP</span>
-                <span class="roadmap-item-meta font-mono">Processos &middot; 8 semanas &middot; +R$ 200k</span>
-                <p class="roadmap-item-desc">Mapear e redesenhar o fluxo de planejamento e controle de produ&ccedil;&atilde;o com metodologia Lean. Eliminar 4 handoffs manuais identificados. Novo SLA de 48h para confirma&ccedil;&atilde;o de pedido.</p>
-              </div>
-            </div>
-          </div>
+        <!-- Roadmap content (dynamic) -->
+        <div id="roadmap-content">
+          <div class="empty-state"><p class="empty-text">Execute o diagn&oacute;stico de uma &aacute;rea para gerar o roadmap (agente ATLAS)</p></div>
         </div>
 
-        <!-- Fase 3 — Transformacional -->
-        <div class="roadmap-phase">
-          <div class="roadmap-phase-header">
-            <span class="roadmap-phase-tag font-mono">FASE 3</span>
-            <span class="roadmap-phase-name">Transformacional</span>
-            <span class="roadmap-phase-period font-mono">2027</span>
-          </div>
-          <div class="roadmap-items">
-            <div class="roadmap-item">
-              <div class="roadmap-marker"></div>
-              <div class="roadmap-item-content">
-                <span class="roadmap-item-title">IA preditiva para forecast de demanda</span>
-                <span class="roadmap-item-meta font-mono">Sistemas &middot; 20 semanas &middot; Estrat&eacute;gico</span>
-                <p class="roadmap-item-desc">Modelo de machine learning treinado com 3 anos de dados hist&oacute;ricos da Santista. Previs&atilde;o por SKU/cliente com horizonte de 30 dias. Target: acur&aacute;cia de 85% vs 60% atual.</p>
-              </div>
-            </div>
-            <div class="roadmap-item">
-              <div class="roadmap-marker"></div>
-              <div class="roadmap-item-content">
-                <span class="roadmap-item-title">Torre de controle de supply chain</span>
-                <span class="roadmap-item-meta font-mono">Opera&ccedil;&otilde;es &middot; 24 semanas &middot; Estrat&eacute;gico</span>
-                <p class="roadmap-item-desc">Dashboard em tempo real com visibilidade end-to-end: fornecedores, produ&ccedil;&atilde;o, estoque e entregas. Alertas autom&aacute;ticos de desvio. Sala de war room f&iacute;sica com telas dedicadas.</p>
-              </div>
-            </div>
-            <div class="roadmap-item">
-              <div class="roadmap-marker"></div>
-              <div class="roadmap-item-content">
-                <span class="roadmap-item-title">Automa&ccedil;&atilde;o de pricing din&acirc;mico</span>
-                <span class="roadmap-item-meta font-mono">Processos &middot; 16 semanas &middot; +R$ 500k</span>
-                <p class="roadmap-item-desc">Algoritmo de pre&ccedil;o din&acirc;mico baseado em custo, estoque, demanda e concorr&ecirc;ncia. Ajuste autom&aacute;tico di&aacute;rio com piso de margem 5%. Aprova&ccedil;&atilde;o humana apenas para desvios &gt;10%.</p>
-              </div>
-            </div>
-            <div class="roadmap-item">
-              <div class="roadmap-marker"></div>
-              <div class="roadmap-item-content">
-                <span class="roadmap-item-title">Centro de excel&ecirc;ncia em dados</span>
-                <span class="roadmap-item-meta font-mono">Organiza&ccedil;&atilde;o &middot; Cont&iacute;nuo &middot; Longo prazo</span>
-                <p class="roadmap-item-desc">Equipe dedicada de 3 pessoas (data engineer + 2 analistas) respons&aacute;vel por governan&ccedil;a de dados, qualidade, e evolu&ccedil;&atilde;o dos modelos anal&iacute;ticos. Reporta &agrave; diretoria. Cultura data-driven como compet&ecirc;ncia organizacional.</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- ══ PAGE: ESTRATÉGIA ══ -->
