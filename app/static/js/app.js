@@ -766,7 +766,8 @@ var AGENT_INFO = {
   'nexus':     { name: 'NEXUS',     role: 'Benchmark & Intelig\u00eancia de Mercado' },
   'catalyst':  { name: 'CATALYST',  role: 'Business Case & ROI' },
   'prism':     { name: 'PRISM',     role: 'An\u00e1lise de Entrevistas' },
-  'atlas':     { name: 'ATLAS',     role: 'Roadmap & Transforma\u00e7\u00e3o' }
+  'atlas':     { name: 'ATLAS',     role: 'Roadmap & Transforma\u00e7\u00e3o' },
+  'synapse':   { name: 'SYNAPSE',   role: 'S\u00edntese Integrada do Workflow' }
 };
 
 function openAgentChat(agentId) {
