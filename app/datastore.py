@@ -1,7 +1,6 @@
 """
 Stoken Advisory — Database-backed Data Store
-Persiste dados no Supabase via REST API (PostgREST).
-Usa httpx (leve) em vez do SDK completo do Supabase.
+Persiste dados no PostgreSQL via DATABASE_URL (Railway).
 Fallback in-memory quando não configurado.
 """
 
@@ -11,71 +10,113 @@ import os
 from datetime import datetime
 from typing import Optional
 
-import httpx
+import psycopg2
+import psycopg2.extras
 
 logger = logging.getLogger(__name__)
 
-# ─── Supabase REST config ────────────────────────────────────────────────────
+# ─── Postgres connection ────────────────────────────────────────────────────
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
-_REST_URL = f"{SUPABASE_URL}/rest/v1" if SUPABASE_URL else ""
-_HEADERS = {
-    "apikey": SUPABASE_KEY,
-    "Authorization": f"Bearer {SUPABASE_KEY}",
-    "Content-Type": "application/json",
-    "Prefer": "return=representation",
-} if SUPABASE_KEY else {}
-
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+_conn = None
 _db_available = False
 
-if _REST_URL and _HEADERS:
+_SCHEMA = """
+CREATE TABLE IF NOT EXISTS interviews (
+    id SERIAL PRIMARY KEY,
+    interviewer TEXT DEFAULT '',
+    interviewee TEXT DEFAULT '',
+    role TEXT DEFAULT '',
+    department TEXT DEFAULT '',
+    level TEXT DEFAULT '',
+    pillar TEXT DEFAULT '',
+    date TEXT DEFAULT '',
+    transcript TEXT DEFAULT '',
+    ia_ready BOOLEAN DEFAULT FALSE,
+    created_at TEXT DEFAULT '',
+    analysis TEXT
+);
+
+CREATE TABLE IF NOT EXISTS diagnostic_scores (
+    key TEXT PRIMARY KEY,
+    value DOUBLE PRECISION
+);
+
+CREATE TABLE IF NOT EXISTS analysis_results (
+    key TEXT PRIMARY KEY,
+    content TEXT,
+    generated_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS insights (
+    id SERIAL PRIMARY KEY,
+    data TEXT,
+    generated_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS pipeline_status (
+    id INTEGER PRIMARY KEY DEFAULT 1,
+    running BOOLEAN DEFAULT FALSE,
+    last_run TEXT,
+    steps_completed TEXT DEFAULT '[]',
+    errors TEXT DEFAULT '[]'
+);
+"""
+
+
+def _get_conn():
+    global _conn
+    if _conn and not _conn.closed:
+        return _conn
     try:
-        r = httpx.get(f"{_REST_URL}/interviews?select=id&limit=1",
-                      headers=_HEADERS, timeout=5)
-        if r.status_code in (200, 206):
-            _db_available = True
-            logger.info(f"Supabase connected: {SUPABASE_URL}")
-        else:
-            logger.error(f"Supabase test failed: {r.status_code} {r.text[:200]}")
+        _conn = psycopg2.connect(DATABASE_URL, connect_timeout=10)
+        _conn.autocommit = True
+        return _conn
     except Exception as e:
-        logger.error(f"Supabase connection error: {e}")
+        logger.error(f"Postgres reconnect failed: {e}")
+        _conn = None
+        return None
+
+
+def _query(sql, params=None, fetch=True):
+    """Execute a query, reconnecting once on failure."""
+    conn = _get_conn()
+    if not conn:
+        return [] if fetch else None
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(sql, params)
+            if fetch:
+                return [dict(r) for r in cur.fetchall()]
+    except psycopg2.OperationalError:
+        logger.warning("Postgres connection lost, reconnecting...")
+        global _conn
+        _conn = None
+        conn = _get_conn()
+        if not conn:
+            return [] if fetch else None
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(sql, params)
+            if fetch:
+                return [dict(r) for r in cur.fetchall()]
+    except Exception as e:
+        logger.error(f"Query error: {e}")
+        return [] if fetch else None
+
+
+if DATABASE_URL:
+    try:
+        _conn = psycopg2.connect(DATABASE_URL, connect_timeout=10)
+        _conn.autocommit = True
+        with _conn.cursor() as cur:
+            cur.execute(_SCHEMA)
+        _db_available = True
+        logger.info("PostgreSQL connected and tables ready")
+    except Exception as e:
+        logger.error(f"Postgres init error: {e}")
+        _conn = None
 else:
-    logger.warning("SUPABASE_URL/SUPABASE_KEY not set — in-memory fallback")
-
-
-def _get(path: str, params: dict = None) -> list:
-    r = httpx.get(f"{_REST_URL}/{path}", headers=_HEADERS, params=params, timeout=10)
-    r.raise_for_status()
-    return r.json()
-
-
-def _post(table: str, data: dict) -> dict:
-    r = httpx.post(f"{_REST_URL}/{table}", headers=_HEADERS, json=data, timeout=10)
-    r.raise_for_status()
-    return r.json()[0] if r.json() else data
-
-
-def _patch(table: str, match: dict, data: dict) -> list:
-    params = {f"{k}": f"eq.{v}" for k, v in match.items()}
-    r = httpx.patch(f"{_REST_URL}/{table}", headers=_HEADERS, params=params,
-                    json=data, timeout=10)
-    r.raise_for_status()
-    return r.json()
-
-
-def _delete(table: str, match: dict) -> list:
-    params = {f"{k}": f"eq.{v}" for k, v in match.items()}
-    r = httpx.delete(f"{_REST_URL}/{table}", headers=_HEADERS, params=params, timeout=10)
-    r.raise_for_status()
-    return r.json()
-
-
-def _upsert(table: str, data: dict) -> dict:
-    h = {**_HEADERS, "Prefer": "return=representation,resolution=merge-duplicates"}
-    r = httpx.post(f"{_REST_URL}/{table}", headers=h, json=data, timeout=10)
-    r.raise_for_status()
-    return r.json()[0] if r.json() else data
+    logger.warning("DATABASE_URL not set — in-memory fallback")
 
 
 # ─── In-memory fallback ──────────────────────────────────────────────────────
@@ -111,8 +152,12 @@ def save_interview(data: dict) -> dict:
     }
     if _db_available:
         try:
-            result = _post("interviews", row)
-            row = result
+            rows = _query(
+                """INSERT INTO interviews (interviewer, interviewee, role, department, level, pillar, date, transcript, ia_ready, created_at, analysis)
+                   VALUES (%(interviewer)s, %(interviewee)s, %(role)s, %(department)s, %(level)s, %(pillar)s, %(date)s, %(transcript)s, %(ia_ready)s, %(created_at)s, %(analysis)s)
+                   RETURNING *""", row)
+            if rows:
+                row = rows[0]
         except Exception as e:
             logger.error(f"Save interview error: {e}")
             row["id"] = len(_mem_interviews) + 1
@@ -128,7 +173,7 @@ def get_interviews() -> list:
     if not _db_available:
         return _mem_interviews
     try:
-        return _get("interviews?order=id")
+        return _query("SELECT * FROM interviews ORDER BY id")
     except Exception as e:
         logger.error(f"Get interviews error: {e}")
         return _mem_interviews
@@ -138,7 +183,7 @@ def get_interview(interview_id: int) -> Optional[dict]:
     if not _db_available:
         return next((i for i in _mem_interviews if i["id"] == interview_id), None)
     try:
-        rows = _get(f"interviews?id=eq.{interview_id}")
+        rows = _query("SELECT * FROM interviews WHERE id = %s", (interview_id,))
         return rows[0] if rows else None
     except Exception as e:
         logger.error(f"Get interview error: {e}")
@@ -158,7 +203,9 @@ def update_interview(interview_id: int, data: dict) -> Optional[dict]:
                 return i
         return None
     try:
-        rows = _patch("interviews", {"id": interview_id}, updates)
+        set_clause = ", ".join(f"{k} = %({k})s" for k in updates)
+        updates["id"] = interview_id
+        rows = _query(f"UPDATE interviews SET {set_clause} WHERE id = %(id)s RETURNING *", updates)
         return rows[0] if rows else None
     except Exception as e:
         logger.error(f"Update interview error: {e}")
@@ -173,7 +220,7 @@ def delete_interview(interview_id: int) -> bool:
                 return True
         return False
     try:
-        rows = _delete("interviews", {"id": interview_id})
+        rows = _query("DELETE FROM interviews WHERE id = %s RETURNING id", (interview_id,))
         return len(rows) > 0
     except Exception as e:
         logger.error(f"Delete interview error: {e}")
@@ -188,7 +235,7 @@ def update_interview_analysis(interview_id: int, analysis: str):
                 break
         return
     try:
-        _patch("interviews", {"id": interview_id}, {"analysis": analysis})
+        _query("UPDATE interviews SET analysis = %s WHERE id = %s", (analysis, interview_id), fetch=False)
     except Exception as e:
         logger.error(f"Update analysis error: {e}")
 
@@ -202,7 +249,10 @@ def set_diagnostic_scores(scores: dict):
     try:
         for key, value in scores.items():
             if isinstance(value, (int, float)):
-                _upsert("diagnostic_scores", {"key": key, "value": float(value)})
+                _query(
+                    """INSERT INTO diagnostic_scores (key, value) VALUES (%s, %s)
+                       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value""",
+                    (key, float(value)), fetch=False)
         logger.info(f"Diagnostic scores updated: {scores}")
     except Exception as e:
         logger.error(f"Set scores error: {e}")
@@ -212,7 +262,7 @@ def get_diagnostic_scores() -> dict:
     if not _db_available:
         return _mem_diagnostic_scores
     try:
-        rows = _get("diagnostic_scores?select=key,value")
+        rows = _query("SELECT key, value FROM diagnostic_scores")
         return {r["key"]: r["value"] for r in rows}
     except Exception as e:
         logger.error(f"Get scores error: {e}")
@@ -227,7 +277,10 @@ def set_analysis_result(key: str, result: str):
         _mem_analysis_results[key] = {"content": result, "generated_at": now}
         return
     try:
-        _upsert("analysis_results", {"key": key, "content": result, "generated_at": now})
+        _query(
+            """INSERT INTO analysis_results (key, content, generated_at) VALUES (%s, %s, %s)
+               ON CONFLICT (key) DO UPDATE SET content = EXCLUDED.content, generated_at = EXCLUDED.generated_at""",
+            (key, result, now), fetch=False)
     except Exception as e:
         logger.error(f"Set analysis error: {e}")
 
@@ -236,7 +289,7 @@ def get_analysis_results() -> dict:
     if not _db_available:
         return _mem_analysis_results
     try:
-        rows = _get("analysis_results?select=key,content,generated_at")
+        rows = _query("SELECT key, content, generated_at FROM analysis_results")
         return {r["key"]: {"content": r["content"], "generated_at": r["generated_at"]} for r in rows}
     except Exception as e:
         logger.error(f"Get analysis error: {e}")
@@ -253,9 +306,12 @@ def add_insight(insight: dict):
         _mem_insights.append(insight)
         return
     try:
-        result = _post("insights", {"data": json.dumps(insight, ensure_ascii=False), "generated_at": now})
-        insight["id"] = result["id"]
-        insight["generated_at"] = now
+        rows = _query(
+            "INSERT INTO insights (data, generated_at) VALUES (%s, %s) RETURNING id",
+            (json.dumps(insight, ensure_ascii=False), now))
+        if rows:
+            insight["id"] = rows[0]["id"]
+            insight["generated_at"] = now
     except Exception as e:
         logger.error(f"Add insight error: {e}")
 
@@ -270,12 +326,14 @@ def set_insights(insights: list):
             ins["generated_at"] = now
         return
     try:
-        # Delete all then insert
-        httpx.delete(f"{_REST_URL}/insights?id=gt.0", headers=_HEADERS, timeout=10)
+        _query("DELETE FROM insights", fetch=False)
         for ins in insights:
-            result = _post("insights", {"data": json.dumps(ins, ensure_ascii=False), "generated_at": now})
-            ins["id"] = result["id"]
-            ins["generated_at"] = now
+            rows = _query(
+                "INSERT INTO insights (data, generated_at) VALUES (%s, %s) RETURNING id",
+                (json.dumps(ins, ensure_ascii=False), now))
+            if rows:
+                ins["id"] = rows[0]["id"]
+                ins["generated_at"] = now
     except Exception as e:
         logger.error(f"Set insights error: {e}")
 
@@ -284,7 +342,7 @@ def get_insights() -> list:
     if not _db_available:
         return _mem_insights
     try:
-        rows = _get("insights?select=id,data,generated_at&order=id")
+        rows = _query("SELECT id, data, generated_at FROM insights ORDER BY id")
         out = []
         for row in rows:
             ins = json.loads(row["data"])
@@ -303,7 +361,7 @@ def get_pipeline_status() -> dict:
     if not _db_available:
         return _mem_pipeline_status
     try:
-        rows = _get("pipeline_status?id=eq.1")
+        rows = _query("SELECT * FROM pipeline_status WHERE id = 1")
         if not rows:
             return {"running": False, "last_run": None, "steps_completed": [], "errors": []}
         row = rows[0]
@@ -338,12 +396,13 @@ def update_pipeline_status(running: bool = None, step: str = None, error: str = 
         _mem_pipeline_status.update(status)
         return
     try:
-        _upsert("pipeline_status", {
-            "id": 1,
-            "running": status["running"],
-            "last_run": status["last_run"],
-            "steps_completed": json.dumps(status["steps_completed"]),
-            "errors": json.dumps(status["errors"]),
-        })
+        _query(
+            """INSERT INTO pipeline_status (id, running, last_run, steps_completed, errors)
+               VALUES (1, %s, %s, %s, %s)
+               ON CONFLICT (id) DO UPDATE SET running = EXCLUDED.running, last_run = EXCLUDED.last_run,
+               steps_completed = EXCLUDED.steps_completed, errors = EXCLUDED.errors""",
+            (status["running"], status["last_run"],
+             json.dumps(status["steps_completed"]), json.dumps(status["errors"])),
+            fetch=False)
     except Exception as e:
         logger.error(f"Update pipeline error: {e}")
