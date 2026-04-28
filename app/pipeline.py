@@ -76,6 +76,23 @@ async def run_full_pipeline():
         set_insights, update_pipeline_status
     )
 
+    try:
+        await _run_pipeline_inner()
+    except Exception as e:
+        logger.error(f"Pipeline crashed: {e}")
+        try:
+            update_pipeline_status(running=False, error=f"Pipeline error: {str(e)[:200]}")
+        except Exception:
+            pass
+
+
+async def _run_pipeline_inner():
+    from app.datastore import (
+        get_interviews, update_interview_analysis,
+        set_diagnostic_scores, set_analysis_result,
+        set_insights, update_pipeline_status
+    )
+
     interviews = get_interviews()
     ia_interviews = [i for i in interviews if i.get("ia_ready") and i.get("transcript")]
 

@@ -698,9 +698,6 @@ function initNovaEntrevista() {
         alert('Erro: ' + (result.detail || 'erro desconhecido'));
         return;
       }
-      if (!isEditing && iaReady && transcricao) {
-        triggerPipeline();
-      }
       loadInterviews();
       closeModal();
     }).catch(function(err) {
@@ -1360,8 +1357,6 @@ function initOnlineForm() {
       })
     }).then(function(r) { return r.json(); })
     .then(function(result) {
-      if (iaReady && answered > 0) triggerPipeline();
-
       // Create card
       var parts = nome.split(' ');
       var initials = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
@@ -1545,8 +1540,6 @@ function initFormExportImport() {
       if (!importedData) return;
 
       // Backend already saved during import, just trigger pipeline if needed
-      if (importedData.answeredCount > 0) triggerPipeline();
-
       // Create card visually
       var parts = importedData.interviewee.split(' ');
       var initials = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
