@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 # ─── Postgres connection ────────────────────────────────────────────────────
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
+if DATABASE_URL and "sslmode" not in DATABASE_URL:
+    DATABASE_URL += "?sslmode=require" if "?" not in DATABASE_URL else "&sslmode=require"
 _conn = None
 _db_available = False
 
@@ -108,6 +110,7 @@ def _query(sql, params=None, fetch=True):
 
 
 if DATABASE_URL:
+    logger.info(f"DATABASE_URL found, connecting to: {DATABASE_URL[:40]}...")
     try:
         _conn = psycopg2.connect(DATABASE_URL, connect_timeout=10)
         _conn.autocommit = True
