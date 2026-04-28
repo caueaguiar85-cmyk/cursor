@@ -583,11 +583,16 @@ function updateQuestionsByArea(areaValue) {
 }
 
 var PILAR_MAP = {
-  'processos':   { label: 'PROCESSOS',      color: 'var(--pilar-processos)',   title: 'Processos & Governan\u00e7a' },
-  'sistemas':    { label: 'SISTEMAS',        color: 'var(--pilar-sistemas)',    title: 'Sistemas & Dados' },
-  'operacoes':   { label: 'OPERA\u00c7\u00d5ES', color: 'var(--pilar-operacoes)', title: 'Opera\u00e7\u00f5es & Log\u00edstica' },
-  'organizacao': { label: 'ORGANIZA\u00c7\u00c3O', color: 'var(--pilar-organizacao)', title: 'Organiza\u00e7\u00e3o & Pessoas' },
-  'roadmap':     { label: 'ROADMAP',         color: 'var(--pilar-roadmap)',     title: 'Estrat\u00e9gia & Roadmap' }
+  'supply-chain': { label: 'CADEIA DE SUPRIMENTOS', color: 'var(--pilar-processos)',    title: 'Cadeia de Suprimentos' },
+  'producao':     { label: 'OP. INDUSTRIAIS',       color: 'var(--pilar-operacoes)',    title: 'Operações Industriais' },
+  'comercial':    { label: 'RECEITA & GROWTH',      color: 'var(--pilar-roadmap)',      title: 'Receita & Growth' },
+  'logistica':    { label: 'OP. LOGÍSTICAS',        color: 'var(--pilar-operacoes)',    title: 'Operações Logísticas' },
+  'ti':           { label: 'TECNOLOGIA',            color: 'var(--pilar-sistemas)',     title: 'Tecnologia & Sistemas' },
+  'financeiro':   { label: 'FINANÇAS',              color: 'var(--pilar-organizacao)',  title: 'Finanças & Performance' },
+  'qualidade':    { label: 'QUALIDADE',             color: 'var(--pilar-processos)',    title: 'Qualidade & Compliance' },
+  'compras':      { label: 'SUPRIMENTOS',           color: 'var(--pilar-processos)',    title: 'Suprimentos & Aquisições' },
+  'rh':           { label: 'PESSOAS',               color: 'var(--pilar-organizacao)',  title: 'Pessoas & Cultura' },
+  'diretoria':    { label: 'GOVERNANÇA',            color: 'var(--pilar-roadmap)',      title: 'Estratégia & Governança' }
 };
 
 function initNovaEntrevista() {
@@ -935,9 +940,9 @@ function loadDiagnosticData(area) {
       // Populate area tabs (only on global load)
       if (!area && data.areas && data.areas.length) {
         var diagAreaLabels = {
-          'supply-chain': 'Cadeia de Suprimentos', 'producao': 'Op. Industriais', 'comercial': 'Receita & Growth',
-          'logistica': 'Op. Logísticas', 'ti': 'Tecnologia', 'financeiro': 'Finanças',
-          'qualidade': 'Qualidade', 'compras': 'Suprimentos', 'rh': 'Pessoas', 'diretoria': 'Governança'
+          'supply-chain': 'Supply Chain', 'producao': 'Produção', 'comercial': 'Comercial',
+          'logistica': 'Logística', 'ti': 'TI', 'financeiro': 'Financeiro',
+          'qualidade': 'Qualidade', 'compras': 'Compras', 'rh': 'RH', 'diretoria': 'Diretoria'
         };
         var tabsContainer = document.getElementById('diag-area-tabs');
         if (tabsContainer) {
@@ -1165,9 +1170,9 @@ function loadInterviews() {
       if (emptyState) emptyState.style.display = 'none';
 
       var areaLabels = {
-        'supply-chain': 'CADEIA DE SUPRIMENTOS', 'producao': 'OP. INDUSTRIAIS', 'comercial': 'RECEITA & GROWTH',
-        'logistica': 'OP. LOGÍSTICAS', 'ti': 'TECNOLOGIA', 'financeiro': 'FINANÇAS',
-        'qualidade': 'QUALIDADE', 'compras': 'SUPRIMENTOS', 'rh': 'PESSOAS', 'diretoria': 'GOVERNANÇA'
+        'supply-chain': 'SUPPLY CHAIN', 'producao': 'PRODUÇÃO', 'comercial': 'COMERCIAL',
+        'logistica': 'LOGÍSTICA', 'ti': 'TI', 'financeiro': 'FINANCEIRO',
+        'qualidade': 'QUALIDADE', 'compras': 'COMPRAS', 'rh': 'RH', 'diretoria': 'DIRETORIA'
       };
 
       grid.innerHTML = '';
@@ -1232,9 +1237,9 @@ function renderCoverageMap(interviews) {
   var pilars = ['processos', 'sistemas', 'operacoes', 'organizacao', 'roadmap'];
   var areas = ['supply-chain', 'producao', 'comercial', 'logistica', 'ti', 'financeiro', 'qualidade', 'compras', 'rh', 'diretoria'];
   var areaLabels = {
-    'supply-chain': 'Cadeia de Suprimentos', 'producao': 'Op. Industriais', 'comercial': 'Receita & Growth',
-    'logistica': 'Op. Logísticas', 'ti': 'Tecnologia & Sistemas', 'financeiro': 'Finanças & Performance',
-    'qualidade': 'Qualidade & Compliance', 'compras': 'Suprimentos & Aquisições', 'rh': 'Pessoas & Cultura', 'diretoria': 'Estratégia & Governança'
+    'supply-chain': 'Supply Chain', 'producao': 'Produção', 'comercial': 'Comercial',
+    'logistica': 'Logística', 'ti': 'TI', 'financeiro': 'Financeiro',
+    'qualidade': 'Qualidade', 'compras': 'Compras', 'rh': 'RH', 'diretoria': 'Diretoria'
   };
 
   // Build coverage matrix: area → pilar → count
@@ -1470,9 +1475,9 @@ function initOnlineForm() {
       var dateStr = data ? (new Date(data + 'T12:00:00').getDate() + ' ' + months[new Date(data + 'T12:00:00').getMonth()] + ' ' + new Date(data + 'T12:00:00').getFullYear()) : 'Hoje';
 
       var areaLabels = {
-        'supply-chain': 'CADEIA DE SUPRIMENTOS', 'producao': 'OP. INDUSTRIAIS', 'comercial': 'RECEITA & GROWTH',
-        'logistica': 'OP. LOGÍSTICAS', 'ti': 'TECNOLOGIA', 'financeiro': 'FINANÇAS',
-        'qualidade': 'QUALIDADE', 'compras': 'SUPRIMENTOS', 'rh': 'PESSOAS', 'diretoria': 'GOVERNANÇA'
+        'supply-chain': 'SUPPLY CHAIN', 'producao': 'PRODUÇÃO', 'comercial': 'COMERCIAL',
+        'logistica': 'LOGÍSTICA', 'ti': 'TI', 'financeiro': 'FINANCEIRO',
+        'qualidade': 'QUALIDADE', 'compras': 'COMPRAS', 'rh': 'RH', 'diretoria': 'DIRETORIA'
       };
 
       var card = document.createElement('div');
@@ -1901,9 +1906,9 @@ var _activeStrategyArea = null;
 
 function initStrategy() {
   var areaLabelsS = {
-    'supply-chain': 'Cadeia de Suprimentos', 'producao': 'Operações Industriais', 'comercial': 'Receita & Growth',
-    'logistica': 'Operações Logísticas', 'ti': 'Tecnologia & Sistemas', 'financeiro': 'Finanças & Performance',
-    'qualidade': 'Qualidade & Compliance', 'compras': 'Suprimentos & Aquisições', 'rh': 'Pessoas & Cultura', 'diretoria': 'Estratégia & Governança'
+    'supply-chain': 'Supply Chain', 'producao': 'Produção', 'comercial': 'Comercial',
+    'logistica': 'Logística', 'ti': 'TI', 'financeiro': 'Financeiro',
+    'qualidade': 'Qualidade', 'compras': 'Compras', 'rh': 'RH', 'diretoria': 'Diretoria'
   };
 
   // Load area tabs from interviews

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 AREA_QUESTIONS = {
     "supply-chain": {
-        "title": "Cadeia de Suprimentos",
+        "title": "Supply Chain",
         "questions": [
             "Como funciona o processo de S&OP atualmente? Existe validação estratégica de demanda?",
             "Qual o nível de integração entre as áreas (Comercial, PCP, Financeiro)?",
@@ -29,7 +29,7 @@ AREA_QUESTIONS = {
         ]
     },
     "producao": {
-        "title": "Operações Industriais",
+        "title": "Produção / PCP",
         "questions": [
             "O planejamento de produção é feito em sistema ou em Excel? Por quê?",
             "Existe controle de acurácia do cronograma de produção?",
@@ -41,7 +41,7 @@ AREA_QUESTIONS = {
         ]
     },
     "comercial": {
-        "title": "Receita & Growth",
+        "title": "Comercial / Vendas",
         "questions": [
             "Como é feita a previsão de vendas? Qual a acurácia histórica?",
             "Existe processo formal de validação de demanda com a produção?",
@@ -53,7 +53,7 @@ AREA_QUESTIONS = {
         ]
     },
     "logistica": {
-        "title": "Operações Logísticas",
+        "title": "Logística",
         "questions": [
             "Como funciona o fluxo de recebimento, armazenagem e expedição?",
             "Qual o nível de automação na operação (picking, embalagem, inventário)?",
@@ -65,7 +65,7 @@ AREA_QUESTIONS = {
         ]
     },
     "ti": {
-        "title": "Tecnologia & Sistemas",
+        "title": "Tecnologia / TI",
         "questions": [
             "Quais sistemas são usados no dia a dia (ERP, WMS, TMS, BI)?",
             "Qual a versão do ERP e quando foi a última atualização?",
@@ -77,7 +77,7 @@ AREA_QUESTIONS = {
         ]
     },
     "financeiro": {
-        "title": "Finanças & Performance",
+        "title": "Financeiro / Controladoria",
         "questions": [
             "Como é feito o custeio de produtos? Custo padrão ou real?",
             "Qual a visibilidade de margem por SKU, canal e cliente?",
@@ -89,7 +89,7 @@ AREA_QUESTIONS = {
         ]
     },
     "qualidade": {
-        "title": "Qualidade & Compliance",
+        "title": "Qualidade",
         "questions": [
             "Como é feito o controle de qualidade na produção? Em quais etapas?",
             "Os checklists de qualidade são digitais ou em papel?",
@@ -101,7 +101,7 @@ AREA_QUESTIONS = {
         ]
     },
     "compras": {
-        "title": "Suprimentos & Aquisições",
+        "title": "Compras / Procurement",
         "questions": [
             "Como é o processo de compras? Manual, por aprovação ou automatizado?",
             "Existe avaliação formal de fornecedores? Quais critérios?",
@@ -113,7 +113,7 @@ AREA_QUESTIONS = {
         ]
     },
     "rh": {
-        "title": "Pessoas & Cultura",
+        "title": "RH / Pessoas",
         "questions": [
             "Como está estruturada a equipe de supply chain? Quantas pessoas por área?",
             "Existe programa de capacitação técnica para a equipe?",
@@ -125,7 +125,7 @@ AREA_QUESTIONS = {
         ]
     },
     "diretoria": {
-        "title": "Estratégia & Governança",
+        "title": "Diretoria Geral",
         "questions": [
             "Qual a visão estratégica para supply chain nos próximos 3 anos?",
             "Quais são os principais riscos do negócio relacionados à operação?",

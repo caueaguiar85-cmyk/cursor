@@ -18,16 +18,16 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 AREA_LABELS = {
-    "supply-chain": "Cadeia de Suprimentos",
-    "producao": "Operações Industriais",
-    "comercial": "Receita & Growth",
-    "logistica": "Operações Logísticas",
-    "ti": "Tecnologia & Sistemas",
-    "financeiro": "Finanças & Performance",
-    "qualidade": "Qualidade & Compliance",
-    "compras": "Suprimentos & Aquisições",
-    "rh": "Pessoas & Cultura",
-    "diretoria": "Estratégia & Governança",
+    "supply-chain": "Supply Chain",
+    "producao": "Produção / PCP",
+    "comercial": "Comercial / Vendas",
+    "logistica": "Logística",
+    "ti": "Tecnologia / TI",
+    "financeiro": "Financeiro / Controladoria",
+    "qualidade": "Qualidade",
+    "compras": "Compras / Procurement",
+    "rh": "RH / Pessoas",
+    "diretoria": "Diretoria Geral",
 }
 
 
