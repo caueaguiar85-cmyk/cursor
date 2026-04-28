@@ -152,8 +152,6 @@ function navigateTo(page, fromPopstate) {
   if (page === 'usuarios') loadUsersTable();
 }
 
-}
-
 /* ── Timeline — interactive expand, checkboxes, status, notes ──────────── */
 function initTimeline() {
   var items = document.querySelectorAll('.timeline-item[data-tl-id]');
@@ -292,26 +290,6 @@ function initTimeline() {
 
   // Initial global progress update
   updateGlobalProgress();
-}
-
-
-  // "Gerar agora →" on pilar cards → navigate to ARIA with pilar-specific prompt
-  document.addEventListener('click', function(e) {
-    var link = e.target.closest('[data-run-pilar]');
-    if (link) {
-      e.preventDefault();
-      var pilar = link.getAttribute('data-run-pilar');
-      navigateTo('agentes');
-      setTimeout(function() {
-        currentAgent = 'aria';
-        openAgentChat('aria');
-        var input = document.getElementById('agent-input');
-        if (input) {
-          input.value = 'Analise o pilar "' + pilar + '" da Santista S.A. em detalhe. Forne\u00e7a: score CMMI (1-5), justificativa com evid\u00eancias, gap vs benchmark ABIT, e as 5 a\u00e7\u00f5es mais urgentes priorizadas por impacto.';
-        }
-      }, 100);
-    }
-  });
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
