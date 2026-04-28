@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initOnlineForm();
   initAreaFilter();
   initDiagAreaTabs();
+  initStrategy();
   try { initAgents(); } catch(e) { console.warn('Agents init:', e); }
   initVexia();
 });
@@ -909,8 +910,9 @@ function pollPipelineStatus() {
         if (!pipeline.running) {
           clearInterval(interval);
           // Pipeline done — reload data
-          loadDiagnosticData();
+          loadDiagnosticData(_activeDiagArea);
           loadInsightsData();
+          if (_activeStrategyArea) loadStrategyData(_activeStrategyArea);
           // Update interview cards to show AI ANALYZED
           document.querySelectorAll('.interview-ai-tag').forEach(function(tag) {
             if (tag.textContent === 'PRONTO P/ IA') tag.textContent = 'ANALISADO';
@@ -1889,6 +1891,109 @@ function renderMarkdown(text) {
     .replace(/\n{2,}/g, '</p><p>')
     .replace(/\n/g, '<br>')
     .replace(/^/, '<p>').replace(/$/, '</p>');
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   STRATEGY — Per-area strategy generation and display
+   ══════════════════════════════════════════════════════════════════════════ */
+
+var _activeStrategyArea = null;
+
+function initStrategy() {
+  var areaLabelsS = {
+    'supply-chain': 'Supply Chain', 'producao': 'Produção', 'comercial': 'Comercial',
+    'logistica': 'Logística', 'ti': 'TI', 'financeiro': 'Financeiro',
+    'qualidade': 'Qualidade', 'compras': 'Compras', 'rh': 'RH', 'diretoria': 'Diretoria'
+  };
+
+  // Load area tabs from interviews
+  fetch('/api/interviews')
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (!data || !Array.isArray(data)) return;
+      var areas = {};
+      data.forEach(function(iv) {
+        if (iv.ia_ready && iv.transcript && iv.department) {
+          areas[iv.department] = (areas[iv.department] || 0) + 1;
+        }
+      });
+      var container = document.getElementById('strategy-area-tabs');
+      if (!container || !Object.keys(areas).length) return;
+      var html = '';
+      Object.keys(areas).sort().forEach(function(a) {
+        html += '<button class="area-tab" data-strategy-area="' + a + '">' +
+          (areaLabelsS[a] || a) + ' <span class="font-mono" style="opacity:0.5">(' + areas[a] + ')</span></button>';
+      });
+      container.innerHTML = html;
+    });
+
+  // Area tab click
+  document.getElementById('strategy-area-tabs').addEventListener('click', function(e) {
+    var tab = e.target.closest('.area-tab');
+    if (!tab) return;
+    _activeStrategyArea = tab.getAttribute('data-strategy-area');
+    this.querySelectorAll('.area-tab').forEach(function(t) { t.classList.toggle('active', t === tab); });
+    document.getElementById('strategy-tabs').style.display = '';
+    loadStrategyData(_activeStrategyArea);
+  });
+
+  // Strategy sub-tabs
+  document.getElementById('strategy-tabs').addEventListener('click', function(e) {
+    var tab = e.target.closest('.tab');
+    if (!tab) return;
+    var target = tab.getAttribute('data-stab');
+    this.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.getAttribute('data-stab') === target); });
+    document.querySelectorAll('.stab-content').forEach(function(el) {
+      el.style.display = el.id === ('stab-' + target) ? '' : 'none';
+    });
+  });
+
+  // Generate button
+  document.getElementById('btn-gerar-estrategia').addEventListener('click', function() {
+    if (!_activeStrategyArea) {
+      alert('Selecione uma área primeiro');
+      return;
+    }
+    fetch('/api/strategy/run?area=' + encodeURIComponent(_activeStrategyArea), { method: 'POST' })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.status === 'ok') {
+          pollPipelineStatus();
+          document.getElementById('stab-macro').innerHTML = '<div class="empty-state"><p class="empty-text">Gerando estrat&eacute;gia... Acompanhe o progresso no status do pipeline.</p></div>';
+        } else if (data.status === 'already_running') {
+          alert('Pipeline já está rodando. Aguarde a conclusão.');
+        }
+      });
+  });
+}
+
+function loadStrategyData(area) {
+  if (!area) return;
+  fetch('/api/strategy?area=' + encodeURIComponent(area))
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.status !== 'ok') return;
+
+      var tabs = [
+        { id: 'stab-macro', content: data.macro, title: 'Roadmap Estrat&eacute;gico Macro', empty: 'Roadmap macro n&atilde;o gerado. Clique em &ldquo;Gerar estrat&eacute;gia&rdquo;.' },
+        { id: 'stab-tatico', content: data.tatico, title: 'Roadmap T&aacute;tico (Micro Entreg&aacute;veis)', empty: 'Roadmap t&aacute;tico n&atilde;o gerado.' },
+        { id: 'stab-automacao', content: data.automacao, title: 'Estrat&eacute;gia de Automa&ccedil;&atilde;o', empty: 'Estrat&eacute;gia de automa&ccedil;&atilde;o n&atilde;o gerada.' }
+      ];
+
+      tabs.forEach(function(tab) {
+        var el = document.getElementById(tab.id);
+        if (!el) return;
+        if (tab.content) {
+          el.innerHTML = '<div class="card-section">' +
+            '<h3 class="card-label-heading">' + tab.title + '</h3>' +
+            '<div class="agent-output-content" style="font-size:0.85rem;line-height:1.6;white-space:pre-wrap;max-height:700px;overflow-y:auto;padding:var(--space-4);background:var(--bg-secondary);border-radius:var(--radius-md)">' +
+            renderMarkdown(tab.content) +
+            '</div></div>';
+        } else {
+          el.innerHTML = '<div class="empty-state"><p class="empty-text">' + tab.empty + '</p></div>';
+        }
+      });
+    });
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
