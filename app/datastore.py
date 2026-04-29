@@ -205,19 +205,34 @@ def update_interview(interview_id: int, data: dict) -> Optional[dict]:
         return None
 
 
-def delete_interview(interview_id: int) -> bool:
+def delete_interview(interview_id: int) -> Optional[dict]:
+    """Remove uma entrevista e retorna seus dados (para reprocessamento), ou None se não encontrada."""
     if not _db_available:
         for i, iv in enumerate(_mem_interviews):
             if iv["id"] == interview_id:
-                _mem_interviews.pop(i)
-                return True
-        return False
+                return _mem_interviews.pop(i)
+        return None
     try:
-        rows = _query("DELETE FROM interviews WHERE id = %s RETURNING id", (interview_id,))
-        return len(rows) > 0
+        rows = _query("DELETE FROM interviews WHERE id = %s RETURNING *", (interview_id,))
+        return rows[0] if rows else None
     except Exception as e:
         logger.error(f"Delete interview error: {e}")
-        return False
+        return None
+
+
+def count_interviews_with_transcript(department: str) -> int:
+    """Conta entrevistas com transcrição em uma área (query leve, sem carregar dados)."""
+    if not _db_available:
+        return sum(1 for i in _mem_interviews
+                   if i.get("department") == department and i.get("transcript"))
+    try:
+        rows = _query(
+            "SELECT COUNT(*) AS cnt FROM interviews WHERE department = %s AND transcript IS NOT NULL AND transcript != ''",
+            (department,))
+        return rows[0]["cnt"] if rows else 0
+    except Exception as e:
+        logger.error(f"Count interviews error: {e}")
+        return 0
 
 
 def update_interview_analysis(interview_id: int, analysis: str):

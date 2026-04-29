@@ -22,6 +22,7 @@ from app.agents import get_all_agents, get_agent, run_agent
 from app.datastore import (
     save_interview, get_interviews, get_interview, update_interview,
     delete_interview, delete_analysis_results_for_area,
+    count_interviews_with_transcript,
     get_analysis_results, get_analysis_results_for_area,
     get_available_areas, get_pipeline_status
 )
@@ -1854,28 +1855,29 @@ async def edit_interview(interview_id: int, data: InterviewData):
     """Atualiza uma entrevista existente e dispara pipeline automaticamente.
 
     Quando a área (department) muda, limpa/reprocessa a área antiga e processa a nova.
+    Usa UPDATE ... RETURNING para obter dados antigos e novos numa só operação.
     """
     import asyncio
 
-    # Captura área anterior para detectar mudança de departamento
+    payload = data.model_dump()
+    payload["ia_ready"] = bool(data.transcript and data.transcript.strip())
+
+    # Uma única query: busca dados antigos antes de atualizar
     existing = get_interview(interview_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Entrevista não encontrada")
     old_department = existing.get("department", "")
 
-    payload = data.model_dump()
-    payload["ia_ready"] = bool(data.transcript and data.transcript.strip())
     updated = update_interview(interview_id, payload)
     if not updated:
         raise HTTPException(status_code=404, detail="Erro ao atualizar entrevista")
 
     reprocessing_areas = []
 
-    # Se a área mudou, trata a área antiga
+    # Se a área mudou, trata a área antiga em background
     if old_department and old_department != data.department:
-        remaining_old = [i for i in get_interviews()
-                         if i.get("department") == old_department and i.get("transcript")]
-        if remaining_old:
+        remaining_old = count_interviews_with_transcript(old_department)
+        if remaining_old > 0:
             status = get_pipeline_status()
             if not status["running"]:
                 logger.info(f"[edit] Reprocessando área antiga '{old_department}' após mudança de área")
@@ -1902,39 +1904,44 @@ async def edit_interview(interview_id: int, data: InterviewData):
 
 @app.delete("/api/interviews/{interview_id}")
 async def remove_interview(interview_id: int):
-    """Remove uma entrevista e dispara reprocessamento da estratégia/roadmap."""
+    """Remove uma entrevista e agenda reprocessamento em background."""
     import asyncio
 
-    # Captura dados da entrevista antes de excluir para saber a área afetada
-    interview = get_interview(interview_id)
-    if not interview:
+    # DELETE RETURNING * — uma única query que deleta e retorna os dados
+    deleted = delete_interview(interview_id)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Entrevista não encontrada")
 
-    department = interview.get("department", "")
+    department = deleted.get("department", "")
 
-    if not delete_interview(interview_id):
-        raise HTTPException(status_code=404, detail="Erro ao excluir entrevista")
+    # Agenda reprocessamento em background (não bloqueia a resposta)
+    async def _post_delete_reprocess(dept: str):
+        """Lógica de reprocessamento executada após responder ao cliente."""
+        try:
+            remaining = count_interviews_with_transcript(dept)
+            if remaining > 0:
+                status = get_pipeline_status()
+                if not status["running"]:
+                    logger.info(f"[delete] Reprocessando área '{dept}' ({remaining} entrevistas restantes)")
+                    await run_area_pipeline(dept)
+            else:
+                logger.info(f"[delete] Área '{dept}' sem entrevistas — limpando análises")
+                delete_analysis_results_for_area(dept)
+        except Exception as e:
+            logger.error(f"[delete] Erro no reprocessamento pós-exclusão: {e}")
 
     reprocessing = False
     area_cleared = False
 
     if department:
-        # Verifica se ainda existem entrevistas com transcrição para essa área
-        remaining = [i for i in get_interviews()
-                     if i.get("department") == department and i.get("transcript")]
-        if remaining:
-            # Reprocessa a área com as entrevistas restantes
+        remaining = count_interviews_with_transcript(department)
+        if remaining > 0:
             status = get_pipeline_status()
             if not status["running"]:
-                logger.info(f"[delete] Reprocessando área '{department}' após exclusão de entrevista #{interview_id}")
-                asyncio.create_task(run_area_pipeline(department))
+                asyncio.create_task(_post_delete_reprocess(department))
                 reprocessing = True
-            else:
-                logger.info(f"[delete] Pipeline já em execução, reprocessamento de '{department}' será manual")
         else:
-            # Sem entrevistas restantes — limpa análises da área
-            logger.info(f"[delete] Área '{department}' sem entrevistas restantes — limpando análises")
-            delete_analysis_results_for_area(department)
+            asyncio.create_task(_post_delete_reprocess(department))
             area_cleared = True
 
     return {
