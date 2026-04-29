@@ -103,6 +103,15 @@ async def _run_area_pipeline(area: str, interviews: list) -> dict:
     vexia_context = _load_vexia_context()
     results = {}
 
+    # Header de modo — injetado em todos os prompts desta pipeline
+    mode_header = (
+        f"MODO DE ANÁLISE: POR ÁREA\n"
+        f"ÁREA ANALISADA: {area_label}\n"
+        f"ESCOPO: Considere APENAS dados e entrevistas da área {area_label}. "
+        f"Ignore informações de outras áreas.\n"
+        f"IDENTIFICAÇÃO: Inicie sua resposta identificando que esta é uma análise da área {area_label}."
+    )
+
     # ─── Step 1: PRISM — Analisa cada entrevista ─────────────────────────
     logger.info(f"[{area}] Step 1: PRISM — Interview Analysis")
     update_pipeline_status(step=f"PRISM [{area_label}]: Analisando {len(interviews)} entrevistas")
@@ -111,7 +120,7 @@ async def _run_area_pipeline(area: str, interviews: list) -> dict:
     for interview in interviews:
         prompt = f"""Analise esta entrevista da área {area_label}.
 
-ÁREA ANALISADA: {area_label}
+{mode_header}
 ENTREVISTADO: {interview['interviewee']}
 CARGO: {interview['role']}
 DEPARTAMENTO: {interview['department']}
@@ -178,8 +187,7 @@ IMPORTANTE:
 
     diag_prompt = f"""Com base nas {len(interviews)} entrevistas da área {area_label} analisadas pelo PRISM, gere o diagnóstico de maturidade.
 
-ÁREA ANALISADA: {area_label}
-Considere APENAS os dados desta área. Não generalize.
+{mode_header}
 
 CONSOLIDAÇÃO DAS ENTREVISTAS (PRISM):
 {interview_context}
@@ -234,7 +242,7 @@ Retorne EXATAMENTE este JSON (sem markdown, sem explicação, apenas o JSON):
     logger.info(f"[{area}] Step 3: SENTINEL + NEXUS + CATALYST")
     update_pipeline_status(step=f"[{area_label}]: SENTINEL, NEXUS, CATALYST em paralelo")
 
-    context_for_agents = f"ÁREA ANALISADA: {area_label}\n\nDados das entrevistas da área:\n{interview_context}\n\nScores ARIA:\n{diag_result or 'não disponível'}"
+    context_for_agents = f"{mode_header}\n\nDados das entrevistas da área:\n{interview_context}\n\nScores ARIA:\n{diag_result or 'não disponível'}"
     if vexia_context:
         context_for_agents += f"\n\nDIAGNÓSTICO BPO VEXIA:\n{vexia_context}"
 
@@ -281,7 +289,7 @@ Retorne EXATAMENTE este JSON (sem markdown, sem explicação, apenas o JSON):
     update_pipeline_status(step=f"[{area_label}]: STRATEGOS e ATLAS em paralelo")
 
     context_step4 = (
-        f"ÁREA ANALISADA: {area_label}\n\n"
+        f"{mode_header}\n\n"
         f"Dados das entrevistas (PRISM):\n{interview_context}\n\n"
         f"Scores ARIA:\n{diag_result or 'N/A'}\n\n"
         f"Riscos SENTINEL:\n{sentinel_result or 'N/A'}\n\n"
@@ -338,7 +346,7 @@ Retorne EXATAMENTE este JSON (sem markdown, sem explicação, apenas o JSON):
     update_pipeline_status(step=f"SYNAPSE [{area_label}]: Consolidando")
 
     all_outputs = (
-        f"ÁREA ANALISADA: {area_label}\n\n"
+        f"{mode_header}\n\n"
         f"ANÁLISE QUALITATIVA PRISM:\n{interview_context or 'N/A'}\n\n"
         f"DIAGNÓSTICO ARIA:\n{diag_result or 'N/A'}\n\n"
         f"RISCOS SENTINEL:\n{sentinel_result or 'N/A'}\n\n"
@@ -395,9 +403,19 @@ async def _run_global_consolidation(area_results: dict):
 
     global_context = "\n\n".join(area_summaries)
 
+    areas_list = ", ".join(AREA_LABELS.get(a, a.upper()) for a in area_results.keys())
+    global_mode_header = (
+        f"MODO DE ANÁLISE: CONSOLIDADO (TODAS AS ÁREAS)\n"
+        f"ÁREAS INCLUÍDAS: {areas_list}\n"
+        f"TOTAL: {len(area_results)} áreas\n"
+        f"ESCOPO: Visão holística cross-área — cruze achados entre áreas e identifique padrões transversais.\n"
+        f"IDENTIFICAÇÃO: Inicie sua resposta identificando que esta é uma análise consolidada de {len(area_results)} áreas."
+    )
+
     # SYNAPSE global
     synapse_global = await _call_agent("synapse",
         f"Consolide os diagnósticos de {len(area_results)} áreas num relatório executivo global.\n\n"
+        f"{global_mode_header}\n\n"
         "O relatório deve conter:\n"
         "1. Executive Summary — visão geral da organização\n"
         "2. Mapa de Interdependências — onde problemas de uma área impactam outras\n"
@@ -553,8 +571,15 @@ async def _run_strategy_steps(area: str):
     if existing.get("risks"):
         diag_context += f"\nRISCOS SENTINEL:\n{existing['risks'].get('content', '')}"
 
-    full_context = (
+    strategy_mode_header = (
+        f"MODO DE ANÁLISE: POR ÁREA\n"
         f"ÁREA ANALISADA: {area_label}\n"
+        f"ESCOPO: Estratégia exclusiva para a área {area_label}.\n"
+        f"IDENTIFICAÇÃO: Inicie sua resposta identificando que esta é uma estratégia da área {area_label}."
+    )
+
+    full_context = (
+        f"{strategy_mode_header}\n"
         f"TOTAL DE ENTREVISTAS: {len(area_interviews)}\n\n"
         f"ENTREVISTAS CONSOLIDADAS:\n{interview_context}"
     )

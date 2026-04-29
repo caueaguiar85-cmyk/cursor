@@ -416,6 +416,31 @@ LANDING_HTML = """<!DOCTYPE html>
           </div>
         </div>
 
+        <!-- ── Pipeline Control: Seletor de modo ── -->
+        <div class="card-section" style="margin-bottom: var(--space-4)">
+          <h2 class="section-heading">Executar Diagn&oacute;stico IA</h2>
+          <div style="display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap">
+            <label class="form-label" style="margin:0; white-space:nowrap">Modo:</label>
+            <select class="form-input form-select" id="pipeline-mode-select" style="max-width: 340px">
+              <option value="">Consolidado (todas as &aacute;reas)</option>
+              <option value="supply-chain">Supply Chain</option>
+              <option value="producao">Produ&ccedil;&atilde;o / PCP</option>
+              <option value="comercial">Comercial / Vendas</option>
+              <option value="logistica">Log&iacute;stica</option>
+              <option value="ti">Tecnologia / TI</option>
+              <option value="financeiro">Financeiro / Controladoria</option>
+              <option value="qualidade">Qualidade</option>
+              <option value="compras">Compras / Procurement</option>
+              <option value="rh">RH / Pessoas</option>
+              <option value="diretoria">Diretoria Geral</option>
+            </select>
+            <button class="btn btn--primary" id="btn-rodar-pipeline">&#9655; Rodar Diagn&oacute;stico</button>
+            <span id="pipeline-mode-hint" class="body-text" style="color: var(--text-subtle); font-size: 12px;">
+              Consolidado: analisa todas as &aacute;reas e gera vis&atilde;o global
+            </span>
+          </div>
+        </div>
+
         <div class="projeto-grid">
           <div class="card-section">
             <h2 class="section-heading">Escopo do projeto</h2>

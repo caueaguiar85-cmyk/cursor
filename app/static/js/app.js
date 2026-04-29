@@ -1666,7 +1666,32 @@ function initStrategy() {
     });
   });
 
-  // Generate button
+  // ── Pipeline mode selector + trigger ──
+  var pipelineModeSelect = document.getElementById('pipeline-mode-select');
+  var pipelineModeHint = document.getElementById('pipeline-mode-hint');
+  if (pipelineModeSelect && pipelineModeHint) {
+    pipelineModeSelect.addEventListener('change', function() {
+      var area = this.value;
+      if (area) {
+        var label = this.options[this.selectedIndex].text;
+        pipelineModeHint.textContent = 'Por \u00e1rea: analisa apenas entrevistas de ' + label;
+      } else {
+        pipelineModeHint.textContent = 'Consolidado: analisa todas as \u00e1reas e gera vis\u00e3o global';
+      }
+    });
+  }
+
+  var btnRodarPipeline = document.getElementById('btn-rodar-pipeline');
+  if (btnRodarPipeline) {
+    btnRodarPipeline.addEventListener('click', function() {
+      var area = pipelineModeSelect ? pipelineModeSelect.value : '';
+      var modeLabel = area ? pipelineModeSelect.options[pipelineModeSelect.selectedIndex].text : 'todas as \u00e1reas';
+      if (!confirm('Rodar diagn\u00f3stico IA para ' + modeLabel + '?\n\nIsso pode levar alguns minutos.')) return;
+      triggerPipeline(area || null);
+    });
+  }
+
+  // Generate strategy button
   document.getElementById('btn-gerar-estrategia').addEventListener('click', function() {
     if (!_activeStrategyArea) {
       alert('Selecione uma área primeiro');
