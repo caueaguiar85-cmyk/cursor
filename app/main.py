@@ -1557,16 +1557,7 @@ LANDING_HTML = """<!DOCTYPE html>
         <div class="form-questions-list" id="form-questions-list"></div>
       </div>
 
-      <!-- Pronto para IA -->
-      <div class="form-ia-check">
-        <label class="form-checkbox">
-          <input type="checkbox" id="ent-ia-ready" />
-          <div>
-            <strong>Pronto para an&aacute;lise de IA</strong>
-            <span class="form-hint">Marque quando a transcri&ccedil;&atilde;o estiver revisada e aprovada para processamento.</span>
-          </div>
-        </label>
-      </div>
+      <!-- ia_ready é automático: ativado quando há transcrição -->
 
       <div class="modal-actions">
         <button type="button" class="btn btn--glass" id="modal-entrevista-cancel">Cancelar</button>
@@ -1777,7 +1768,7 @@ async def agent_run(agent_id: str, req: AgentRequest):
         ctx_parts.append(req.context)
 
     interviews = get_interviews()
-    ia_interviews = [i for i in interviews if i.get("ia_ready") and i.get("transcript")]
+    ia_interviews = [i for i in interviews if i.get("transcript")]
     if ia_interviews:
         summaries = []
         for iv in ia_interviews:
@@ -1815,23 +1806,26 @@ class InterviewData(BaseModel):
     transcript: str = ""
     ia_ready: bool = False
 
-def _maybe_auto_trigger_pipeline(department: str, ia_ready: bool, transcript: str):
-    """Dispara o pipeline automaticamente se a entrevista está pronta para IA."""
+def _maybe_auto_trigger_pipeline(department: str, transcript: str):
+    """Dispara o pipeline automaticamente quando a entrevista possui transcrição e área."""
     import asyncio
-    if not (ia_ready and transcript and department):
+    if not (transcript and department):
         return
     status = get_pipeline_status()
     if status["running"]:
         logger.info(f"[auto-trigger] Pipeline já em execução, ignorando auto-trigger para {department}")
         return
-    logger.info(f"[auto-trigger] Entrevista ia_ready para área '{department}' — disparando pipeline + estratégia")
+    logger.info(f"[auto-trigger] Entrevista salva para área '{department}' — disparando pipeline + estratégia automaticamente")
     asyncio.create_task(run_area_pipeline(department))
 
 @app.post("/api/interviews")
 async def create_interview(data: InterviewData):
-    """Salva uma entrevista no datastore e dispara pipeline automaticamente se ia_ready."""
-    interview = save_interview(data.model_dump())
-    _maybe_auto_trigger_pipeline(data.department, data.ia_ready, data.transcript)
+    """Salva uma entrevista no datastore e dispara pipeline automaticamente se houver transcrição."""
+    payload = data.model_dump()
+    # ia_ready é automático: True se tiver transcrição
+    payload["ia_ready"] = bool(data.transcript and data.transcript.strip())
+    interview = save_interview(payload)
+    _maybe_auto_trigger_pipeline(data.department, data.transcript)
     return {"status": "ok", "interview": interview}
 
 @app.get("/api/interviews")
@@ -1840,11 +1834,13 @@ def list_interviews():
 
 @app.put("/api/interviews/{interview_id}")
 async def edit_interview(interview_id: int, data: InterviewData):
-    """Atualiza uma entrevista existente e dispara pipeline automaticamente se ia_ready."""
-    updated = update_interview(interview_id, data.model_dump())
+    """Atualiza uma entrevista existente e dispara pipeline automaticamente se houver transcrição."""
+    payload = data.model_dump()
+    payload["ia_ready"] = bool(data.transcript and data.transcript.strip())
+    updated = update_interview(interview_id, payload)
     if not updated:
         raise HTTPException(status_code=404, detail="Entrevista não encontrada")
-    _maybe_auto_trigger_pipeline(data.department, data.ia_ready, data.transcript)
+    _maybe_auto_trigger_pipeline(data.department, data.transcript)
     return {"status": "ok", "interview": updated}
 
 @app.delete("/api/interviews/{interview_id}")
@@ -1969,18 +1965,18 @@ async def import_form(file: UploadFile = File(...)):
         data = parse_form_docx(content)
         # Auto-save as interview
         if data["interviewee"]:
-            ia_ready = data.get("questions_answered", 0) > 0
+            transcript = data.get("transcript", "")
             interview = save_interview({
                 "interviewer": data.get("interviewer", ""),
                 "interviewee": data["interviewee"],
                 "role": data.get("role", ""),
                 "department": data.get("department", ""),
                 "date": data.get("date", ""),
-                "transcript": data.get("transcript", ""),
-                "ia_ready": ia_ready,
+                "transcript": transcript,
+                "ia_ready": bool(transcript and transcript.strip()),
             })
             data["interview_id"] = interview["id"]
-            _maybe_auto_trigger_pipeline(data.get("department", ""), ia_ready, data.get("transcript", ""))
+            _maybe_auto_trigger_pipeline(data.get("department", ""), transcript)
         return {"status": "ok", "data": data}
     except Exception as e:
         logger.error(f"Import error: {e}")

@@ -427,7 +427,7 @@ async def run_full_pipeline():
         update_pipeline_status(running=True)
 
         interviews = get_interviews()
-        ia_interviews = [i for i in interviews if i.get("ia_ready") and i.get("transcript")]
+        ia_interviews = [i for i in interviews if i.get("transcript")]
 
         if not ia_interviews:
             logger.warning("No IA-ready interviews to analyze")
@@ -479,7 +479,7 @@ async def run_area_pipeline(area: str):
 
         interviews = get_interviews()
         area_interviews = [i for i in interviews
-                           if i.get("ia_ready") and i.get("transcript")
+                           if i.get("transcript")
                            and i.get("department") == area]
 
         if not area_interviews:
@@ -518,7 +518,7 @@ async def _run_strategy_steps(area: str):
     # Carrega entrevistas da área
     interviews = get_interviews()
     area_interviews = [i for i in interviews
-                       if i.get("ia_ready") and i.get("transcript")
+                       if i.get("transcript")
                        and i.get("department") == area]
 
     if not area_interviews:

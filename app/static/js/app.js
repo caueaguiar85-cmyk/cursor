@@ -527,7 +527,6 @@ function initNovaEntrevista() {
     var cargo = document.getElementById('ent-cargo').value.trim();
     var data = document.getElementById('ent-data').value;
     var pilar = document.getElementById('ent-pilar').value;
-    var iaReady = document.getElementById('ent-ia-ready').checked;
     var transcricao = document.getElementById('ent-transcricao').value.trim();
 
     if (!nome || !cargo) return;
@@ -537,6 +536,7 @@ function initNovaEntrevista() {
     var nivel = document.getElementById('ent-nivel').value;
 
     // Save to backend (POST for new, PUT for edit)
+    // ia_ready é automático no backend quando há transcrição
     var isEditing = !!_editingInterviewId;
     var url = isEditing ? '/api/interviews/' + _editingInterviewId : '/api/interviews';
     var method = isEditing ? 'PUT' : 'POST';
@@ -553,7 +553,7 @@ function initNovaEntrevista() {
         pillar: pilar,
         date: data,
         transcript: transcricao,
-        ia_ready: iaReady
+        ia_ready: !!transcricao
       })
     }).then(function(res) { return res.json(); })
     .then(function(result) {
@@ -812,7 +812,7 @@ function loadInterviews() {
           dateStr = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
         }
 
-        var aiTag = iv.analysis ? 'ANALISADO' : (iv.ia_ready ? 'PRONTO P/ IA' : (iv.transcript ? 'TRANSCRITO' : 'NOVO'));
+        var aiTag = iv.analysis ? 'ANALISADO' : (iv.transcript ? 'PROCESSANDO' : 'NOVO');
         var areaTag = areaLabels[iv.department] || (iv.department || '').toUpperCase();
         var pilarInfo = PILAR_MAP[iv.pillar];
         var pilarTag = pilarInfo ? '<span class="interview-tag" style="color:' + pilarInfo.color + '">' + pilarInfo.label + '</span>' : '';
@@ -964,8 +964,6 @@ function editInterview(id) {
       document.getElementById('ent-pilar').value = iv.pillar || 'processos';
       document.getElementById('ent-data').value = iv.date || '';
       document.getElementById('ent-transcricao').value = iv.transcript || '';
-      document.getElementById('ent-ia-ready').checked = iv.ia_ready || false;
-
       // Update modal title
       document.querySelector('#modal-entrevista .modal-title').textContent = 'Editar Entrevista';
       document.querySelector('#form-entrevista .btn--primary').textContent = 'Salvar Altera\u00e7\u00f5es';
@@ -1046,8 +1044,6 @@ function initOnlineForm() {
     var data = document.getElementById('of-data').value;
     var nivel = document.getElementById('of-nivel').value;
     var observacoes = document.getElementById('of-observacoes').value.trim();
-    var iaReady = document.getElementById('of-ia-ready').checked;
-
     if (!nome || !cargo || !area) {
       alert('Preencha nome, cargo e \u00e1rea');
       return;
@@ -1089,7 +1085,7 @@ function initOnlineForm() {
         level: nivel,
         date: data,
         transcript: transcript,
-        ia_ready: iaReady && answered > 0
+        ia_ready: answered > 0
       })
     }).then(function(r) { return r.json(); })
     .then(function(result) {
@@ -1116,7 +1112,7 @@ function initOnlineForm() {
             '<span class="interview-name">' + escapeHtml(nome) + '</span>' +
             '<span class="interview-role">' + escapeHtml(cargo) + '</span>' +
           '</div>' +
-          '<span class="interview-ai-tag font-mono">' + (iaReady && answered > 0 ? 'PRONTO P/ IA' : answered + '/' + total + ' resp.') + '</span>' +
+          '<span class="interview-ai-tag font-mono">' + (answered > 0 ? 'PROCESSANDO' : answered + '/' + total + ' resp.') + '</span>' +
         '</div>' +
         '<div class="interview-tags">' +
           '<span class="interview-tag" style="color: var(--text-muted)">' + (areaLabels[area] || area.toUpperCase()) + '</span>' +
@@ -1543,7 +1539,7 @@ function _loadAreaTabs(containerId, dataAttr, callback) {
       if (!Array.isArray(interviews)) return;
       var areas = {};
       interviews.forEach(function(iv) {
-        if (iv.ia_ready && iv.transcript && iv.department) {
+        if (iv.transcript && iv.department) {
           areas[iv.department] = (areas[iv.department] || 0) + 1;
         }
       });
