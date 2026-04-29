@@ -363,6 +363,18 @@ LANDING_HTML = """<!DOCTYPE html>
       </div>
     </header>
 
+    <!-- Pipeline status banner -->
+    <div class="pipeline-banner" id="pipeline-banner" style="display:none">
+      <div class="pipeline-banner-inner">
+        <div class="pipeline-spinner"></div>
+        <div class="pipeline-banner-text">
+          <strong id="pipeline-banner-title">Pipeline em execu&ccedil;&atilde;o</strong>
+          <span id="pipeline-banner-step">Iniciando...</span>
+        </div>
+        <div class="pipeline-banner-steps" id="pipeline-banner-steps"></div>
+      </div>
+    </div>
+
     <!-- Content area — pages -->
     <main class="content" id="content">
 

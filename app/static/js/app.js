@@ -747,28 +747,65 @@ function triggerPipeline(area) {
 }
 
 function pollPipelineStatus() {
+  var banner = document.getElementById('pipeline-banner');
+  var bannerTitle = document.getElementById('pipeline-banner-title');
+  var bannerStep = document.getElementById('pipeline-banner-step');
+  var bannerSteps = document.getElementById('pipeline-banner-steps');
+  var prevCount = 0;
+
+  banner.style.display = '';
+  banner.classList.remove('done');
+
   var interval = setInterval(function() {
     fetch('/api/pipeline/status')
       .then(function(res) { return res.json(); })
       .then(function(data) {
         var pipeline = data.pipeline;
+        var steps = pipeline.steps_completed || [];
+        var lastStep = steps.length ? steps[steps.length - 1] : 'Iniciando...';
+
+        bannerStep.textContent = lastStep;
+
+        // Update step dots
+        if (steps.length !== prevCount) {
+          prevCount = steps.length;
+          var dotsHtml = '';
+          for (var i = 0; i < steps.length; i++) {
+            dotsHtml += '<div class="pipeline-step-dot done" title="' + steps[i].replace(/"/g, '&quot;') + '"></div>';
+          }
+          dotsHtml += '<div class="pipeline-step-dot active"></div>';
+          bannerSteps.innerHTML = dotsHtml;
+        }
+
+        if (pipeline.errors && pipeline.errors.length) {
+          bannerTitle.textContent = 'Pipeline — ' + pipeline.errors.length + ' erro(s)';
+        }
+
         if (!pipeline.running) {
           clearInterval(interval);
-          // Pipeline done — reload data
+          banner.classList.add('done');
+          var hasErrors = pipeline.errors && pipeline.errors.length;
+          bannerTitle.textContent = hasErrors ? 'Pipeline concluido com erros' : 'Pipeline concluido';
+          bannerStep.textContent = hasErrors ? pipeline.errors[pipeline.errors.length - 1] : steps[steps.length - 1] || 'Finalizado';
+          // Remove active dot
+          bannerSteps.querySelectorAll('.active').forEach(function(d) { d.classList.remove('active'); d.classList.add('done'); });
+          // Auto-hide after 5s
+          setTimeout(function() { banner.style.display = 'none'; }, 5000);
+          // Reload data
           if (_activeStrategyArea) loadStrategyData(_activeStrategyArea);
-          // Update interview cards to show AI ANALYZED
-          document.querySelectorAll('.interview-ai-tag').forEach(function(tag) {
-            if (tag.textContent === 'PRONTO P/ IA') tag.textContent = 'ANALISADO';
-          });
+          loadInterviews();
         }
       })
-      .catch(function() { clearInterval(interval); });
+      .catch(function() { clearInterval(interval); banner.style.display = 'none'; });
   }, 3000);
 }
 
-// Load data on page init if available
+// Load data on page init + check if pipeline is already running
 setTimeout(function() {
   loadInterviews();
+  fetch('/api/pipeline/status').then(function(r) { return r.json(); }).then(function(data) {
+    if (data.pipeline && data.pipeline.running) pollPipelineStatus();
+  }).catch(function() {});
 }, 500);
 
 function loadInterviews() {
@@ -1275,7 +1312,7 @@ function initFormExportImport() {
       // Create card visually
       var parts = importedData.interviewee.split(' ');
       var initials = (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
-      var aiTag = importedData.answeredCount > 0 ? 'PRONTO P/ IA' : 'IMPORTADO';
+      var aiTag = importedData.answeredCount > 0 ? 'PROCESSANDO' : 'IMPORTADO';
 
       var card = document.createElement('div');
       card.className = 'interview-card';
@@ -1591,7 +1628,7 @@ function initStrategy() {
       .then(function(data) {
         if (data.status === 'ok') {
           pollPipelineStatus();
-          document.getElementById('stab-macro').innerHTML = '<div class="empty-state"><p class="empty-text">Gerando estrat&eacute;gia... Acompanhe o progresso no status do pipeline.</p></div>';
+          document.getElementById('stab-macro').innerHTML = '<div class="empty-state"><p class="empty-text">Gerando estrat&eacute;gia... Acompanhe o progresso no banner acima.</p></div>';
         } else if (data.status === 'already_running') {
           alert('Pipeline já está rodando. Aguarde a conclusão.');
         }
