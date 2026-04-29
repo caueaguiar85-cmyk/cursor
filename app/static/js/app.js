@@ -752,11 +752,25 @@ function pollPipelineStatus() {
   var bannerStep = document.getElementById('pipeline-banner-step');
   var bannerSteps = document.getElementById('pipeline-banner-steps');
   var prevCount = 0;
+  var pollCount = 0;
+  var maxPolls = 200; // ~10 min timeout (200 * 3s)
 
   banner.style.display = '';
   banner.classList.remove('done');
 
   var interval = setInterval(function() {
+    pollCount++;
+    if (pollCount > maxPolls) {
+      clearInterval(interval);
+      bannerTitle.textContent = 'Pipeline — timeout';
+      bannerStep.textContent = 'O pipeline demorou demais. Recarregue a pagina para verificar.';
+      banner.classList.add('done');
+      setTimeout(function() { banner.style.display = 'none'; }, 8000);
+      if (_activeStrategyArea) loadStrategyData(_activeStrategyArea);
+      loadInterviews();
+      return;
+    }
+
     fetch('/api/pipeline/status')
       .then(function(res) { return res.json(); })
       .then(function(data) {

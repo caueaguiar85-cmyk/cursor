@@ -459,13 +459,17 @@ async def run_full_pipeline():
         if len(area_results) > 0:
             await _run_global_consolidation(area_results)
 
-        update_pipeline_status(running=False)
         logger.info(f"Pipeline complete! {len(area_results)} áreas processadas.")
 
     except Exception as e:
         logger.error(f"Pipeline crashed: {e}")
         try:
-            update_pipeline_status(running=False, error=f"Pipeline error: {str(e)[:200]}")
+            update_pipeline_status(error=f"Pipeline error: {str(e)[:200]}")
+        except Exception:
+            pass
+    finally:
+        try:
+            update_pipeline_status(running=False)
         except Exception:
             pass
 
@@ -490,16 +494,20 @@ async def run_area_pipeline(area: str):
         await _run_area_pipeline(area, area_interviews)
 
         # Auto-gera estratégia após pipeline da área
+        area_label = AREA_LABELS.get(area, area)
         logger.info(f"[{area}] Auto-generating strategy after pipeline...")
         update_pipeline_status(step=f"Gerando estratégia para {area_label}...")
         await _run_strategy_steps(area)
 
-        update_pipeline_status(running=False)
-
     except Exception as e:
         logger.error(f"Area pipeline crashed [{area}]: {e}")
         try:
-            update_pipeline_status(running=False, error=f"Pipeline error [{area}]: {str(e)[:200]}")
+            update_pipeline_status(error=f"Pipeline error [{area}]: {str(e)[:200]}")
+        except Exception:
+            pass
+    finally:
+        try:
+            update_pipeline_status(running=False)
         except Exception:
             pass
 
@@ -681,12 +689,16 @@ async def run_strategy_pipeline(area: str):
         await _run_strategy_steps(area)
 
         update_pipeline_status(step=f"Estratégia [{area_label}]: Concluída")
-        update_pipeline_status(running=False)
         logger.info(f"[{area}] Strategy pipeline complete.")
 
     except Exception as e:
         logger.error(f"Strategy pipeline crashed [{area}]: {e}")
         try:
-            update_pipeline_status(running=False, error=f"Strategy error [{area}]: {str(e)[:200]}")
+            update_pipeline_status(error=f"Strategy error [{area}]: {str(e)[:200]}")
+        except Exception:
+            pass
+    finally:
+        try:
+            update_pipeline_status(running=False)
         except Exception:
             pass
