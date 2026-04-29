@@ -416,7 +416,7 @@ var AREA_QUESTIONS = {
   'rh': {
     title: 'RH / Pessoas',
     questions: [
-      'Como est\u00e1 estruturada a equipe de supply chain? Quantas pessoas por \u00e1rea?',
+      'Como est\u00e1 estruturada a \u00e1rea de RH? Quantas pessoas comp\u00f5em a equipe e como est\u00e3o divididas as responsabilidades?',
       'Existe programa de capacita\u00e7\u00e3o t\u00e9cnica para a equipe?',
       'Qual o turnover da \u00e1rea? Quais os cargos mais cr\u00edticos para reter?',
       'Existe clareza de pap\u00e9is e responsabilidades (RACI) nos processos-chave?',
