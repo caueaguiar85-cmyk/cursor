@@ -21,6 +21,25 @@ document.addEventListener('DOMContentLoaded', function() {
   initVexia();
 });
 
+/* ── Toast Notification ────────────────────────────────────────────── */
+function showToast(message, type) {
+  type = type || 'info';
+  var toast = document.createElement('div');
+  toast.className = 'toast-notification toast-' + type;
+  toast.textContent = message;
+  toast.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:10000;padding:14px 24px;border-radius:10px;font-size:0.95rem;font-weight:500;color:#fff;box-shadow:0 4px 24px rgba(0,0,0,.18);opacity:0;transition:opacity .3s ease;max-width:420px;';
+  if (type === 'info') toast.style.background = 'var(--accent, #6366f1)';
+  else if (type === 'success') toast.style.background = '#22c55e';
+  else if (type === 'warning') toast.style.background = '#f59e0b';
+  else toast.style.background = '#ef4444';
+  document.body.appendChild(toast);
+  requestAnimationFrame(function() { toast.style.opacity = '1'; });
+  setTimeout(function() {
+    toast.style.opacity = '0';
+    setTimeout(function() { toast.remove(); }, 400);
+  }, 4000);
+}
+
 /* ── Theme Toggle ──────��───────────────────────────────────────────────── */
 function initThemeToggle() {
   var btn = document.getElementById('theme-toggle');
@@ -563,6 +582,10 @@ function initNovaEntrevista() {
       }
       loadInterviews();
       closeModal();
+      // Se pipeline foi disparado (edição ou criação com transcrição), mostra progresso
+      if (result.reprocessing) {
+        pollPipelineStatus();
+      }
     }).catch(function(err) {
       alert('Erro: ' + err.message);
     });
@@ -982,12 +1005,24 @@ function loadInterviewCount() {
 
 /* ── Delete Interview ──────────────────────────────────────────────── */
 function deleteInterview(id, name) {
-  if (!confirm('Excluir entrevista de "' + name + '"? Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.')) return;
+  if (!confirm('Excluir entrevista de "' + name + '"?\n\nA estrat\u00e9gia e o roadmap ser\u00e3o recalculados automaticamente.\nEsta a\u00e7\u00e3o n\u00e3o pode ser desfeita.')) return;
   fetch('/api/interviews/' + id, { method: 'DELETE' })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.status === 'ok') loadInterviews();
-      else alert('Erro ao excluir: ' + (data.detail || 'erro desconhecido'));
+      if (data.status === 'ok') {
+        loadInterviews();
+        if (data.reprocessing) {
+          // Pipeline foi disparado para reprocessar a área
+          pollPipelineStatus();
+        } else if (data.area_cleared) {
+          // Área ficou sem entrevistas — análises foram limpas
+          showToast('\u00c1rea "' + (data.department || '') + '" sem entrevistas \u2014 an\u00e1lises removidas.', 'info');
+          // Recarrega estratégia se estiver visualizando essa área
+          if (_activeStrategyArea === data.department) loadStrategyData(_activeStrategyArea);
+        }
+      } else {
+        alert('Erro ao excluir: ' + (data.detail || 'erro desconhecido'));
+      }
     })
     .catch(function(err) { alert('Erro: ' + err.message); });
 }

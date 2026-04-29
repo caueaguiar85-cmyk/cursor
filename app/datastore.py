@@ -279,6 +279,22 @@ def get_analysis_results_for_area(area: str) -> dict:
         return {}
 
 
+def delete_analysis_results_for_area(area: str):
+    """Remove todos os resultados de análise de uma área específica."""
+    suffix = f":{area}"
+    if not _db_available:
+        keys_to_remove = [k for k in _mem_analysis_results if k.endswith(suffix)]
+        for k in keys_to_remove:
+            del _mem_analysis_results[k]
+        logger.info(f"[mem] Removed {len(keys_to_remove)} analysis results for area '{area}'")
+        return
+    try:
+        _query("DELETE FROM analysis_results WHERE key LIKE %s", (f"%{suffix}",), fetch=False)
+        logger.info(f"[db] Removed analysis results for area '{area}'")
+    except Exception as e:
+        logger.error(f"Delete area analysis error: {e}")
+
+
 def get_available_areas() -> list:
     if not _db_available:
         areas = set()
